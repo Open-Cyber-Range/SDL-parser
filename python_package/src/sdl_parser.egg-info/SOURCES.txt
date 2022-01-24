@@ -1,0 +1,7 @@
+pyproject.toml
+setup.cfg
+src/sdl_parser/__init__.py
+src/sdl_parser.egg-info/PKG-INFO
+src/sdl_parser.egg-info/SOURCES.txt
+src/sdl_parser.egg-info/dependency_links.txt
+src/sdl_parser.egg-info/top_level.txt

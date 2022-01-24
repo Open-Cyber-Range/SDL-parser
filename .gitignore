@@ -1,3 +1,11 @@
+# Rust
 /target
 Cargo.lock
 **/target
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Miscellaneous
+dist
