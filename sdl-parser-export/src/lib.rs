@@ -13,6 +13,7 @@ enum Status {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Response {
     status: Status,
     result: Option<Schema>,
