@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-    "parser",
-    "parser-wasm"
+    "sdl-parser",
+    "sdl-parser-export"
 ]
