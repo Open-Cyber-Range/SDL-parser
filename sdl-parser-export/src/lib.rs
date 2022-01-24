@@ -38,7 +38,12 @@ pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -
     
         let response = match parse_native_sdl(sdl_string) {
             Ok(sld_schema) => {
-                to_string(&sld_schema).map_or(json_error_response, |result| result)
+                let success_response = Response {
+                    status: Status::SUCCESS,
+                    result: Some(sld_schema),
+                    error_message: None
+                };
+                to_string(&success_response).map_or(json_error_response, |result| result)
             },
             Err(err) => {
                 let error_response = Response {
