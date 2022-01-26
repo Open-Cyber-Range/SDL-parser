@@ -8,8 +8,8 @@ use anyhow::Result;
 
 #[derive(Serialize, Deserialize)]
 enum Status {
-    SUCCESS,
-    ERROR
+    Success,
+    Error
 }
 
 #[derive(Serialize, Deserialize)]
@@ -25,6 +25,10 @@ unsafe fn pointer_to_string<'a>(raw_pointer: *const c_char) -> Result<&'a str> {
     return Ok(raw.to_str()?);
 }
 
+/// # Safety
+///
+/// This function should only be called with a string pointer. In case of input being a null
+/// pointer this function will also return a null pointer
 #[no_mangle]
 pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -> *mut c_char {
     if sdl_string_pointer.is_null() {
@@ -40,7 +44,7 @@ pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -
         let response = match parse_native_sdl(sdl_string) {
             Ok(sld_schema) => {
                 let success_response = Response {
-                    status: Status::SUCCESS,
+                    status: Status::Success,
                     result: Some(sld_schema),
                     error_message: None
                 };
@@ -48,7 +52,7 @@ pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -
             },
             Err(err) => {
                 let error_response = Response {
-                    status: Status::ERROR,
+                    status: Status::Error,
                     result: None,
                     error_message: Some(err.to_string())
                     
@@ -65,6 +69,10 @@ pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -
     ptr::null_mut()
 }
 
+/// # Safety
+///
+/// This function should only be called with a string pointer. In case of input being a null
+/// pointer this function will do nothing and just return
 #[no_mangle]
 pub unsafe extern "C" fn parse_sdl_free(sdl_string: *mut c_char) {
     if sdl_string.is_null() {

@@ -46,8 +46,8 @@ mod tests {
         };
 
         assert_eq!(result, expected_schema);
-        assert_eq!(result.scenario.name, scenario_name.clone());
-        assert_eq!(result.scenario.start, start_time.clone());
-        assert_eq!(result.scenario.end, end_time.clone());
+        assert_eq!(result.scenario.name, scenario_name);
+        assert_eq!(result.scenario.start, start_time);
+        assert_eq!(result.scenario.end, end_time);
     }
 }
