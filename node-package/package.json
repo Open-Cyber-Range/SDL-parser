@@ -1,0 +1,20 @@
+{
+  "name": "sdl-parser",
+  "version": "1.0.0",
+  "description": "Parser library for Scenario Defined Language (SDL)",
+  "main": "index.js",
+  "author": "kaarel.allemann@cr14.ee",
+  "scripts": {
+    "build": "tsc",
+    "run-example": "ts-node src/example.ts"
+  },
+  "dependencies": {
+    "ffi-napi": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/ffi-napi": "^4.0.5",
+    "@types/node": "^17.0.12",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.5"
+  }
+}
