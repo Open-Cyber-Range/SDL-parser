@@ -32,7 +32,7 @@ rust-nightly:
 build-x86-64bit-windows-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: cross:latest
+  image: rustembedded/cross
   before_script:
   #   - cargo install cross
     - export CROSS_DOCKER_IN_DOCKER=true
@@ -46,7 +46,7 @@ build-x86-64bit-windows-release:
 build-x86-64bit-linux-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: cross:latest
+  image: rustembedded/cross
   before_script:
   #   - cargo install cross
      - export CROSS_DOCKER_IN_DOCKER=true
