@@ -1,0 +1,16 @@
+image: rust
+
+lint:
+  stage: lint
+  script:
+    - cargo clippy -- -Dwarnings
+
+test:
+  stage: test
+  script:
+    - cargo test
+
+build:
+  stage: build
+  script:
+    - cargo build --release
