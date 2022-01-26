@@ -28,3 +28,31 @@ rust-nightly:
     key: sdl-cargo-target
     paths:
       - target
+
+build-x86-64bit-windows-release:
+  stage: build
+  needs: ["rust-latest", "rust-nightly"]
+  image: rust:latest
+  before_script:
+    - cargo install cross
+    - export CROSS_DOCKER_IN_DOCKER=true
+  script:
+    - cross build --release --target x86_64-pc-windows-gnu
+  cache:
+    key: sdl-cargo-target
+    paths:
+      - target
+
+build-x86-64bit-linux-release:
+  stage: build
+  needs: ["rust-latest", "rust-nightly"]
+  image: rust:latest
+  before_script:
+    - cargo install cross
+    - export CROSS_DOCKER_IN_DOCKER=true
+  script:
+    - cross build --release --target x86_64-unknown-linux-gnu
+  cache:
+    key: sdl-cargo-target
+    paths:
+      - target
