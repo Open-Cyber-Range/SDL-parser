@@ -1,16 +1,18 @@
-image: rust
+stages:
+  - build
 
-lint:
-  stage: test
-  script:
-    - cargo clippy -- -Dwarnings
-
-test:
-  stage: test
-  script:
-    - cargo test
-
-build:
+rust-latest:
   stage: build
+  image: rust:latest
   script:
-    - cargo build --release
+    - cargo clippy -- Dwarnings
+    - cargo build --verbose
+    - cargo test --verbose
+
+rust-nightly:
+  stage: build
+  image: rustlang/rust:nightly
+  script:
+    - cargo clippy -- Dwarnings
+    - cargo build --verbose
+    - cargo test --verbose
