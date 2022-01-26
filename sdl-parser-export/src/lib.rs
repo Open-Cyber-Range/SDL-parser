@@ -7,6 +7,7 @@ use libc::{c_char};
 use anyhow::Result;
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 enum Status {
     Success,
     Error
