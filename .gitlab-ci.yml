@@ -7,9 +7,13 @@ rust-latest:
   before_script:
     - rustup component add clippy
   script:
-    - cargo clippy -- Dwarnings
+    - cargo clippy -- -Dwarnings
     - cargo build --verbose
     - cargo test --verbose
+  cache:
+    key: sdl-cargo-target
+    paths:
+      - target
 
 rust-nightly:
   stage: build
@@ -17,6 +21,10 @@ rust-nightly:
   before_script:
     - rustup component add clippy
   script:
-    - cargo clippy -- Dwarnings
+    - cargo clippy -- -Dwarnings
     - cargo build --verbose
     - cargo test --verbose
+  cache:
+    key: sdl-cargo-target
+    paths:
+      - target
