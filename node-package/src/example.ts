@@ -1,5 +1,6 @@
-import { parseSDL } from '.';
+import parseSDL from '.';
 
+// eslint-disable-next-line no-console
 console.log(parseSDL(`
 scenario:
   name: test-scenario
