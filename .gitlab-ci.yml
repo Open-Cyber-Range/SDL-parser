@@ -1,7 +1,7 @@
 image: rust
 
 lint:
-  stage: lint
+  stage: test
   script:
     - cargo clippy -- -Dwarnings
 
