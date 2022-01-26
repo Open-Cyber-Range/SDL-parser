@@ -32,12 +32,9 @@ rust-nightly:
 build-x86-64bit-windows-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: rustembedded/cross
-  before_script:
-  #   - cargo install cross
-    - export CROSS_DOCKER_IN_DOCKER=true
+  image: rustembedded/cross:x86_64-pc-windows-gnu
   script:
-    - cross build --release --target x86_64-pc-windows-gnu
+    - cargo build --release --target x86_64-pc-windows-gnu
   cache:
     key: sdl-cargo-target
     paths:
@@ -46,12 +43,9 @@ build-x86-64bit-windows-release:
 build-x86-64bit-linux-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: rustembedded/cross
-  before_script:
-  #   - cargo install cross
-     - export CROSS_DOCKER_IN_DOCKER=true
+  image: rustembedded/cross:x86_64-unknown-linux-gnu
   script:
-    - cross build --release --target x86_64-unknown-linux-gnu
+    - cargo build --release --target x86_64-unknown-linux-gnu
   cache:
     key: sdl-cargo-target
     paths:
