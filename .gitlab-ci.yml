@@ -31,10 +31,10 @@ rust-nightly:
 
 build-x86-64bit-windows-release:
   stage: build
-  needs: ["rust-latest", "rust-nightly"]
-  image: rust:latest
+  #needs: ["rust-latest", "rust-nightly"]
+  image: cross:latest
   before_script:
-    - cargo install cross
+  #   - cargo install cross
     - export CROSS_DOCKER_IN_DOCKER=true
   script:
     - cross build --release --target x86_64-pc-windows-gnu
@@ -45,11 +45,11 @@ build-x86-64bit-windows-release:
 
 build-x86-64bit-linux-release:
   stage: build
-  needs: ["rust-latest", "rust-nightly"]
-  image: rust:latest
+  #needs: ["rust-latest", "rust-nightly"]
+  image: cross:latest
   before_script:
-    - cargo install cross
-    - export CROSS_DOCKER_IN_DOCKER=true
+  #   - cargo install cross
+     - export CROSS_DOCKER_IN_DOCKER=true
   script:
     - cross build --release --target x86_64-unknown-linux-gnu
   cache:
