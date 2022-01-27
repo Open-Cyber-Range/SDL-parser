@@ -32,7 +32,7 @@ rust-nightly:
 build-x86-64bit-windows-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: rustembedded/cross:x86_64-pc-windows-gnu
+  image: nexus.ex.c-lab.ee:8003/cargo-cross
   script:
     - cargo build --release --target x86_64-pc-windows-gnu
   cache:
@@ -43,7 +43,7 @@ build-x86-64bit-windows-release:
 build-x86-64bit-linux-release:
   stage: build
   #needs: ["rust-latest", "rust-nightly"]
-  image: rustembedded/cross:x86_64-unknown-linux-gnu
+  image: nexus.ex.c-lab.ee:8003/cargo-cross
   script:
     - cargo build --release --target x86_64-unknown-linux-gnu
   cache:
