@@ -1,6 +1,14 @@
 stages:
   - build
 
+variables:
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+    - docker:18.09-dind
+
 rust-latest:
   stage: build
   image: rust:latest
@@ -34,7 +42,7 @@ build-x86-64bit-windows-release:
   #needs: ["rust-latest", "rust-nightly"]
   image: nexus.ex.c-lab.ee:8003/cargo-cross
   script:
-    - cargo build --release --target x86_64-pc-windows-gnu
+    - cross build --release --target x86_64-pc-windows-gnu
   cache:
     key: sdl-cargo-target
     paths:
@@ -45,7 +53,7 @@ build-x86-64bit-linux-release:
   #needs: ["rust-latest", "rust-nightly"]
   image: nexus.ex.c-lab.ee:8003/cargo-cross
   script:
-    - cargo build --release --target x86_64-unknown-linux-gnu
+    - cross build --release --target x86_64-unknown-linux-gnu
   cache:
     key: sdl-cargo-target
     paths:
