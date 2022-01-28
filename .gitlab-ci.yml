@@ -19,11 +19,6 @@ build-x86-64bit-windows-release:
   stage: build
   needs: ["lint-and-test"]
   image: nexus.ex.c-lab.ee:8003/rust-builder
-  services:
-   - docker:19.03.12-dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_DRIVER: "overlay2"
   script:
     - cargo build --release --target x86_64-pc-windows-gnu
   cache:
@@ -37,6 +32,17 @@ build-x86-64bit-linux-release:
   image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
     - cargo build --release --target x86_64-unknown-linux-gnu
+  cache:
+    key: sdl-cargo-target
+    paths:
+      - target
+
+build-arm-64bit-linux-release:
+  stage: build
+  needs: ["lint-and-test"]
+  image: nexus.ex.c-lab.ee:8003/rust-builder
+  script:
+    - cargo build --release --target aarch64-unknown-linux-gnu
   cache:
     key: sdl-cargo-target
     paths:
