@@ -1,23 +1,9 @@
 stages:
   - build
 
-rust-latest:
+lint-and-test:
   stage: build
-  image: rust:latest
-  before_script:
-    - rustup component add clippy
-  script:
-    - cargo clippy -- -Dwarnings
-    - cargo build --verbose
-    - cargo test --verbose
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
-
-rust-nightly:
-  stage: build
-  image: rustlang/rust:nightly
+  image: nexus.ex.c-lab.ee:8003/rust-builder
   before_script:
     - rustup component add clippy
   script:
@@ -31,15 +17,15 @@ rust-nightly:
 
 build-x86-64bit-windows-release:
   stage: build
-  #needs: ["rust-latest", "rust-nightly"]
-  image: nexus.ex.c-lab.ee:8003/cargo-cross
+  needs: ["lint-and-test"]
+  image: nexus.ex.c-lab.ee:8003/rust-builder
   services:
    - docker:19.03.12-dind
   variables:
     DOCKER_HOST: "tcp://docker:2375"
     DOCKER_DRIVER: "overlay2"
   script:
-    - cross build --release --target x86_64-pc-windows-gnu
+    - cargo build --release --target x86_64-pc-windows-gnu
   cache:
     key: sdl-cargo-target
     paths:
@@ -47,15 +33,10 @@ build-x86-64bit-windows-release:
 
 build-x86-64bit-linux-release:
   stage: build
-  #needs: ["rust-latest", "rust-nightly"]
-  image: nexus.ex.c-lab.ee:8003/cargo-cross
-  services:
-   - docker:19.03.12-dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_DRIVER: "overlay2"
+  needs: ["lint-and-test"]
+  image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
-    - cross build --release --target x86_64-unknown-linux-gnu
+    - cargo build --release --target x86_64-unknown-linux-gnu
   cache:
     key: sdl-cargo-target
     paths:
