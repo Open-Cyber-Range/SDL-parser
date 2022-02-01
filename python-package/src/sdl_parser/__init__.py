@@ -4,7 +4,7 @@ import json
 
 prefix = {'win32': ''}.get(sys.platform, 'lib')
 extension = {'darwin': '.dylib', 'win32': '.dll'}.get(sys.platform, '.so')
-library = ctypes.cdll.LoadLibrary(prefix + "sdl_parser_export" + extension)
+library = ctypes.cdll.LoadLibrary(prefix + "sdl_parser" + extension)
 
 library.parse_sdl_generate.argtypes = (c_char_p, )
 library.parse_sdl_generate.restype = c_void_p
