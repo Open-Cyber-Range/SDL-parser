@@ -20,6 +20,7 @@ build-x86-64bit-windows-release:
   needs: ["lint-and-test"]
   image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
+    - cargo deb --no-build --target x86_64-unknown-linux-gnu -p sdl-parser-export
     - cargo build --release --target x86_64-pc-windows-gnu
   cache:
     key: sdl-cargo-target
@@ -43,27 +44,6 @@ build-arm-64bit-linux-release:
   image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
     - cargo build --release --target aarch64-unknown-linux-gnu
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
-
-build-and-upload-x86-64bit-deb:
-  stage: build
-  needs: ["build-x86-64bit-linux-release"]
-  image: nexus.ex.c-lab.ee:8003/rust-builder
-  script:
-    - cargo deb --no-build --target x86_64-unknown-linux-gnu -p sdl-parser-export
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
-
-build-and-upload-arm-64bit-deb:
-  stage: build
-  needs: ["build-arm-64bit-linux-release"]
-  image: nexus.ex.c-lab.ee:8003/rust-builder
-  script:
     - cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
   cache:
     key: sdl-cargo-target
