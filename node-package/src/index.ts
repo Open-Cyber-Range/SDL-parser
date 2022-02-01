@@ -1,6 +1,6 @@
 import { Library } from 'ffi-napi';
 
-const sdlLibrary = Library('sdl_parser', {
+const sdlLibrary = Library('libsdl_parser', {
   parse_sdl_generate: ['char *', ['string']],
   parse_sdl_free: ['void', ['char *']],
 });
