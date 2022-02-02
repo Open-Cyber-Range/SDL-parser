@@ -20,12 +20,11 @@ depends = "$auto"
 section = "utility"
 priority = "optional"
 assets = [
-  ["../target/release/libsdl_parser.so", "/usr/lib/sdl-parser/", "755"],
+  ["target/release/libsdl_parser.so", "/usr/lib/sdl-parser/", "755"],
   ["assets/sdl-parser.conf", "/etc/ld.so.conf.d/", "644"]
 ]
 maintainer-scripts = "assets/maintainer-scripts"
 triggers-file = "assets/sdl-parser.triggers"
-preserve-symlinks = true
 
 [dependencies]
 anyhow = "1"

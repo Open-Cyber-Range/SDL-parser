@@ -44,7 +44,7 @@ build-arm-64bit-linux-release:
   image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
     - cargo build --release --target aarch64-unknown-linux-gnu
-    - cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
+    - LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):/usr/aarch64-linux-gnu/lib/ cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
   cache:
     key: sdl-cargo-target
     paths:
