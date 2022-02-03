@@ -67,5 +67,6 @@ build-and-publish-pip-wrapper:
   script:
     - cd python-package
     - python3 -m pip install --upgrade build
+    - python3 -m build
     - pip install twine
     - twine upload -u $OCR_DEPLOYMENT_USER -p $OCR_DEPLOYMENT_PASSWORD  --repository-url $OCR_PIP_REPOSITORY  dist/*
