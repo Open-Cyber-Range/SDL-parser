@@ -63,8 +63,9 @@ build-and-publish-npm-wrapper:
 
 build-and-publish-pip-wrapper:
   stage: build
-  image: pypi/twine
+  image: python3
   script:
     - cd python-package
     - python3 -m pip install --upgrade build
+    - pip install twine
     - twine upload -u $OCR_DEPLOYMENT_USER -p $OCR_DEPLOYMENT_PASSWORD  --repository-url $OCR_PIP_REPOSITORY  dist/*
