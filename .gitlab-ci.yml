@@ -54,7 +54,7 @@ build-and-upload-arm-64bit-linux-release:
 
 build-and-publish-npm-wrapper:
   stage: build
-  image: yarnpkg/node-yarn
+  image: node:lts
   script:
     - cd node-package
     - yarn
