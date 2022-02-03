@@ -63,7 +63,7 @@ build-and-publish-npm-wrapper:
 
 build-and-publish-pip-wrapper:
   stage: build
-  image: python3:latest
+  image: python:latest
   script:
     - cd python-package
     - python3 -m pip install --upgrade build
