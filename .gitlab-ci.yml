@@ -51,3 +51,11 @@ build-and-upload-arm-64bit-linux-release:
     key: sdl-cargo-target
     paths:
       - target
+
+build-and-publish-npm-wrapper:
+  stage: build
+  image: yarnpkg/node-yarn
+  script:
+    - yarn --cwd ./node-package
+    - NPM_USER=$OCR_DEPLOYMENT_USER NPM_PASS=$OCR_DEPLOYMENT_PASSWORD NPM_EMAIL=$OCR_NPM_PUBLISH_EMAIL NPM_REGISTRY=$OCR_NPM_REPOSITORY yarn --cwd ./node-package npm-cli-login
+    - cd node-package && npm publish
