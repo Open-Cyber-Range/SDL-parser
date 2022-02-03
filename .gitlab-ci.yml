@@ -33,7 +33,7 @@ build-and-upload-x86-64bit-linux-release:
   script:
     - cargo build --release --target x86_64-unknown-linux-gnu
     - cargo deb --no-build --target x86_64-unknown-linux-gnu -p sdl-parser-export
-    - curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@./target/x86_64-unknown-linux-gnu/debian/libsdl-parser_0.1.0_amd64.deb" $OCR_APT_REPOSITORY
+    - 'curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@./target/x86_64-unknown-linux-gnu/debian/libsdl-parser_0.1.0_amd64.deb" $OCR_APT_REPOSITORY'
   cache:
     key: sdl-cargo-target
     paths:
@@ -46,7 +46,7 @@ build-and-upload-arm-64bit-linux-release:
   script:
     - cargo build --release --target aarch64-unknown-linux-gnu
     - LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):/usr/aarch64-linux-gnu/lib/ cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
-    - curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@./target/aarch64-unknown-linux-gnu/debian/libsdl-parser_0.1.0_arm64.deb" $OCR_APT_REPOSITORY
+    - 'curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@./target/aarch64-unknown-linux-gnu/debian/libsdl-parser_0.1.0_arm64.deb" $OCR_APT_REPOSITORY'
   cache:
     key: sdl-cargo-target
     paths:
