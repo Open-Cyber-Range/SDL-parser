@@ -5,7 +5,7 @@ const sdlLibrary = Library('libsdl_parser', {
   parse_sdl_free: ['void', ['char *']],
 });
 
-export default function parseSDL(sdlString: string) {
+export default function parseSDL(sdlString: string): string {
   const responsePointer = sdlLibrary.parse_sdl_generate(sdlString) as any;
   try {
     return responsePointer.readCString();
