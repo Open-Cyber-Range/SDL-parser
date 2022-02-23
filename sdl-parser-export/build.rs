@@ -2,7 +2,7 @@ extern crate cbindgen;
 
 use std::env;
 use std::path::{PathBuf};
-use cbindgen::Config;
+use cbindgen::{Language::C, Config};
 
 
 fn main() {
@@ -10,12 +10,13 @@ fn main() {
 
     let package_name = "sdl_parser";
     let output_file = target_dir()
-        .join(format!("{}.h", package_name))
-        .display()
-        .to_string();
+      .join(format!("{}.h", package_name))
+      .display()
+      .to_string();
 
     let config = Config {
-        ..Default::default()
+      language: C,
+      ..Default::default()
     };
 
     cbindgen::generate_with_config(&crate_dir, config)
