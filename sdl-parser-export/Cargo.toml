@@ -2,6 +2,7 @@
 name = "sdl-parser-export"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -21,6 +22,7 @@ section = "utility"
 priority = "optional"
 assets = [
   ["target/release/libsdl_parser.so", "/usr/lib/sdl-parser/", "755"],
+  ["target/release/sdl_parser.h", "/usr/include/sdl-parser/", "644"],
   ["assets/sdl-parser.conf", "/etc/ld.so.conf.d/", "644"]
 ]
 maintainer-scripts = "assets/maintainer-scripts"
@@ -32,3 +34,6 @@ sdl-parser = { path = "../sdl-parser" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 libc = "0.2"
+
+[build-dependencies]
+cbindgen = "0.20"
