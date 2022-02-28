@@ -11,12 +11,12 @@ pub struct Scenario {
     pub name: String,
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
+    pub infrastructure: Option<InfrastructureMap>
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Schema { 
     pub scenario: Scenario,
-    pub infrastructure: Option<InfrastructureMap>
 }
 
 pub fn parse_sdl (sdl_string: &str) -> Result<Schema> {
@@ -44,11 +44,11 @@ mod tests {
         let scenario = Scenario {
             name: scenario_name.clone(),
             start: start_time,
-            end: end_time
+            end: end_time,
+            infrastructure: None
         };
         let expected_schema = Schema {
             scenario,
-            infrastructure: None
         };
 
         assert_eq!(parsed_schema, expected_schema);
@@ -64,27 +64,27 @@ mod tests {
                 name: test-scenario
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
-            infrastructure:
-                test-infrastructure:
-                    description: some-test-description
-                    node:
-                        win10:
-                            type: VM
-                            template: windows10
-                            flavor:
-                                ram: 4gb
-                                cpu: 2
-                        deb10:
-                            type: VM
-                            template: debian10
-                            flavor:
-                                ram: 2gb
-                                cpu: 1
+                infrastructure:
+                    test-infrastructure:
+                        description: some-test-description
+                        node:
+                            win10:
+                                type: VM
+                                template: windows10
+                                flavor:
+                                    ram: 4gb
+                                    cpu: 2
+                            deb10:
+                                type: VM
+                                template: debian10
+                                flavor:
+                                    ram: 2gb
+                                    cpu: 1
         "#;
         let parsed_schema = super::parse_sdl(sdl).unwrap();
 
-        assert!(parsed_schema.infrastructure.is_some());
-        let infrastructure = parsed_schema.infrastructure.unwrap();
+        assert!(parsed_schema.scenario.infrastructure.is_some());
+        let infrastructure = parsed_schema.scenario.infrastructure.unwrap();
         let node_map = infrastructure.get_key_value(
             "test-infrastructure"
         ).unwrap().1.to_owned().node.unwrap();
