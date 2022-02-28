@@ -27,6 +27,7 @@ pub struct Flavor {
 pub struct Node {
     #[serde(rename = "type")]
     pub type_field: NodeType,
+    pub description: Option<String>,
     pub template: String,
     pub flavor: Flavor,
 }
@@ -56,5 +57,6 @@ mod tests {
     assert_eq!(node.template, "windows10");
     assert_eq!(node.flavor.ram, 4000000000);
     assert_eq!(node.flavor.cpu, 2);
+    assert_eq!(node.description, None);
   }
 }

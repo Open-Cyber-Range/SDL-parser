@@ -1,8 +1,9 @@
 mod node;
+mod infrastructure;
 
 use anyhow::Result;
 use chrono::{ DateTime, Utc};
-use node::NodeMap;
+use infrastructure::InfrastructureMap;
 use serde::{Serialize, Deserialize};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -15,7 +16,7 @@ pub struct Scenario {
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Schema { 
     pub scenario: Scenario,
-    pub nodes: Option<NodeMap>
+    pub infrastructure: Option<InfrastructureMap>
 }
 
 pub fn parse_sdl (sdl_string: &str) -> Result<Schema> {
@@ -47,7 +48,7 @@ mod tests {
         };
         let expected_schema = Schema {
             scenario,
-            nodes: None
+            infrastructure: None
         };
 
         assert_eq!(parsed_schema, expected_schema);
@@ -63,23 +64,30 @@ mod tests {
                 name: test-scenario
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
-            nodes:
-                win10:
-                    type: VM
-                    template: windows10
-                    flavor:
-                        ram: 4gb
-                        cpu: 2
-                deb10:
-                    type: VM
-                    template: debian10
-                    flavor:
-                        ram: 2gb
-                        cpu: 1
+            infrastructure:
+                test-infrastructure:
+                    description: some-test-description
+                    node:
+                        win10:
+                            type: VM
+                            template: windows10
+                            flavor:
+                                ram: 4gb
+                                cpu: 2
+                        deb10:
+                            type: VM
+                            template: debian10
+                            flavor:
+                                ram: 2gb
+                                cpu: 1
         "#;
         let parsed_schema = super::parse_sdl(sdl).unwrap();
 
-        assert!(parsed_schema.nodes.is_some());
-        assert_eq!(parsed_schema.nodes.unwrap().values().len(), 2)
+        assert!(parsed_schema.infrastructure.is_some());
+        let infrastructure = parsed_schema.infrastructure.unwrap();
+        let node_map = infrastructure.get_key_value(
+            "test-infrastructure"
+        ).unwrap().1.to_owned().node.unwrap();
+        assert_eq!(node_map.values().len(), 2)
     }
 }
