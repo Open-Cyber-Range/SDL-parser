@@ -1,4 +1,3 @@
-
 ## SDL parser library
 
 This library handles parsing SDL input for different programming libraries and environments
@@ -17,4 +16,4 @@ In order to use wrapper libraries, dynamic libraries must be installed on the sy
 Once OCR apt repostiory is installed, this can be done
 by executing
 
-`sudo apt install sdl-parser`
+`sudo apt install libsdl-parser`
