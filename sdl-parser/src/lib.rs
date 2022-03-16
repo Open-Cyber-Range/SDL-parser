@@ -2,7 +2,7 @@ mod node;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use node::{NodeMap};
+use node::NodeMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
