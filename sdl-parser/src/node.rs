@@ -54,7 +54,6 @@ mod tests {
   #[test]
   fn includes_node_requirements_with_source_template() {
     let node_sdl = r#"
-        win10:
             type: VM
             template: windows10
             flavor:
@@ -63,23 +62,14 @@ mod tests {
             source:
                 template: windows10-template
         "#;
-    let parsed_nodes = serde_yaml::from_str::<NodeMap>(node_sdl).unwrap();
+    let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
 
-    let name = (*parsed_nodes.keys().collect::<Vec<&String>>().get(0).unwrap()).clone();
-    let node = (*parsed_nodes.values().collect::<Vec<&Node>>().get(0).unwrap()).clone();
-    
-    assert_eq!(name, "win10".to_string());
-    assert_eq!(node.template, "windows10");
-    assert_eq!(node.flavor.ram, 4000000000);
-    assert_eq!(node.flavor.cpu, 4);
-    assert_eq!(node.description, None);
     assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
   }
 
    #[test]
   fn includes_all_node_requirements_with_source_package() {
     let node_sdl = r#"
-        win10:
             type: VM
             template: windows10
             description: win10 node for OCR
@@ -91,15 +81,8 @@ mod tests {
                     name: basic-windows10
                     version: '*' 
         "#;
-    let parsed_nodes = serde_yaml::from_str::<NodeMap>(node_sdl).unwrap();
+    let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
 
-    let name = (*parsed_nodes.keys().collect::<Vec<&String>>().get(0).unwrap()).clone();
-    let node = (*parsed_nodes.values().collect::<Vec<&Node>>().get(0).unwrap()).clone();
-    
-    assert_eq!(name, "win10".to_string());
-    assert_eq!(node.template, "windows10");
-    assert_eq!(node.flavor.ram, 4000000000);
-    assert_eq!(node.flavor.cpu, 4);
     assert_eq!(node.description.unwrap(), "win10 node for OCR");
     assert_eq!(node.source.clone().unwrap().package.unwrap().name, "basic-windows10");
     assert_eq!(node.source.unwrap().package.unwrap().version, "*");
@@ -109,19 +92,14 @@ mod tests {
   #[test]
   fn includes_minimal_node_requirements() {
     let node_sdl = r#"
-        win10:
             type: VM
             template: windows10
             flavor:
                 ram: 4gb
                 cpu: 2
         "#;
-    let parsed_nodes = serde_yaml::from_str::<NodeMap>(node_sdl).unwrap();
-
-    let name = (*parsed_nodes.keys().collect::<Vec<&String>>().get(0).unwrap()).clone();
-    let node = (*parsed_nodes.values().collect::<Vec<&Node>>().get(0).unwrap()).clone();
+    let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
     
-    assert_eq!(name, "win10".to_string());
     assert_eq!(node.template, "windows10");
     assert_eq!(node.flavor.ram, 4000000000);
     assert_eq!(node.flavor.cpu, 2);
