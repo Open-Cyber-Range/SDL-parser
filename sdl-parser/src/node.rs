@@ -37,17 +37,6 @@ pub struct Package {
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Source {
-  pub template: Option<String>,
-  pub package: Option<Package>,
-}
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Package {
-  pub name: String,
-  pub version: String,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     #[serde(rename = "type")]
     pub type_field: NodeType,
