@@ -14,6 +14,10 @@ lint-and-test:
     key: sdl-cargo-target
     paths:
       - target
+  only:
+    - develop
+    - master
+    - merge_requests
 
 build-x86-64bit-windows-release:
   stage: build
@@ -25,6 +29,8 @@ build-x86-64bit-windows-release:
     key: sdl-cargo-target
     paths:
       - target
+  only:
+    - master
 
 build-and-upload-x86-64bit-linux-release:
   stage: build
@@ -39,6 +45,8 @@ build-and-upload-x86-64bit-linux-release:
     key: sdl-cargo-target
     paths:
       - target
+  only:
+    - master
 
 build-and-upload-arm-64bit-linux-release:
   stage: build
@@ -53,6 +61,8 @@ build-and-upload-arm-64bit-linux-release:
     key: sdl-cargo-target
     paths:
       - target
+  only:
+    - master
 
 build-and-publish-npm-wrapper:
   stage: build
@@ -62,6 +72,8 @@ build-and-publish-npm-wrapper:
     - yarn
     - '{ echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; sleep 1;  echo "$OCR_NPM_PUBLISH_EMAIL"; } | npm login --registry=$OCR_NPM_REPOSITORY'
     - npm publish --registry=$OCR_NPM_REPOSITORY
+  only:
+    - master
 
 build-and-publish-pip-wrapper:
   stage: build
@@ -72,3 +84,5 @@ build-and-publish-pip-wrapper:
     - python3 -m build
     - pip install twine
     - twine upload -u $OCR_DEPLOYMENT_USER -p $OCR_DEPLOYMENT_PASSWORD  --repository-url $OCR_PIP_REPOSITORY  dist/*
+  only:
+    - master
