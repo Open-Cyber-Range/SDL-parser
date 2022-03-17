@@ -1,16 +1,16 @@
+use anyhow::Result;
+use libc::c_char;
 use sdl_parser::{parse_sdl as parse_native_sdl, Schema};
-use serde::{Serialize, Deserialize};
-use serde_json::{to_string, json};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, to_string};
 use std::ffi::{CStr, CString};
 use std::ptr;
-use libc::{c_char};
-use anyhow::Result;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 enum Status {
     Success,
-    Error
+    Error,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -18,7 +18,7 @@ enum Status {
 struct Response {
     status: Status,
     result: Option<Schema>,
-    error_message: Option<String>
+    error_message: Option<String>,
 }
 
 unsafe fn pointer_to_string<'a>(raw_pointer: *const c_char) -> Result<&'a str> {
@@ -37,26 +37,26 @@ pub unsafe extern "C" fn parse_sdl_generate(sdl_string_pointer: *const c_char) -
     }
 
     if let Ok(sdl_string) = pointer_to_string(sdl_string_pointer) {
-        let json_error_response= json!({
+        let json_error_response = json!({
             "status": "ERROR",
             "errorMessage": "failed to serialize response to JSON"
-        }).to_string();
-    
+        })
+        .to_string();
+
         let response = match parse_native_sdl(sdl_string) {
             Ok(sld_schema) => {
                 let success_response = Response {
                     status: Status::Success,
                     result: Some(sld_schema),
-                    error_message: None
+                    error_message: None,
                 };
                 to_string(&success_response).map_or(json_error_response, |result| result)
-            },
+            }
             Err(err) => {
                 let error_response = Response {
                     status: Status::Error,
                     result: None,
-                    error_message: Some(err.to_string())
-                    
+                    error_message: Some(err.to_string()),
                 };
                 to_string(&error_response).map_or(json_error_response, |result| result)
             }
