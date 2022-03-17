@@ -66,7 +66,7 @@ build-and-upload-arm-64bit-linux-release:
 
 build-and-publish-npm-wrapper:
   stage: build
-  image: node:lts
+  image: nexus.ex.c-lab.ee:8003/node:lts
   script:
     - cd node-package
     - yarn
@@ -77,7 +77,7 @@ build-and-publish-npm-wrapper:
 
 build-and-publish-pip-wrapper:
   stage: build
-  image: python:latest
+  image: nexus.ex.c-lab.ee:8003/python:latest
   script:
     - cd python-package
     - python3 -m pip install --upgrade build
