@@ -1,4 +1,5 @@
 mod node;
+mod library_item;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
