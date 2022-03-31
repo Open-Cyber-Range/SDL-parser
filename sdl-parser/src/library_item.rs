@@ -8,14 +8,14 @@ pub struct LibraryItem {
     version: String,
 }
 
-pub fn generate_package_list(schema: &str) -> Result<Vec<LibraryItem>> {
-    let nodes: Vec<Node> = serde_yaml::from_str(schema)?;
+pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
+    let nodes: Vec<Node> = serde_yaml::from_str(sdl_string)?;
     let mut result = Vec::new();
     for val in nodes {
         if val.source.clone().is_some() && val.source.clone().unwrap().package.is_some() {
             let item = LibraryItem {
                 name: val.source.clone().unwrap().package.unwrap().name,
-                version: val.clone().source.unwrap().package.unwrap().version,
+                version: val.source.unwrap().package.unwrap().version,
             };
             result.push(item);
         }
