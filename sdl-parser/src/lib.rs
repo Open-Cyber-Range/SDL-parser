@@ -1,9 +1,11 @@
 mod node;
+mod library_item;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use node::NodeMap;
 use serde::{Deserialize, Serialize};
+pub use library_item::{generate_package_list, LibraryItem};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Scenario {
