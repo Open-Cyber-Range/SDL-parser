@@ -4,20 +4,25 @@ use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct LibraryItem {
-    name: String,
-    version: String,
+    pub name: String,
+    pub version: String,
+}
+
+impl LibraryItem {
+    fn new(name: String, version: String) -> Self {
+        Self { name, version }
+    }
 }
 
 pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
     let nodes: Vec<Node> = serde_yaml::from_str(sdl_string)?;
     let mut result = Vec::new();
-    for val in nodes {
-        if val.source.clone().is_some() && val.source.clone().unwrap().package.is_some() {
-            let item = LibraryItem {
-                name: val.source.clone().unwrap().package.unwrap().name,
-                version: val.source.unwrap().package.unwrap().version,
-            };
-            result.push(item);
+
+    for node in nodes {
+        if let Some(source) = node.source {
+            if let Some(package) = source.package {
+                result.push(LibraryItem::new(package.name, package.version));
+            }
         }
     }
     Ok(result)
@@ -65,18 +70,7 @@ mod tests {
                     ram: 4gb
                     cpu: 4
         "#;
-        
         let library_items = generate_package_list(node_sdl).unwrap();
-        let expected_answer = vec![
-            LibraryItem {
-                name: "basic-windows10".to_string(),
-                version: "*".to_string(),
-            },
-            LibraryItem {
-                name: "debian10".to_string(),
-                version: "*".to_string(),
-            },
-        ];
-        assert_eq!(library_items, expected_answer)
+        insta::assert_debug_snapshot!(library_items);
     }
 }
