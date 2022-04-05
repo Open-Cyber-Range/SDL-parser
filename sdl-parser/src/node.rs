@@ -88,22 +88,22 @@ mod tests {
     fn includes_node_requirements_with_network_type() {
         let node_sdl = r#"
             type: Network
-            dependencies: []
+            dependencies: [1, kolm, serde]
             description: a network
             address:
                 type: ipv4
                 cidr: 10.10.10.0/24
             policy:
-              type: network
-              rule:
-                direction: Ingress
-                description: a-description
-                allowed-address: [a-list-of-address]
-                port: 8080
+                type: network
+                rule:
+                    direction: Ingress
+                    description: a-description
+                    allowed_address: [a-list-of-address, kolm, 5]
+                    port: 8080
         "#;
 
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        println!("{:?}", node)
+        insta::assert_debug_snapshot!(node);
     }
 
     #[test]
@@ -126,6 +126,7 @@ mod tests {
     fn includes_all_node_requirements_with_source_package() {
         let node_sdl = r#"
             type: VM
+            dependencies: [pub-net]
             template: windows10
             description: win10 node for OCR
             flavor:
@@ -137,7 +138,6 @@ mod tests {
                     version: '*'
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-
         assert_eq!(node.description.unwrap(), "win10 node for OCR");
         assert_eq!(
             node.source.clone().unwrap().package.unwrap().name,
