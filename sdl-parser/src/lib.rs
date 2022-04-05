@@ -73,29 +73,25 @@ mod tests {
                 win10:
                     type: VM
                     description: win-10-description
-                    template: windows10
+                    source:
+                        template: windows10
                     flavor:
                         ram: 4gb
                         cpu: 2
                 deb10:
                     type: VM
                     description: deb-10-description
-                    template: debian10
+                    source:
+                        name: debian10
+                        version: '*'
                     flavor:
                         ram: 2gb
                         cpu: 1
-
         "#;
         let parsed_schema = super::parse_sdl(sdl).unwrap();
 
         assert!(parsed_schema.scenario.infrastructure.is_some());
         let node_map = parsed_schema.scenario.infrastructure.unwrap();
-        let node = node_map.get_key_value("win10").unwrap().1.to_owned();
-        let flavor = node.flavor.unwrap();
         assert_eq!(node_map.values().len(), 2);
-        assert_eq!(node.source.unwrap().template.unwrap(), "windows10".to_string());
-        assert_eq!(flavor.ram, 4000000000);
-        assert_eq!(flavor.cpu, 2);
-        assert_eq!(node.description.unwrap(), "win-10-description".to_string());
     }
 }

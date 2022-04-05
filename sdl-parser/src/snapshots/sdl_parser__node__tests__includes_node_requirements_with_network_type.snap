@@ -37,7 +37,6 @@ Node {
             },
         },
     ),
-    template: None,
     flavor: None,
     source: None,
 }

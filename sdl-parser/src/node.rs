@@ -155,8 +155,6 @@ mod tests {
                 cpu: 2
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-
-        assert_eq!(node.source.unwrap().template.unwrap(), "windows10");
         let flavor = node.flavor.unwrap();
         assert_eq!(flavor.ram, 4000000000);
         assert_eq!(flavor.cpu, 2);
