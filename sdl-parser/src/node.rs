@@ -16,6 +16,13 @@ where
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
+    Network,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub enum Direction {
+    Ingress,
+    Egress,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
@@ -37,12 +44,37 @@ pub struct Package {
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub struct Address {
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub cidr: String,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub struct Policy {
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub rule: Rule,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub struct Rule {
+    pub direction: Direction,
+    pub description: String,
+    pub allowed_address: Option<Vec<String>>,
+    pub port: String,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     #[serde(rename = "type")]
     pub type_field: NodeType,
+    pub dependencies: Option<Vec<String>>,
     pub description: Option<String>,
-    pub template: String,
-    pub flavor: Flavor,
+    pub address: Option<Address>,
+    pub policy: Option<Policy>,
+    pub template: Option<String>,
+    pub flavor: Option<Flavor>,
     pub source: Option<Source>,
 }
 
@@ -51,6 +83,28 @@ pub type NodeMap = HashMap<String, Node>;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn includes_node_requirements_with_network_type() {
+        let node_sdl = r#"
+            type: Network
+            dependencies: []
+            description: a network
+            address:
+                type: ipv4
+                cidr: 10.10.10.0/24
+            policy:
+              type: network
+              rule:
+                direction: Ingress
+                description: a-description
+                allowed-address: [a-list-of-address]
+                port: 8080
+        "#;
+
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        println!("{:?}", node)
+    }
 
     #[test]
     fn includes_node_requirements_with_source_template() {
@@ -80,7 +134,7 @@ mod tests {
             source:
                 package:
                     name: basic-windows10
-                    version: '*' 
+                    version: '*'
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
 
@@ -103,9 +157,9 @@ mod tests {
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
 
-        assert_eq!(node.template, "windows10");
-        assert_eq!(node.flavor.ram, 4000000000);
-        assert_eq!(node.flavor.cpu, 2);
+        assert_eq!(node.template.unwrap(), "windows10");
+        assert_eq!(node.flavor.clone().unwrap().ram, 4000000000);
+        assert_eq!(node.flavor.unwrap().cpu, 2);
         assert_eq!(node.description, None);
     }
 }
