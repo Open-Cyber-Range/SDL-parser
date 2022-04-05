@@ -73,7 +73,6 @@ pub struct Node {
     pub description: Option<String>,
     pub address: Option<Address>,
     pub policy: Option<Policy>,
-    pub template: Option<String>,
     pub flavor: Option<Flavor>,
     pub source: Option<Source>,
 }
@@ -157,9 +156,10 @@ mod tests {
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
 
-        assert_eq!(node.template.unwrap(), "windows10");
-        assert_eq!(node.flavor.clone().unwrap().ram, 4000000000);
-        assert_eq!(node.flavor.unwrap().cpu, 2);
+        assert_eq!(node.source.unwrap().template.unwrap(), "windows10");
+        let flavor = node.flavor.unwrap();
+        assert_eq!(flavor.ram, 4000000000);
+        assert_eq!(flavor.cpu, 2);
         assert_eq!(node.description, None);
     }
 }
