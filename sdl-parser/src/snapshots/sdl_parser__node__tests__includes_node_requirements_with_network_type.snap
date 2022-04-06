@@ -28,9 +28,9 @@ Node {
                 description: "a-description",
                 allowed_address: Some(
                     [
-                        "a-list-of-address",
-                        "kolm",
-                        "5",
+                        "some-ip",
+                        "some-address",
+                        "some-number-5",
                     ],
                 ),
                 port: "8080",

@@ -87,7 +87,10 @@ mod tests {
     fn includes_node_requirements_with_network_type() {
         let node_sdl = r#"
             type: Network
-            dependencies: [1, kolm, serde]
+            dependencies:
+                - 1
+                - kolm
+                - serde
             description: a network
             address:
                 type: ipv4
@@ -97,10 +100,12 @@ mod tests {
                 rule:
                     direction: Ingress
                     description: a-description
-                    allowed_address: [a-list-of-address, kolm, 5]
+                    allowed_address:
+                        - some-ip
+                        - some-address
+                        - some-number-5
                     port: 8080
         "#;
-
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
