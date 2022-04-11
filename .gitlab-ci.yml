@@ -9,11 +9,11 @@ lint-and-test:
   script:
     - cargo clippy -- -Dwarnings
     - cargo build --verbose
-    - cargo test --verbose
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
+    - cargo tarpaulin --skip-clean --verbose --out Xml
+  coverage: '/^\d+.\d+% coverage/'
+  artifacts:
+    reports:
+      cobertura: cobertura.xml
   only:
     - develop
     - master
@@ -25,10 +25,6 @@ build-x86-64bit-windows-release:
   image: nexus.ex.c-lab.ee:8003/rust-builder
   script:
     - cargo build --release --target x86_64-pc-windows-gnu
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
   only:
     - master
 
@@ -41,10 +37,6 @@ build-and-upload-x86-64bit-linux-release:
     - cargo deb --no-build --target x86_64-unknown-linux-gnu -p sdl-parser-export
     - DEB_FILE=$(find ./target/x86_64-unknown-linux-gnu/debian/ -maxdepth 1 -type f -name "*.deb")
     - 'curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@$DEB_FILE" $OCR_APT_REPOSITORY'
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
   only:
     - master
 
@@ -57,10 +49,6 @@ build-and-upload-arm-64bit-linux-release:
     - LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):/usr/aarch64-linux-gnu/lib/ cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
     - DEB_FILE=$(find ./target/aarch64-unknown-linux-gnu/debian/ -maxdepth 1 -type f -name "*.deb")
     - 'curl -u $OCR_DEPLOYMENT_USER:$OCR_DEPLOYMENT_PASSWORD -X POST -H "Content-Type: multipart/form-data" --data-binary "@$DEB_FILE" $OCR_APT_REPOSITORY'
-  cache:
-    key: sdl-cargo-target
-    paths:
-      - target
   only:
     - master
 
