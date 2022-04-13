@@ -37,6 +37,23 @@ Node {
             },
         },
     ),
-    flavor: None,
-    source: None,
+    flavor: Some(
+        Flavor {
+            ram: 4000000000,
+            cpu: 4,
+        },
+    ),
+    source: Some(
+        Source {
+            template: Some(
+                "windows10-template",
+            ),
+            package: Some(
+                Package {
+                    name: "basic-windows10",
+                    version: "*",
+                },
+            ),
+        },
+    ),
 }
