@@ -54,7 +54,7 @@ pub struct Address {
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Policy {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: String,
     #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub rule: Rule,
@@ -72,21 +72,32 @@ pub struct Rule {
 pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,
-    #[serde(alias = "Dependencies", alias = "DEPENDENCIES")]
+    #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
-    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(alias = "Address", alias = "ADDRESS")]
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
+    #[serde(default, alias = "Address", alias = "ADDRESS")]
     pub address: Option<Address>,
-    #[serde(alias = "Policy", alias = "POLICY")]
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
+    #[serde(
+        default,
+        alias = "Policy",
+        alias = "POLICY",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub policy: Option<Policy>,
-    #[serde(alias = "Flavor", alias = "FLAVOR")]
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
+    #[serde(
+        default,
+        alias = "Flavor",
+        alias = "FLAVOR",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub flavor: Option<Flavor>,
-    #[serde(alias = "Source", alias = "SOURCE")]
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
+    #[serde(
+        default,
+        alias = "Source",
+        alias = "SOURCE",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub source: Option<Source>,
 }
 
@@ -135,7 +146,6 @@ mod tests {
                 template: windows10-template
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-
         assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
     }
 
@@ -177,42 +187,5 @@ mod tests {
         assert_eq!(flavor.ram, 4000000000);
         assert_eq!(flavor.cpu, 2);
         assert_eq!(node.description, None);
-    }
-
-    #[test]
-    fn fields_are_case_insensitive() {
-        let node_sdl = r#"
-            Type: Network
-            Dependencies:
-                - 1
-                - kolm
-                - serde
-            Description: a network
-            Address:
-                TYPE: ipv4
-                Cidr: 10.10.10.0/24
-            POLICY:
-                Type: network
-                Rule:
-                    Direction: Ingress
-                    Description: a-description
-                    Allowed_address:
-                        - some-ip
-                        - some-address
-                        - some-number-5
-                    Port: 8080
-
-            Template: windows10
-            Flavor:
-                Ram: 4gb
-                Cpu: 4
-            Source:
-                Template: windows10-template
-                Package:
-                    Name: basic-windows10
-                    Version: '*'
-        "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        insta::assert_debug_snapshot!(node);
     }
 }
