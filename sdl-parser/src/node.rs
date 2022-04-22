@@ -64,6 +64,11 @@ pub struct Policy {
 pub struct Rule {
     pub direction: Direction,
     pub description: String,
+    #[serde(
+        rename = "allowed-address",
+        alias = "Allowed-Address",
+        alias = "ALLOWED-ADDRESS"
+    )]
     pub allowed_address: Option<Vec<String>>,
     pub port: u16,
 }
@@ -124,7 +129,7 @@ mod tests {
                 rule:
                     direction: Ingress
                     description: a-description
-                    allowed_address:
+                    allowed-address:
                         - some-ip
                         - some-address
                         - some-number-5

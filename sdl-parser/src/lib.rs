@@ -126,7 +126,7 @@ mod tests {
                         Rule:
                             Direction: Ingress
                             Description: some-description
-                            Allowed_Address:
+                            Allowed-Address:
                                 - some-ipv4
                                 - some-address
                                 - something-or-other
