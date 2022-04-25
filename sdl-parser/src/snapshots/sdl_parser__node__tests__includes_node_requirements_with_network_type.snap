@@ -33,7 +33,7 @@ Node {
                         "some-number-5",
                     ],
                 ),
-                port: "8080",
+                port: 8080,
             },
         },
     ),
