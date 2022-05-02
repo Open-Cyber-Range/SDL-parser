@@ -8,7 +8,7 @@ use node::NodeMap;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
     pub name: String,
     #[serde(default)]
@@ -115,7 +115,7 @@ mod tests {
                     Description: win-10-description
                     Source:
                         Template: windows10
-                        Package: 
+                        Package:
                             Name: windows10
                             Version: '*'
                     Flavor:
