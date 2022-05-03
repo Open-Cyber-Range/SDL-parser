@@ -1,6 +1,7 @@
 use anyhow::Result;
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
+use serde_aux::prelude::*;
 use std::collections::HashMap;
 
 fn parse_bytesize<'de, D>(deserializer: D) -> Result<u32, D::Error>
@@ -35,6 +36,7 @@ pub struct Flavor {
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Source {
     pub template: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
     pub package: Option<Package>,
 }
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
@@ -52,8 +54,9 @@ pub struct Address {
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Policy {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: String,
+    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub rule: Rule,
 }
 
@@ -61,19 +64,45 @@ pub struct Policy {
 pub struct Rule {
     pub direction: Direction,
     pub description: String,
+    #[serde(
+        rename = "allowed-address",
+        alias = "Allowed-Address",
+        alias = "ALLOWED-ADDRESS"
+    )]
     pub allowed_address: Option<Vec<String>>,
-    pub port: String,
+    pub port: u16,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,
+    #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
+    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
+    #[serde(default, alias = "Address", alias = "ADDRESS")]
     pub address: Option<Address>,
+    #[serde(
+        default,
+        alias = "Policy",
+        alias = "POLICY",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub policy: Option<Policy>,
+    #[serde(
+        default,
+        alias = "Flavor",
+        alias = "FLAVOR",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub flavor: Option<Flavor>,
+    #[serde(
+        default,
+        alias = "Source",
+        alias = "SOURCE",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub source: Option<Source>,
 }
 
@@ -100,7 +129,7 @@ mod tests {
                 rule:
                     direction: Ingress
                     description: a-description
-                    allowed_address:
+                    allowed-address:
                         - some-ip
                         - some-address
                         - some-number-5
@@ -122,7 +151,6 @@ mod tests {
                 template: windows10-template
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-
         assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
     }
 

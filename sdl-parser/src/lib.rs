@@ -6,10 +6,12 @@ use chrono::{DateTime, Utc};
 pub use library_item::{generate_package_list, LibraryItem};
 use node::NodeMap;
 use serde::{Deserialize, Serialize};
+use serde_aux::prelude::*;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
     pub name: String,
+    #[serde(default)]
     pub description: Option<String>,
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
@@ -18,6 +20,11 @@ pub struct Scenario {
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Schema {
+    #[serde(
+        alias = "Scenario",
+        alias = "SCENARIO",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
     pub scenario: Scenario,
 }
 
@@ -89,9 +96,47 @@ mod tests {
                         cpu: 1
         "#;
         let parsed_schema = super::parse_sdl(sdl).unwrap();
-
         assert!(parsed_schema.scenario.infrastructure.is_some());
         let node_map = parsed_schema.scenario.infrastructure.unwrap();
         assert_eq!(node_map.values().len(), 2);
+    }
+
+    #[test]
+    fn sdl_keys_are_valid_in_lowercase_uppercase_capitalized() {
+        let sdl = r#"
+        scenario:
+            NAME: test-scenario
+            Description: some-description
+            start: 2022-01-20T13:00:00Z
+            End: 2022-01-20T23:00:00Z
+            Infrastructure:
+                Win10:
+                    TYPE: VM
+                    Description: win-10-description
+                    Source:
+                        Template: windows10
+                        Package:
+                            Name: windows10
+                            Version: '*'
+                    Flavor:
+                        Ram: 4gb
+                        Cpu: 2
+                    Policy:
+                        Type: network
+                        Rule:
+                            Direction: Ingress
+                            Description: some-description
+                            Allowed-Address:
+                                - some-ipv4
+                                - some-address
+                                - something-or-other
+                            Port: 8080
+                    Dependencies:
+                        - First-dependency
+                        - second-dependency
+                        - third-dependency
+        "#;
+        let parsed_schema = super::parse_sdl(sdl).unwrap();
+        insta::assert_debug_snapshot!(parsed_schema);
     }
 }

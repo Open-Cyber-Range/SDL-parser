@@ -3,7 +3,7 @@ stages:
 
 lint-and-test:
   stage: build
-  image: nexus.ex.c-lab.ee:8003/rust-builder
+  image: $DOCKER_REGISTRY_PULL/rust-builder
   before_script:
     - rustup component add clippy
   script:
@@ -22,7 +22,7 @@ lint-and-test:
 build-x86-64bit-windows-release:
   stage: build
   needs: ["lint-and-test"]
-  image: nexus.ex.c-lab.ee:8003/rust-builder
+  image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
     - cargo build --release --target x86_64-pc-windows-gnu
   only:
@@ -31,7 +31,7 @@ build-x86-64bit-windows-release:
 build-and-upload-x86-64bit-linux-release:
   stage: build
   needs: ["lint-and-test"]
-  image: nexus.ex.c-lab.ee:8003/rust-builder
+  image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
     - cargo build --release --target x86_64-unknown-linux-gnu
     - cargo deb --no-build --target x86_64-unknown-linux-gnu -p sdl-parser-export
@@ -43,7 +43,7 @@ build-and-upload-x86-64bit-linux-release:
 build-and-upload-arm-64bit-linux-release:
   stage: build
   needs: ["lint-and-test"]
-  image: nexus.ex.c-lab.ee:8003/rust-builder
+  image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
     - cargo build --release --target aarch64-unknown-linux-gnu
     - LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):/usr/aarch64-linux-gnu/lib/ cargo deb --no-build --target aarch64-unknown-linux-gnu -p sdl-parser-export
@@ -54,7 +54,7 @@ build-and-upload-arm-64bit-linux-release:
 
 build-and-publish-npm-wrapper:
   stage: build
-  image: nexus.ex.c-lab.ee:8003/node:lts
+  image: $DOCKER_REGISTRY_PULL/node:lts
   script:
     - cd node-package
     - yarn
@@ -65,7 +65,7 @@ build-and-publish-npm-wrapper:
 
 build-and-publish-pip-wrapper:
   stage: build
-  image: nexus.ex.c-lab.ee:8003/python:latest
+  image: $DOCKER_REGISTRY_PULL/python:latest
   script:
     - cd python-package
     - python3 -m pip install --upgrade build
