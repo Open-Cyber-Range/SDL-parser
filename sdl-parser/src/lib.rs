@@ -1,3 +1,5 @@
+#[cfg(feature = "test")]
+pub mod test;
 mod library_item;
 mod node;
 
