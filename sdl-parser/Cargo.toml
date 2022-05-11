@@ -16,5 +16,5 @@ serde-aux = "3"
 serde_yaml = "0.8"
 
 [features]
-default = ["test"]
+default = []
 test = []
