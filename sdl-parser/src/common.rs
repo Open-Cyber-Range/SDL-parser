@@ -1,7 +1,9 @@
-extern crate lazy_static;
+use crate::{parse_sdl, Schema};
+use lazy_static::lazy_static;
 
 lazy_static! {
-pub static ref TEST_DATA: Scenario = parse_sdl(r#"
+    pub static ref TEST_DATA: Schema = parse_sdl(
+        r#"
     scenario:
         name: test-scenario
         description: some-description
@@ -24,3 +26,4 @@ pub static ref TEST_DATA: Scenario = parse_sdl(r#"
                     cpu: 1
     "#).unwrap();
 }
+

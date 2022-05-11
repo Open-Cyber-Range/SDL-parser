@@ -1,4 +1,4 @@
-
+mod common;
 mod library_item;
 mod node;
 
@@ -35,7 +35,6 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
 
 #[cfg(test)]
 mod tests {
-
 
     use super::*;
     use chrono::DateTime;
