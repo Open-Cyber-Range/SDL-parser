@@ -2,7 +2,7 @@ use crate::{parse_sdl, Schema};
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref TEST_DATA: Schema = parse_sdl(
+    pub static ref TEST_SCHEMA: Schema = parse_sdl(
         r#"
     scenario:
         name: test-scenario
@@ -24,6 +24,7 @@ lazy_static! {
                 flavor:
                     ram: 2gb
                     cpu: 1
-    "#).unwrap();
+    "#
+    )
+    .unwrap();
 }
-

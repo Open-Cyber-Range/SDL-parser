@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 mod library_item;
 mod node;
 
