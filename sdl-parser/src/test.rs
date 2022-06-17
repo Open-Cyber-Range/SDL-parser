@@ -1,10 +1,6 @@
 use crate::{parse_sdl, Schema};
 use lazy_static::lazy_static;
 
-lazy_static! {
-    pub static ref TEST_SCHEMA: Schema = parse_sdl(TEST_SCHEMA_STRING).unwrap();
-}
-
 pub const TEST_SCHEMA_STRING: &str = r#"
 scenario:
     name: test-scenario
@@ -27,3 +23,7 @@ scenario:
                 ram: 2gb
                 cpu: 1
 "#;
+
+lazy_static! {
+    pub static ref TEST_SCHEMA: Schema = parse_sdl(TEST_SCHEMA_STRING).unwrap();
+}
