@@ -10,14 +10,12 @@ scenario:
     infrastructure:
         virtualmachines:
             win10:
-                type: VM
                 description: win-10-description
                 template: windows10
                 flavor:
                     ram: 4gb
                     cpu: 2
             deb10:
-                type: VM
                 description: deb-10-description
                 template: debian10
                 flavor:
