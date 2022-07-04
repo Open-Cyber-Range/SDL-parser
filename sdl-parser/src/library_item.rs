@@ -1,6 +1,6 @@
-use crate::node::Node;
 use anyhow::{Ok, Result};
 use serde::{Deserialize, Serialize};
+use crate::node::VirtualMachine;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct LibraryItem {
@@ -15,7 +15,7 @@ impl LibraryItem {
 }
 
 pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
-    let nodes: Vec<Node> = serde_yaml::from_str(sdl_string)?;
+    let nodes: Vec<VirtualMachine> = serde_yaml::from_str(sdl_string)?;
     let mut result = Vec::new();
 
     for node in nodes {
@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn generate_package_list_based_on_sdl() {
         let node_sdl = r#"
-              - type: VM
+              - name: "VM"
                 template: windows10
                 description: win10 node for OCR
                 flavor:
@@ -45,7 +45,7 @@ mod tests {
                     package:
                         name: basic-windows10
                         version: '*'
-              - type: VM
+              - name: "VM"
                 template: debian10
                 description: deb-10-description
                 flavor:
@@ -55,7 +55,7 @@ mod tests {
                     package:
                         name: debian10
                         version: '*'
-              - type: VM
+              - name: "VM"
                 template: windows10
                 description: win10 node for OCR
                 flavor:
@@ -63,7 +63,7 @@ mod tests {
                     cpu: 4
                 source:
                     template: windows10-template
-              - type: VM
+              - name: "VM"
                 template: windows10
                 description: win10 node for OCR
                 flavor:

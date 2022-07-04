@@ -15,12 +15,6 @@ where
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub enum NodeType {
-    VM,
-    Network,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum Direction {
     Ingress,
     Egress,
@@ -74,9 +68,15 @@ pub struct Rule {
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Node {
-    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
-    pub type_field: NodeType,
+pub struct Network {
+    #[serde(rename = "name", alias = "Name", alias = "NAME")]
+    pub name: String,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub struct VirtualMachine {
+    #[serde(rename = "name", alias = "Name", alias = "NAME")]
+    pub name: String,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
@@ -84,29 +84,37 @@ pub struct Node {
     #[serde(default, alias = "Address", alias = "ADDRESS")]
     pub address: Option<Address>,
     #[serde(
-        default,
-        alias = "Policy",
-        alias = "POLICY",
-        deserialize_with = "deserialize_struct_case_insensitive"
+    default,
+    alias = "Policy",
+    alias = "POLICY",
+    deserialize_with = "deserialize_struct_case_insensitive"
     )]
     pub policy: Option<Policy>,
     #[serde(
-        default,
-        alias = "Flavor",
-        alias = "FLAVOR",
-        deserialize_with = "deserialize_struct_case_insensitive"
+    default,
+    alias = "Flavor",
+    alias = "FLAVOR",
+    deserialize_with = "deserialize_struct_case_insensitive"
     )]
     pub flavor: Option<Flavor>,
     #[serde(
-        default,
-        alias = "Source",
-        alias = "SOURCE",
-        deserialize_with = "deserialize_struct_case_insensitive"
+    default,
+    alias = "Source",
+    alias = "SOURCE",
+    deserialize_with = "deserialize_struct_case_insensitive"
     )]
     pub source: Option<Source>,
 }
 
-pub type NodeMap = HashMap<String, Node>;
+pub type Networks = HashMap<String, Network>;
+
+pub type VirtualMachines = HashMap<String, VirtualMachine>;
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub struct Infrastructure {
+    networks: Networks,
+    pub(crate) virtualmachines: VirtualMachines
+}
 
 #[cfg(test)]
 mod tests {
@@ -115,7 +123,7 @@ mod tests {
     #[test]
     fn includes_node_requirements_with_network_type() {
         let node_sdl = r#"
-            type: Network
+            name: "Network"
             dependencies:
                 - 1
                 - kolm
@@ -135,14 +143,14 @@ mod tests {
                         - some-number-5
                     port: 8080
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        let node = serde_yaml::from_str::<Network>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
     fn includes_node_requirements_with_source_template() {
         let node_sdl = r#"
-            type: VM
+            name: "VM"
             template: windows10
             flavor:
                 ram: 4gb
@@ -150,14 +158,14 @@ mod tests {
             source:
                 template: windows10-template
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
         assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
     }
 
     #[test]
     fn includes_all_node_requirements_with_source_package() {
         let node_sdl = r#"
-            type: VM
+            name: "VM"
             dependencies: [pub-net]
             template: windows10
             description: win10 node for OCR
@@ -169,7 +177,7 @@ mod tests {
                     name: basic-windows10
                     version: '*'
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
         assert_eq!(node.description.unwrap(), "win10 node for OCR");
         assert_eq!(
             node.source.clone().unwrap().package.unwrap().name,
@@ -181,13 +189,13 @@ mod tests {
     #[test]
     fn includes_minimal_node_requirements() {
         let node_sdl = r#"
-            type: VM
+            name: "VM"
             template: windows10
             flavor:
                 ram: 4gb
                 cpu: 2
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
         let flavor = node.flavor.unwrap();
         assert_eq!(flavor.ram, 4000000000);
         assert_eq!(flavor.cpu, 2);
