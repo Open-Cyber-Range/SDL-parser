@@ -112,6 +112,7 @@ pub type VirtualMachines = HashMap<String, VirtualMachine>;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Infrastructure {
+    // TODO Should these be optional?
     networks: Networks,
     pub(crate) virtualmachines: VirtualMachines
 }
