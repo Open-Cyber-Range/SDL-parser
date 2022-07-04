@@ -6,9 +6,9 @@ mod node;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 pub use library_item::{generate_package_list, LibraryItem};
-use node::NodeMap;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
+use node::Infrastructure;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
@@ -17,7 +17,7 @@ pub struct Scenario {
     pub description: Option<String>,
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
-    pub infrastructure: Option<NodeMap>,
+    pub infrastructure: Option<Infrastructure>,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ mod tests {
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
         "#;
-        let parsed_schema = super::parse_sdl(minimal_sdl).unwrap();
+        let parsed_schema = parse_sdl(minimal_sdl).unwrap();
         let scenario_name = "test-scenario".to_string();
         let start_time =
             DateTime::from(DateTime::parse_from_rfc3339("2022-01-20T13:00:00Z").unwrap());
@@ -79,28 +79,32 @@ mod tests {
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
             infrastructure:
-                win10:
-                    type: VM
-                    description: win-10-description
-                    source:
-                        template: windows10
-                    flavor:
-                        ram: 4gb
-                        cpu: 2
-                deb10:
-                    type: VM
-                    description: deb-10-description
-                    source:
-                        name: debian10
-                        version: '*'
-                    flavor:
-                        ram: 2gb
-                        cpu: 1
+                networks:
+                    network1:
+                        name: "Network1"
+                virtualmachines:
+                    win10:
+                        name: "windows 10"
+                        description: "win-10-description"
+                        source:
+                            template: windows10
+                        flavor:
+                            ram: 4gb
+                            cpu: 2
+                    deb10:
+                        name: "deb-10"
+                        description: "deb-10-description"
+                        source:
+                            name: debian10
+                            version: '*'
+                        flavor:
+                            ram: 2gb
+                            cpu: 1
         "#;
-        let parsed_schema = super::parse_sdl(sdl).unwrap();
+        let parsed_schema = parse_sdl(sdl).unwrap();
         assert!(parsed_schema.scenario.infrastructure.is_some());
         let node_map = parsed_schema.scenario.infrastructure.unwrap();
-        assert_eq!(node_map.values().len(), 2);
+        assert_eq!(node_map.virtualmachines.values().len(), 2);
     }
 
     #[test]
@@ -112,33 +116,37 @@ mod tests {
             start: 2022-01-20T13:00:00Z
             End: 2022-01-20T23:00:00Z
             Infrastructure:
-                Win10:
-                    TYPE: VM
-                    Description: win-10-description
-                    Source:
-                        Template: windows10
-                        Package:
-                            Name: windows10
-                            Version: '*'
-                    Flavor:
-                        Ram: 4gb
-                        Cpu: 2
-                    Policy:
-                        Type: network
-                        Rule:
-                            Direction: Ingress
-                            Description: some-description
-                            Allowed-Address:
-                                - some-ipv4
-                                - some-address
-                                - something-or-other
-                            Port: 8080
-                    Dependencies:
-                        - First-dependency
-                        - second-dependency
-                        - third-dependency
+                virtualmachines:
+                    Win10:
+                        Name: "Windows 10"
+                        Description: win-10-description
+                        Source:
+                            Template: windows10
+                            Package:
+                                Name: windows10
+                                Version: '*'
+                        Flavor:
+                            Ram: 4gb
+                            Cpu: 2
+                        Policy:
+                            Type: network
+                            Rule:
+                                Direction: Ingress
+                                Description: some-description
+                                Allowed-Address:
+                                    - some-ipv4
+                                    - some-address
+                                    - something-or-other
+                                Port: 8080
+                        Dependencies:
+                            - First-dependency
+                            - second-dependency
+                            - third-dependency
+                networks:
+                    network1:
+                        name: "Network1"
         "#;
-        let parsed_schema = super::parse_sdl(sdl).unwrap();
+        let parsed_schema = parse_sdl(sdl).unwrap();
         insta::assert_debug_snapshot!(parsed_schema);
     }
 }

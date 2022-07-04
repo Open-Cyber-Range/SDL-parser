@@ -8,20 +8,22 @@ scenario:
     start: 2022-01-20T13:00:00Z
     end: 2022-01-20T23:00:00Z
     infrastructure:
-        win10:
-            type: VM
-            description: win-10-description
-            template: windows10
-            flavor:
-                ram: 4gb
-                cpu: 2
-        deb10:
-            type: VM
-            description: deb-10-description
-            template: debian10
-            flavor:
-                ram: 2gb
-                cpu: 1
+        virtualmachines:
+            win10:
+                description: win-10-description
+                template: windows10
+                flavor:
+                    ram: 4gb
+                    cpu: 2
+            deb10:
+                description: deb-10-description
+                template: debian10
+                flavor:
+                    ram: 2gb
+                    cpu: 1
+        networks:
+            network1:
+                name: "Network1"
 "#;
 
 lazy_static! {
