@@ -4,14 +4,14 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
-fn parse_bytesize<'de, D>(deserializer: D) -> Result<u32, D::Error>
+fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
     Ok(s.parse::<ByteSize>()
         .map_err(|_| serde::de::Error::custom("Failed"))?
-        .0 as u32)
+        .0 as u64)
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
@@ -23,7 +23,7 @@ pub enum Direction {
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Flavor {
     #[serde(deserialize_with = "parse_bytesize")]
-    pub ram: u32,
+    pub ram: u64,
     pub cpu: u32,
 }
 
