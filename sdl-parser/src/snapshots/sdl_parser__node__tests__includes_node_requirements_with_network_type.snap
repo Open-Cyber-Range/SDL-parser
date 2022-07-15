@@ -2,6 +2,12 @@
 source: sdl-parser/src/node.rs
 expression: node
 ---
-Network {
-    name: "Network",
+Node {
+    type_field: Network,
+    description: Some(
+        "a network",
+    ),
+    resources: None,
+    source_array: None,
+    source: None,
 }

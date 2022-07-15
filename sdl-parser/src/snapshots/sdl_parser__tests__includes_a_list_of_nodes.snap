@@ -1,6 +1,6 @@
 ---
 source: sdl-parser/src/lib.rs
-expression: parsed_schema
+expression: nodes
 ---
 scenario:
   name: test-scenario
@@ -8,7 +8,16 @@ scenario:
   start: "2022-01-20T13:00:00Z"
   end: "2022-01-20T23:00:00Z"
   nodes:
-    Win10:
+    deb10:
+      type: VM
+      description: deb-10-description
+      resources:
+        ram: 2147483648
+        cpu: 1
+      source:
+        name: debian10
+        version: "*"
+    win10:
       type: VM
       description: win-10-description
       resources:
