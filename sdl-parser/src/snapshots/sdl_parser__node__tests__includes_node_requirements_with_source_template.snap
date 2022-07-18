@@ -12,7 +12,7 @@ expression: nodes
                 cpu: 2,
             },
         ),
-        source_array: None,
+        _source_helper: None,
         source: Some(
             Source {
                 name: "windows10",

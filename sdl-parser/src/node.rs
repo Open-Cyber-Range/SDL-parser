@@ -60,14 +60,14 @@ pub struct Node {
         alias = "SOURCE",
         skip_serializing
     )]
-    pub source_array: Option<SourceArray>,
+    _source_helper: Option<SourceArray>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
 }
 
 impl Node {
     pub fn map_source(&mut self) {
-        match &mut self.source_array.take() {
+        match &mut self._source_helper.take() {
             Some(SourceArray::Source(source)) => {
                 self.source = Some(source.to_owned());
             }

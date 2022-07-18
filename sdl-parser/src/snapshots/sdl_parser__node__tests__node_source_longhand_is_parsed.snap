@@ -6,7 +6,7 @@ Node {
     type_field: VM,
     description: None,
     resources: None,
-    source_array: Some(
+    _source_helper: Some(
         Source(
             Source {
                 name: "package-name",

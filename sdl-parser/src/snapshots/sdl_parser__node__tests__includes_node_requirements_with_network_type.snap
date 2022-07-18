@@ -8,6 +8,6 @@ Node {
         "a network",
     ),
     resources: None,
-    source_array: None,
+    _source_helper: None,
     source: None,
 }
