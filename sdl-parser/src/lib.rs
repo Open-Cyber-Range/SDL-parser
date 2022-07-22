@@ -50,7 +50,7 @@ mod tests {
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
         "#;
-        let parsed_schema = super::parse_sdl(minimal_sdl).unwrap();
+        let parsed_schema = parse_sdl(minimal_sdl).unwrap();
         insta::assert_yaml_snapshot!(parsed_schema);
     }
 
@@ -106,7 +106,7 @@ mod tests {
                         version: '*'
 
         "#;
-        let parsed_schema = super::parse_sdl(sdl).unwrap();
+        let parsed_schema = parse_sdl(sdl).unwrap();
         insta::assert_yaml_snapshot!(parsed_schema);
     }
 }
