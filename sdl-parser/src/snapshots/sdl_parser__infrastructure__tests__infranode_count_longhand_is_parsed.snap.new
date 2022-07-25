@@ -1,0 +1,7 @@
+---
+source: sdl-parser/src/infrastructure.rs
+expression: node
+---
+InfraNode {
+    count: 23,
+}
