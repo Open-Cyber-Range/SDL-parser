@@ -1,0 +1,25 @@
+---
+source: sdl-parser/src/node.rs
+expression: nodes
+---
+scenario:
+  name: test-scenario
+  description: some-description
+  start: "2022-01-20T13:00:00Z"
+  end: "2022-01-20T23:00:00Z"
+  nodes:
+    deb-10:
+      type: VM
+      description: ~
+      resources: ~
+      source:
+        name: debian10
+        version: "*"
+    win-10:
+      type: VM
+      description: ~
+      resources: ~
+      source:
+        name: windows10
+        version: "*"
+

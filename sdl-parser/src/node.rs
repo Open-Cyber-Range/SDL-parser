@@ -15,190 +15,155 @@ where
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub enum Direction {
-    Ingress,
-    Egress,
+pub enum NodeType {
+    VM,
+    Network,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Flavor {
+pub struct Resources {
     #[serde(deserialize_with = "parse_bytesize")]
     pub ram: u64,
     pub cpu: u32,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Source {
-    pub template: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
-    pub package: Option<Package>,
+#[serde(untagged)]
+pub enum SourceArray {
+    Source(Source),
+    ShortSource(String),
 }
+
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Package {
+pub struct Source {
     pub name: String,
     pub version: String,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Address {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub cidr: String,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Policy {
+pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
-    pub type_field: String,
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
-    pub rule: Rule,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Rule {
-    pub direction: Direction,
-    pub description: String,
-    #[serde(
-        rename = "allowed-address",
-        alias = "Allowed-Address",
-        alias = "ALLOWED-ADDRESS"
-    )]
-    pub allowed_address: Option<Vec<String>>,
-    pub port: u16,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Network {
-    #[serde(rename = "name", alias = "Name", alias = "NAME")]
-    pub name: String,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct VirtualMachine {
-    #[serde(rename = "name", alias = "Name", alias = "NAME")]
-    pub name: String,
-    #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
-    pub dependencies: Option<Vec<String>>,
+    pub type_field: NodeType,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(default, alias = "Address", alias = "ADDRESS")]
-    pub address: Option<Address>,
     #[serde(
-    default,
-    alias = "Policy",
-    alias = "POLICY",
-    deserialize_with = "deserialize_struct_case_insensitive"
+        default,
+        alias = "Resources",
+        alias = "RESOURCES",
+        deserialize_with = "deserialize_struct_case_insensitive"
     )]
-    pub policy: Option<Policy>,
+    pub resources: Option<Resources>,
     #[serde(
-    default,
-    alias = "Flavor",
-    alias = "FLAVOR",
-    deserialize_with = "deserialize_struct_case_insensitive"
+        default,
+        rename = "source",
+        alias = "Source",
+        alias = "SOURCE",
+        skip_serializing
     )]
-    pub flavor: Option<Flavor>,
-    #[serde(
-    default,
-    alias = "Source",
-    alias = "SOURCE",
-    deserialize_with = "deserialize_struct_case_insensitive"
-    )]
+    _source_helper: Option<SourceArray>,
+    #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
 }
 
-pub type Networks = HashMap<String, Network>;
-
-pub type VirtualMachines = HashMap<String, VirtualMachine>;
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Infrastructure {
-    networks: Networks,
-    pub(crate) virtualmachines: VirtualMachines
+impl Node {
+    pub fn map_source(&mut self) {
+        match &mut self._source_helper.take() {
+            Some(SourceArray::Source(source)) => {
+                self.source = Some(source.to_owned());
+            }
+            Some(SourceArray::ShortSource(source)) => {
+                self.source = Some(Source {
+                    name: source.to_owned(),
+                    version: "*".to_string(),
+                });
+            }
+            None => {}
+        }
+    }
 }
+
+pub type NodeMap = HashMap<String, Node>;
 
 #[cfg(test)]
 mod tests {
+    use crate::parse_sdl;
+
     use super::*;
+
+    #[test]
+    fn source_fields_are_mapped_correctly() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                deb-10:
+                    type: VM
+                    source:
+                        name: debian10
+                        version: '*'
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    fn node_source_longhand_is_parsed() {
+        let longhand_source = r#"
+            type: VM
+            source: 
+                name: package-name
+                version: 1.2.3
+                    
+        "#;
+        let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+    #[test]
+    fn node_source_shorthand_is_parsed() {
+        let shorthand_source = r#"
+            type: VM
+            source: package-name
+                    
+        "#;
+        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
 
     #[test]
     fn includes_node_requirements_with_network_type() {
         let node_sdl = r#"
-            name: "Network"
-            dependencies:
-                - 1
-                - kolm
-                - serde
+            type: Network
             description: a network
-            address:
-                type: ipv4
-                cidr: 10.10.10.0/24
-            policy:
-                type: network
-                rule:
-                    direction: Ingress
-                    description: a-description
-                    allowed-address:
-                        - some-ip
-                        - some-address
-                        - some-number-5
-                    port: 8080
         "#;
-        let node = serde_yaml::from_str::<Network>(node_sdl).unwrap();
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
     fn includes_node_requirements_with_source_template() {
-        let node_sdl = r#"
-            name: "VM"
-            template: windows10
-            flavor:
-                ram: 4gb
-                cpu: 4
-            source:
-                template: windows10-template
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
         "#;
-        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
-        assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
-    }
-
-    #[test]
-    fn includes_all_node_requirements_with_source_package() {
-        let node_sdl = r#"
-            name: "VM"
-            dependencies: [pub-net]
-            template: windows10
-            description: win10 node for OCR
-            flavor:
-                ram: 4gb
-                cpu: 4
-            source:
-                package:
-                    name: basic-windows10
-                    version: '*'
-        "#;
-        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
-        assert_eq!(node.description.unwrap(), "win10 node for OCR");
-        assert_eq!(
-            node.source.clone().unwrap().package.unwrap().name,
-            "basic-windows10"
-        );
-        assert_eq!(node.source.unwrap().package.unwrap().version, "*");
-    }
-
-    #[test]
-    fn includes_minimal_node_requirements() {
-        let node_sdl = r#"
-            name: "VM"
-            template: windows10
-            flavor:
-                ram: 4gb
-                cpu: 2
-        "#;
-        let node = serde_yaml::from_str::<VirtualMachine>(node_sdl).unwrap();
-        let flavor = node.flavor.unwrap();
-        assert_eq!(flavor.ram, 4000000000);
-        assert_eq!(flavor.cpu, 2);
-        assert_eq!(node.description, None);
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
+        insta::assert_debug_snapshot!(nodes);
     }
 }

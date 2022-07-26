@@ -1,0 +1,23 @@
+---
+source: sdl-parser/src/node.rs
+expression: nodes
+---
+{
+    "win-10": Node {
+        type_field: VM,
+        description: None,
+        resources: Some(
+            Resources {
+                ram: 2147483648,
+                cpu: 2,
+            },
+        ),
+        _source_helper: None,
+        source: Some(
+            Source {
+                name: "windows10",
+                version: "*",
+            },
+        ),
+    },
+}
