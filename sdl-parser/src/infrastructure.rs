@@ -4,21 +4,21 @@ use std::collections::HashMap;
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct LongNode {
     #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
-    pub count: u16,
+    pub count: u32,
     #[serde(default, alias = "Links", alias = "LINKS")]
     pub links: Option<Vec<String>>,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
 }
 
-fn default_count() -> u16 {
+fn default_count() -> u32 {
     1
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum InfraNode {
-    ShortNode(u16),
+    ShortNode(u32),
     LongNode(LongNode),
 }
 
