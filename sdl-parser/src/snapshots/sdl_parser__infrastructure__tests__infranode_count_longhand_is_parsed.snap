@@ -1,7 +1,9 @@
 ---
 source: sdl-parser/src/infrastructure.rs
-expression: node
+expression: infra_node
 ---
 InfraNode {
     count: 23,
+    links: None,
+    dependencies: None,
 }
