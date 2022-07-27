@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+fn default_count() -> u32 {
+    1
+}
+
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct LongNode {
     #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
@@ -11,10 +15,6 @@ pub struct LongNode {
     pub dependencies: Option<Vec<String>>,
 }
 
-fn default_count() -> u32 {
-    1
-}
-
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum InfraNode {
@@ -23,9 +23,42 @@ pub enum InfraNode {
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
-pub struct Schema {
+pub struct RawSchema {
     #[serde(alias = "Infrastructure", alias = "INFRASTRUCTURE", default)]
     pub infrastructure: HashMap<String, InfraNode>,
+}
+
+impl RawSchema {
+    pub fn remap_nodes(&self) -> Schema {
+        let mut schema = Schema {
+            ..Default::default()
+        };
+        for node in &self.infrastructure {
+            match node.1 {
+                InfraNode::ShortNode(value) => {
+                    schema.infrastructure.insert(
+                        node.0.to_string(),
+                        LongNode {
+                            count: *value,
+                            ..Default::default()
+                        },
+                    );
+                }
+                InfraNode::LongNode(long_node) => {
+                    schema
+                        .infrastructure
+                        .insert(node.0.to_string(), long_node.to_owned());
+                }
+            }
+        }
+        schema
+    }
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Schema {
+    #[serde(alias = "Infrastructure", alias = "INFRASTRUCTURE", default)]
+    pub infrastructure: HashMap<String, LongNode>,
 }
 
 #[cfg(test)]
@@ -102,7 +135,9 @@ mod tests {
                 windows-10-vuln-1: 10
                 ubuntu-10: 5   
         "#;
-        let schema = serde_yaml::from_str::<Schema>(simple_infrastructure_with_shorthand).unwrap();
+        let raw_schema =
+            serde_yaml::from_str::<RawSchema>(simple_infrastructure_with_shorthand).unwrap();
+        let schema = raw_schema.remap_nodes();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(schema);
         });
@@ -110,7 +145,7 @@ mod tests {
 
     #[test]
     fn bigger_infrastructure_is_parsed() {
-        let infrastructure = r#"
+        let bigger_infrastructure = r#"
             infrastructure:
                 switch-1: 1
                 windows-10: 3
@@ -127,7 +162,8 @@ mod tests {
                         - windows-10
                         - windows-10-vuln-1 
         "#;
-        let schema = serde_yaml::from_str::<Schema>(infrastructure).unwrap();
+        let raw_schema = serde_yaml::from_str::<RawSchema>(bigger_infrastructure).unwrap();
+        let schema = raw_schema.remap_nodes();
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(schema);
         });
@@ -154,7 +190,8 @@ mod tests {
                         - windows-10
                         - windows-10-vuln-1 
         "#;
-        let schema = serde_yaml::from_str::<Schema>(infrastructure).unwrap();
+        let raw_schema = serde_yaml::from_str::<RawSchema>(infrastructure).unwrap();
+        let schema = raw_schema.remap_nodes();
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(schema);
         });
