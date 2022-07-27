@@ -1,0 +1,7 @@
+---
+source: sdl-parser/src/infrastructure.rs
+expression: infra_node
+---
+ShortNode(
+    23,
+)

@@ -20,5 +20,6 @@ infrastructure:
   windows-10-vuln-1:
     count: 1
     links: ~
-    dependencies: ~
+    dependencies:
+      - windows-10
 
