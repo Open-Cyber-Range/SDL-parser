@@ -53,6 +53,7 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
         schema
             .scenario
+            .clone()
             .map_infrastructure(infrastructure_helper.clone());
     }
     Ok(schema)
