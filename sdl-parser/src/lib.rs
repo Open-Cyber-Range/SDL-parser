@@ -12,7 +12,7 @@ use node::NodeMap;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
     pub name: String,
     #[serde(default)]
@@ -35,7 +35,7 @@ impl Scenario {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Schema {
     #[serde(
         alias = "Scenario",

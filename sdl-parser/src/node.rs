@@ -14,33 +14,33 @@ where
         .0 as u64)
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
     Network,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Resources {
     #[serde(deserialize_with = "parse_bytesize")]
     pub ram: u64,
     pub cpu: u32,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum SourceArray {
     Source(Source),
     ShortSource(String),
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Source {
     pub name: String,
     pub version: String,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,

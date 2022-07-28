@@ -23,7 +23,7 @@ struct Response {
 
 unsafe fn pointer_to_string<'a>(raw_pointer: *const c_char) -> Result<&'a str> {
     let raw = CStr::from_ptr(raw_pointer);
-    return Ok(raw.to_str()?);
+    Ok(raw.to_str()?)
 }
 
 /// # Safety

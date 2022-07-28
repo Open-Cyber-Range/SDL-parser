@@ -12,7 +12,7 @@ fn new_infranode(count_value: u32) -> InfraNode {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct InfraNode {
     #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
     pub count: u32,
@@ -22,7 +22,7 @@ pub struct InfraNode {
     pub dependencies: Option<Vec<String>>,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum HelperNode {
     ShortNode(u32),
