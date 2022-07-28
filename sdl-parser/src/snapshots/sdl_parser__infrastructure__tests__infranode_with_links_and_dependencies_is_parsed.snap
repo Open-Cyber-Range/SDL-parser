@@ -2,19 +2,17 @@
 source: sdl-parser/src/infrastructure.rs
 expression: infra_node
 ---
-LongNode(
-    LongNode {
-        count: 25,
-        links: Some(
-            [
-                "switch-2",
-            ],
-        ),
-        dependencies: Some(
-            [
-                "windows-10",
-                "windows-10-vuln-1",
-            ],
-        ),
-    },
-)
+InfraNode {
+    count: 25,
+    links: Some(
+        [
+            "switch-2",
+        ],
+    ),
+    dependencies: Some(
+        [
+            "windows-10",
+            "windows-10-vuln-1",
+        ],
+    ),
+}

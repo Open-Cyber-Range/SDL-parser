@@ -6,7 +6,7 @@ pub mod test;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use infrastructure::Infrastructure;
+use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::NodeMap;
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,19 @@ pub struct Scenario {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub nodes: Option<NodeMap>,
-    pub infrastructure: Option<Infrastructure>,
+    #[serde(default, rename = "infrastructure", skip_serializing)]
+    _infrastructure_helper: Option<InfrastructureHelper>,
+    #[serde(default, skip_deserializing)]
+    pub infrastructure: Infrastructure,
+}
+
+impl Scenario {
+    pub fn map_infrastructure(&mut self, mut infrastructure_helper: InfrastructureHelper) {
+        for (name, helpernode) in infrastructure_helper.iter_mut() {
+            self.infrastructure
+                .insert(name.to_string(), helpernode.map_into_infranode());
+        }
+    }
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -38,10 +50,10 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     if let Some(nodes) = &mut schema.scenario.nodes {
         nodes.iter_mut().for_each(|(_, node)| node.map_source());
     }
-    if let Some(infrastructure) = &mut schema.scenario.infrastructure {
-        for (_, infranode) in infrastructure.iter_mut() {
-            *infranode = infranode.map_node();
-        }
+    if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
+        schema
+            .scenario
+            .map_infrastructure(infrastructure_helper.clone());
     }
     Ok(schema)
 }

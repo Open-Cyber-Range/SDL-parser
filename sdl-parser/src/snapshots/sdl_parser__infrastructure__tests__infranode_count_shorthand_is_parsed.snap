@@ -2,6 +2,8 @@
 source: sdl-parser/src/infrastructure.rs
 expression: infra_node
 ---
-ShortNode(
-    23,
-)
+InfraNode {
+    count: 23,
+    links: None,
+    dependencies: None,
+}

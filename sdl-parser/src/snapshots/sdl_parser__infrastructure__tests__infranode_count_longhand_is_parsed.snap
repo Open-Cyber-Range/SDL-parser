@@ -2,10 +2,8 @@
 source: sdl-parser/src/infrastructure.rs
 expression: infra_node
 ---
-LongNode(
-    LongNode {
-        count: 23,
-        links: None,
-        dependencies: None,
-    },
-)
+InfraNode {
+    count: 23,
+    links: None,
+    dependencies: None,
+}

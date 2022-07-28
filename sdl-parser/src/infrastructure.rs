@@ -5,15 +5,15 @@ fn default_count() -> u32 {
     1
 }
 
-fn new_longnode(count_value: u32) -> InfraNode {
-    InfraNode::LongNode(LongNode {
+fn new_infranode(count_value: u32) -> InfraNode {
+    InfraNode {
         count: count_value,
         ..Default::default()
-    })
+    }
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
-pub struct LongNode {
+pub struct InfraNode {
     #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
     pub count: u32,
     #[serde(default, alias = "Links", alias = "LINKS")]
@@ -24,19 +24,21 @@ pub struct LongNode {
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
-pub enum InfraNode {
+pub enum HelperNode {
     ShortNode(u32),
-    LongNode(LongNode),
+    LongNode(InfraNode),
 }
 
-impl InfraNode {
-    pub fn map_node(&mut self) -> InfraNode {
+impl HelperNode {
+    pub fn map_into_infranode(&mut self) -> InfraNode {
         match self {
-            InfraNode::ShortNode(value) => new_longnode(*value),
-            InfraNode::LongNode(_) => self.clone(),
+            HelperNode::ShortNode(value) => new_infranode(*value),
+            HelperNode::LongNode(infranode) => infranode.clone(),
         }
     }
 }
+
+pub type InfrastructureHelper = HashMap<String, HelperNode>;
 
 pub type Infrastructure = HashMap<String, InfraNode>;
 
@@ -58,7 +60,9 @@ mod tests {
         let sdl = r#"
             23
         "#;
-        let infra_node = serde_yaml::from_str::<InfraNode>(sdl).unwrap();
+        let infra_node = serde_yaml::from_str::<HelperNode>(sdl)
+            .unwrap()
+            .map_into_infranode();
         insta::assert_debug_snapshot!(infra_node);
     }
 
@@ -97,7 +101,11 @@ mod tests {
             debian-2:
                 count: 4      
         "#;
-        let infrastructure = serde_yaml::from_str::<Infrastructure>(sdl).unwrap();
+        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter_mut() {
+            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
+        }
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -109,11 +117,12 @@ mod tests {
             windows-10-vuln-2:
                 count: 10
             windows-10-vuln-1: 10
-            ubuntu-10: 5   
+            ubuntu-10: 5
         "#;
-        let mut infrastructure = serde_yaml::from_str::<Infrastructure>(sdl).unwrap();
-        for (_, infranode) in infrastructure.iter_mut() {
-            *infranode = infranode.map_node();
+        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter_mut() {
+            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
         }
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
@@ -138,9 +147,10 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure = serde_yaml::from_str::<Infrastructure>(sdl).unwrap();
-        for (_, infranode) in infrastructure.iter_mut() {
-            *infranode = infranode.map_node();
+        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter_mut() {
+            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
         }
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
@@ -167,9 +177,10 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure = serde_yaml::from_str::<Infrastructure>(sdl).unwrap();
-        for (_, infranode) in infrastructure.iter_mut() {
-            *infranode = infranode.map_node();
+        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter_mut() {
+            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
         }
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);

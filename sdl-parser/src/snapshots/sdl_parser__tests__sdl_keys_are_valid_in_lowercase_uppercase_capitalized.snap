@@ -17,5 +17,5 @@ scenario:
       source:
         name: windows10
         version: "*"
-  infrastructure: ~
+  infrastructure: {}
 
