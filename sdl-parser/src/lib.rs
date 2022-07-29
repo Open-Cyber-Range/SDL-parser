@@ -23,15 +23,19 @@ pub struct Scenario {
     #[serde(default, rename = "infrastructure", skip_serializing)]
     _infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
-    pub infrastructure: Infrastructure,
+    pub infrastructure: Option<Infrastructure>,
 }
 
 impl Scenario {
-    pub fn map_infrastructure(&mut self, mut infrastructure_helper: InfrastructureHelper) {
+    pub fn map_infrastructure(
+        &mut self,
+        mut infrastructure_helper: InfrastructureHelper,
+    ) -> Infrastructure {
+        let mut infrastructure = Infrastructure::new();
         for (name, helpernode) in infrastructure_helper.iter_mut() {
-            self.infrastructure
-                .insert(name.to_string(), helpernode.map_into_infranode());
+            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
         }
+        infrastructure
     }
 }
 
@@ -51,10 +55,12 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
         nodes.iter_mut().for_each(|(_, node)| node.map_source());
     }
     if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
-        schema
-            .scenario
-            .clone()
-            .map_infrastructure(infrastructure_helper.clone());
+        schema.scenario.infrastructure = Some(
+            schema
+                .scenario
+                .clone()
+                .map_infrastructure(infrastructure_helper.clone()),
+        );
     }
     Ok(schema)
 }
