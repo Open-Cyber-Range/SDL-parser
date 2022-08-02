@@ -1,0 +1,13 @@
+---
+source: sdl-parser/src/infrastructure.rs
+expression: infrastructure
+---
+debian-2:
+  count: 4
+  links: ~
+  dependencies: ~
+windows-10-vuln-1:
+  count: 10
+  links: ~
+  dependencies: ~
+
