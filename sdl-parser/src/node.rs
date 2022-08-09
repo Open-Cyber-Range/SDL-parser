@@ -82,7 +82,7 @@ impl Node {
     }
 }
 
-pub type NodeMap = HashMap<String, Node>;
+pub type Nodes = HashMap<String, Node>;
 
 #[cfg(test)]
 mod tests {

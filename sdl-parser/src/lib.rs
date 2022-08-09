@@ -8,7 +8,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
-use node::NodeMap;
+use node::Nodes;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
@@ -19,7 +19,7 @@ pub struct Scenario {
     pub description: Option<String>,
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
-    pub nodes: Option<NodeMap>,
+    pub nodes: Option<Nodes>,
     #[serde(default, rename = "infrastructure", skip_serializing)]
     _infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
