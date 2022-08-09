@@ -17,7 +17,7 @@ where
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
-    Network,
+    Switch,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -138,10 +138,10 @@ mod tests {
     }
 
     #[test]
-    fn includes_node_requirements_with_network_type() {
+    fn includes_node_requirements_with_switch_type() {
         let node_sdl = r#"
-            type: Network
-            description: a network
+            type: Switch
+            description: a network switch
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
