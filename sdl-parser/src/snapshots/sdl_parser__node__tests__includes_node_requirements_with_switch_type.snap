@@ -8,6 +8,6 @@ Node {
         "a network switch",
     ),
     resources: None,
-    _source_helper: None,
+    source_helper: None,
     source: None,
 }

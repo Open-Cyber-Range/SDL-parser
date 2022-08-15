@@ -1,25 +1,24 @@
+use crate::constants::default_node_count;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-fn default_count() -> u32 {
-    1
-}
-
-fn new_infranode(count_value: u32) -> InfraNode {
-    InfraNode {
-        count: count_value,
-        ..Default::default()
-    }
-}
-
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct InfraNode {
-    #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
+    #[serde(default = "default_node_count", alias = "Count", alias = "COUNT")]
     pub count: u32,
     #[serde(default, alias = "Links", alias = "LINKS")]
     pub links: Option<Vec<String>>,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
+}
+
+impl InfraNode {
+    pub fn new(count_value: u32) -> Self {
+        Self {
+            count: count_value,
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -29,18 +28,18 @@ pub enum HelperNode {
     LongNode(InfraNode),
 }
 
-impl HelperNode {
-    pub fn map_into_infranode(&mut self) -> InfraNode {
-        match self {
-            HelperNode::ShortNode(value) => new_infranode(*value),
-            HelperNode::LongNode(infranode) => infranode.clone(),
-        }
-    }
-}
-
 pub type InfrastructureHelper = HashMap<String, HelperNode>;
 
 pub type Infrastructure = HashMap<String, InfraNode>;
+
+impl From<HelperNode> for InfraNode {
+    fn from(helper_node: HelperNode) -> Self {
+        match helper_node {
+            HelperNode::ShortNode(value) => InfraNode::new(value),
+            HelperNode::LongNode(infranode) => infranode,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -60,9 +59,7 @@ mod tests {
         let sdl = r#"
             23
         "#;
-        let infra_node = serde_yaml::from_str::<HelperNode>(sdl)
-            .unwrap()
-            .map_into_infranode();
+        let infra_node: InfraNode = serde_yaml::from_str::<HelperNode>(sdl).unwrap().into();
         insta::assert_debug_snapshot!(infra_node);
     }
 
@@ -104,7 +101,7 @@ mod tests {
         let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
         let mut infrastructure: Infrastructure = HashMap::new();
         for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
         }
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
@@ -122,7 +119,7 @@ mod tests {
         let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
         let mut infrastructure: Infrastructure = HashMap::new();
         for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
         }
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
@@ -150,7 +147,7 @@ mod tests {
         let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
         let mut infrastructure: Infrastructure = HashMap::new();
         for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
         }
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
@@ -180,8 +177,9 @@ mod tests {
         let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
         let mut infrastructure: Infrastructure = HashMap::new();
         for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
         }
+
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
         });

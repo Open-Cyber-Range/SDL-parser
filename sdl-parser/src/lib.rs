@@ -1,10 +1,11 @@
+mod constants;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
 
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use chrono::{DateTime, Utc};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
@@ -12,31 +13,8 @@ use node::Nodes;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub struct Scenario {
-    pub name: String,
-    #[serde(default)]
-    pub description: Option<String>,
-    pub start: DateTime<Utc>,
-    pub end: DateTime<Utc>,
-    pub nodes: Option<Nodes>,
-    #[serde(default, rename = "infrastructure", skip_serializing)]
-    _infrastructure_helper: Option<InfrastructureHelper>,
-    #[serde(default, skip_deserializing)]
-    pub infrastructure: Option<Infrastructure>,
-}
-
-impl Scenario {
-    pub fn map_infrastructure(
-        &mut self,
-        mut infrastructure_helper: InfrastructureHelper,
-    ) -> Infrastructure {
-        let mut infrastructure = Infrastructure::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
-        infrastructure
-    }
+pub trait Formalize {
+    fn formalize(&mut self) -> Result<()>;
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -49,19 +27,57 @@ pub struct Schema {
     pub scenario: Scenario,
 }
 
+impl Formalize for Schema {
+    fn formalize(&mut self) -> Result<()> {
+        self.scenario.formalize()?;
+        Ok(())
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+pub struct Scenario {
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    pub start: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    pub nodes: Option<Nodes>,
+    #[serde(default, rename = "infrastructure", skip_serializing)]
+    infrastructure_helper: Option<InfrastructureHelper>,
+    #[serde(default, skip_deserializing)]
+    pub infrastructure: Option<Infrastructure>,
+}
+
+impl Scenario {
+    pub fn map_infrastructure(&mut self) -> Result<()> {
+        if let Some(infrastructure_helper) = &self.infrastructure_helper {
+            let mut infrastructure = Infrastructure::new();
+            for (name, helpernode) in infrastructure_helper.iter() {
+                infrastructure.insert(name.to_string(), helpernode.clone().into());
+            }
+            self.infrastructure = Some(infrastructure);
+        }
+        Ok(())
+    }
+}
+
+impl Formalize for Scenario {
+    fn formalize(&mut self) -> Result<()> {
+        if let Some(mut nodes) = self.nodes.clone() {
+            nodes.iter_mut().try_for_each(move |(_, node)| {
+                node.formalize()?;
+                Ok(())
+            })?;
+            self.nodes = Some(nodes);
+        }
+        self.map_infrastructure()?;
+        Ok(())
+    }
+}
+
 pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
-    if let Some(nodes) = &mut schema.scenario.nodes {
-        nodes.iter_mut().for_each(|(_, node)| node.map_source());
-    }
-    if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
-        schema.scenario.infrastructure = Some(
-            schema
-                .scenario
-                .clone()
-                .map_infrastructure(infrastructure_helper.clone()),
-        );
-    }
+    schema.formalize()?;
     Ok(schema)
 }
 
@@ -169,9 +185,9 @@ mod tests {
                         - deb10
                 deb10: 3
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let schema = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
+                insta::assert_yaml_snapshot!(schema);
         });
     }
 }
