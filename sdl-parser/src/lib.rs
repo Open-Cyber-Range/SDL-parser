@@ -7,6 +7,7 @@ pub mod test;
 
 use anyhow::{Ok, Result};
 use chrono::{DateTime, Utc};
+use depper::Dependencies;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::Nodes;
@@ -49,7 +50,7 @@ pub struct Scenario {
 }
 
 impl Scenario {
-    pub fn map_infrastructure(&mut self) -> Result<()> {
+    fn map_infrastructure(&mut self) -> Result<()> {
         if let Some(infrastructure_helper) = &self.infrastructure_helper {
             let mut infrastructure = Infrastructure::new();
             for (name, helpernode) in infrastructure_helper.iter() {
@@ -57,6 +58,42 @@ impl Scenario {
             }
             self.infrastructure = Some(infrastructure);
         }
+        Ok(())
+    }
+
+    pub fn get_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
+        if let Some(nodes_value) = &self.nodes {
+            for (node_name, _) in nodes_value.iter() {
+                dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
+            }
+        }
+        if let Some(infrastructure) = &self.infrastructure {
+            for (node_name, infra_node) in infrastructure.iter() {
+                let mut dependencies: Vec<String> = vec![];
+                if let Some(links) = &infra_node.links {
+                    let links = links
+                        .iter()
+                        .map(|link| link.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(links.as_slice());
+                }
+                if let Some(node_dependencies) = &infra_node.dependencies {
+                    let node_dependencies = node_dependencies
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(node_dependencies.as_slice());
+                }
+                dependency_builder =
+                    dependency_builder.add_element(node_name.clone(), dependencies);
+            }
+        }
+        dependency_builder.build()
+    }
+
+    fn verify_dependencies(&self) -> Result<()> {
+        self.get_dependencies()?;
         Ok(())
     }
 }
@@ -71,6 +108,7 @@ impl Formalize for Scenario {
             self.nodes = Some(nodes);
         }
         self.map_infrastructure()?;
+        self.verify_dependencies()?;
         Ok(())
     }
 }
