@@ -134,6 +134,7 @@ mod tests {
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
     }
+
     #[test]
     fn node_source_shorthand_is_parsed() {
         let shorthand_source = r#"
@@ -143,6 +144,15 @@ mod tests {
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn switch_source_is_not_required() {
+        let shorthand_source = r#"
+            type: Switch
+                    
+        "#;
+        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
     }
 
     #[test]
