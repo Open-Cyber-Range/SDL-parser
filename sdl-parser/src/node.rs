@@ -71,8 +71,10 @@ impl Formalize for Node {
         if let Some(source_helper) = &self.source_helper {
             self.source = Some(source_helper.to_owned().into());
             return Ok(());
+        } else if self.type_field == NodeType::VM {
+            return Err(anyhow::anyhow!("No source found"));
         }
-        Err(anyhow::anyhow!("No source found"))
+        Ok(())
     }
 }
 
