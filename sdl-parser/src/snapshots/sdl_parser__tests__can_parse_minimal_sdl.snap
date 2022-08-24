@@ -9,4 +9,5 @@ scenario:
   end: "2022-01-20T23:00:00Z"
   nodes: ~
   infrastructure: ~
+  conditions: ~
 

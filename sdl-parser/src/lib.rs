@@ -1,3 +1,4 @@
+mod conditions;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
@@ -6,6 +7,7 @@ pub mod test;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use conditions::ConditionMap;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::NodeMap;
@@ -24,6 +26,7 @@ pub struct Scenario {
     _infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
     pub infrastructure: Option<Infrastructure>,
+    pub conditions: Option<ConditionMap>,
 }
 
 impl Scenario {
@@ -168,6 +171,33 @@ mod tests {
                     dependencies:
                         - deb10
                 deb10: 3
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    fn includes_a_list_of_conditions() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            conditions:
+                condition-1:
+                    vm-name: windows-10
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    vm-name: green-evelation-machine
+                    library: digital-library-package
+                condition-3:
+                    vm-name: green-evelation-machine
+                    command: executable/path.sh
+                    interval: 30
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
