@@ -13,9 +13,12 @@ pub struct InfraNode {
 }
 
 impl InfraNode {
-    pub fn new(count_value: u32) -> Self {
+    pub fn new(potential_count: Option<u32>) -> Self {
         Self {
-            count: count_value,
+            count: match potential_count {
+                Some(count) => count,
+                None => default_node_count(),
+            },
             ..Default::default()
         }
     }
@@ -24,6 +27,7 @@ impl InfraNode {
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum HelperNode {
+    EmptyNode,
     ShortNode(u32),
     LongNode(InfraNode),
 }
@@ -35,8 +39,9 @@ pub type Infrastructure = HashMap<String, InfraNode>;
 impl From<HelperNode> for InfraNode {
     fn from(helper_node: HelperNode) -> Self {
         match helper_node {
-            HelperNode::ShortNode(value) => InfraNode::new(value),
+            HelperNode::ShortNode(value) => InfraNode::new(Some(value)),
             HelperNode::LongNode(infranode) => infranode,
+            HelperNode::EmptyNode => InfraNode::new(None),
         }
     }
 }
@@ -44,6 +49,14 @@ impl From<HelperNode> for InfraNode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn from_helper(infrastructure_helper: InfrastructureHelper) -> Infrastructure {
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter() {
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
+        }
+        infrastructure
+    }
 
     #[test]
     fn infranode_count_longhand_is_parsed() {
@@ -98,11 +111,9 @@ mod tests {
             debian-2:
                 count: 4      
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.clone().into());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -116,11 +127,9 @@ mod tests {
             windows-10-vuln-1: 10
             ubuntu-10: 5
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.clone().into());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -144,11 +153,9 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.clone().into());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -174,14 +181,19 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.clone().into());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
 
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
         });
+    }
+
+    #[test]
+    fn empty_count_is_allowed() {
+        let sdl = r#"
+            switch-1:
+        "#;
+        serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
     }
 }
