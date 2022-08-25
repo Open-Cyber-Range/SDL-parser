@@ -129,7 +129,6 @@ mod tests {
             source: 
                 name: package-name
                 version: 1.2.3
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -140,7 +139,6 @@ mod tests {
         let shorthand_source = r#"
             type: VM
             source: package-name
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -150,7 +148,6 @@ mod tests {
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
-                    
         "#;
         serde_yaml::from_str::<Node>(shorthand_source).unwrap();
     }
