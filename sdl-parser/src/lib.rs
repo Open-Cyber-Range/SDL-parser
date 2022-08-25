@@ -105,7 +105,7 @@ impl Scenario {
                         if let Some(node) = nodes.get(node_name) {
                             if node.type_field == NodeType::Switch {
                                 return Err(anyhow!(
-                                    "Node {} is a switch and has more than one count",
+                                    "Node {} is a switch and has count higher than 1",
                                     node_name
                                 ));
                             }
