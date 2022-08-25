@@ -18,4 +18,5 @@ scenario:
         name: windows10
         version: "*"
   infrastructure: ~
+  conditions: ~
 

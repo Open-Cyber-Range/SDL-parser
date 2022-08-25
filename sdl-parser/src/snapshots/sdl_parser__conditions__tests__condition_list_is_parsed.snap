@@ -1,0 +1,20 @@
+---
+source: sdl-parser/src/conditions.rs
+expression: conditions
+---
+condition-1:
+  vm-name: windows-10
+  command: executable/path.sh
+  interval: 30
+  library: ~
+condition-2:
+  vm-name: green-evelation-machine
+  command: ~
+  interval: ~
+  library: digital-library-package
+condition-3:
+  vm-name: green-evelation-machine
+  command: executable/path.sh
+  interval: 30
+  library: ~
+

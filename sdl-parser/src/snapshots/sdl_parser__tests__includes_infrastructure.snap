@@ -36,4 +36,5 @@ scenario:
       links: ~
       dependencies:
         - deb10
+  conditions: ~
 
