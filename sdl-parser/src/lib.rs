@@ -5,12 +5,12 @@ pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
 
-use anyhow::{Ok, Result};
+use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
 use depper::Dependencies;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
-use node::Nodes;
+use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
@@ -96,6 +96,26 @@ impl Scenario {
         self.get_dependencies()?;
         Ok(())
     }
+
+    fn verify_node_counts(&self) -> Result<()> {
+        if let Some(infrastructure) = &self.infrastructure {
+            if let Some(nodes) = &self.nodes {
+                for (node_name, infra_node) in infrastructure.iter() {
+                    if infra_node.count > 1 {
+                        if let Some(node) = nodes.get(node_name) {
+                            if node.type_field == NodeType::Switch {
+                                return Err(anyhow!(
+                                    "Node {} is a switch and has more than one count",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -108,6 +128,7 @@ impl Formalize for Scenario {
             self.nodes = Some(nodes);
         }
         self.map_infrastructure()?;
+        self.verify_node_counts()?;
         self.verify_dependencies()?;
         Ok(())
     }
