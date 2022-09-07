@@ -26,6 +26,7 @@ scenario:
       source:
         name: windows10
         version: "*"
+  features: ~
   infrastructure:
     deb10:
       count: 3

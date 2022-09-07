@@ -1,4 +1,5 @@
 mod conditions;
+pub mod feature;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
@@ -8,6 +9,7 @@ pub mod test;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use conditions::ConditionMap;
+use feature::FeatureMap;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::NodeMap;
@@ -22,6 +24,7 @@ pub struct Scenario {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub nodes: Option<NodeMap>,
+    pub features: Option<FeatureMap>,
     #[serde(default, rename = "infrastructure", skip_serializing)]
     _infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
@@ -54,8 +57,14 @@ pub struct Schema {
 
 pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
+
     if let Some(nodes) = &mut schema.scenario.nodes {
         nodes.iter_mut().for_each(|(_, node)| node.map_source());
+    }
+    if let Some(features) = &mut schema.scenario.features {
+        features
+            .iter_mut()
+            .for_each(|(_, feature)| feature.map_source());
     }
     if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
         schema.scenario.infrastructure = Some(
@@ -65,6 +74,7 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
                 .map_infrastructure(infrastructure_helper.clone()),
         );
     }
+
     Ok(schema)
 }
 
@@ -202,6 +212,39 @@ mod tests {
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    fn includes_a_list_of_features() {
+        let feature_sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            features:
+                my-cool-service:
+                    type: Service
+                    source: some-service
+                    dependencies:
+                        - some-virtual-machine
+                        - some-switch
+                        - something-else
+                my-cool-config:
+                    type: Configuration
+                    source: some-configuration
+                my-cool-artifact:
+                    type: Artifact
+                    source:
+                        name: dl_library
+                        version: 1.2.3
+                    dependencies: 
+                        - my-cool-service
+        "#;
+        let features = parse_sdl(feature_sdl).unwrap().scenario.features.unwrap();
+        insta::with_settings!({sort_maps => true}, {
+            insta::assert_yaml_snapshot!(features);
         });
     }
 }

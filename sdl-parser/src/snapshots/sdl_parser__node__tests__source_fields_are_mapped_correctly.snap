@@ -22,6 +22,7 @@ scenario:
       source:
         name: windows10
         version: "*"
+  features: ~
   infrastructure: ~
   conditions: ~
 

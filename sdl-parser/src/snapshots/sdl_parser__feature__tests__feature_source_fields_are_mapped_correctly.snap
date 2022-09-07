@@ -1,0 +1,26 @@
+---
+source: sdl-parser/src/feature.rs
+expression: nodes
+---
+scenario:
+  name: test-scenario
+  description: some-description
+  start: "2022-01-20T13:00:00Z"
+  end: "2022-01-20T23:00:00Z"
+  nodes: ~
+  features:
+    my-cool-feature:
+      type: Service
+      source:
+        name: some-service
+        version: "*"
+      dependencies: ~
+    my-cool-feature-config:
+      type: Configuration
+      source:
+        name: cool-config
+        version: 1.0.0
+      dependencies: ~
+  infrastructure: ~
+  conditions: ~
+
