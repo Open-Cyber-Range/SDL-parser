@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-
 use crate::node::{Source, SourceArray};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum FeatureType {
@@ -80,10 +78,9 @@ mod tests {
     fn feature_source_longhand_is_parsed() {
         let longhand_source = r#"
             type: Artifact
-            source: 
+            source:
                 name: artifact-name
                 version: 1.2.3
-                    
         "#;
         let feature = serde_yaml::from_str::<Feature>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(feature);
@@ -93,14 +90,13 @@ mod tests {
         let shorthand_source = r#"
             type: Artifact
             source: artifact-name
-                    
         "#;
         let feature = serde_yaml::from_str::<Feature>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(feature);
     }
 
     #[test]
-    fn feeature_includes_dependencies() {
+    fn feature_includes_dependencies() {
         let feature_sdl = r#"
             type: Service
             source: some-service
