@@ -1,4 +1,5 @@
 mod conditions;
+mod constants;
 pub mod feature;
 pub mod infrastructure;
 mod library_item;
@@ -6,43 +7,19 @@ pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
 
-use anyhow::Result;
+use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
 use conditions::ConditionMap;
+use depper::Dependencies;
 use feature::FeatureMap;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
-use node::NodeMap;
+use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub struct Scenario {
-    pub name: String,
-    #[serde(default)]
-    pub description: Option<String>,
-    pub start: DateTime<Utc>,
-    pub end: DateTime<Utc>,
-    pub nodes: Option<NodeMap>,
-    pub features: Option<FeatureMap>,
-    #[serde(default, rename = "infrastructure", skip_serializing)]
-    _infrastructure_helper: Option<InfrastructureHelper>,
-    #[serde(default, skip_deserializing)]
-    pub infrastructure: Option<Infrastructure>,
-    pub conditions: Option<ConditionMap>,
-}
-
-impl Scenario {
-    pub fn map_infrastructure(
-        &mut self,
-        mut infrastructure_helper: InfrastructureHelper,
-    ) -> Infrastructure {
-        let mut infrastructure = Infrastructure::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
-        infrastructure
-    }
+pub trait Formalize {
+    fn formalize(&mut self) -> Result<()>;
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -55,26 +32,125 @@ pub struct Schema {
     pub scenario: Scenario,
 }
 
+impl Formalize for Schema {
+    fn formalize(&mut self) -> Result<()> {
+        self.scenario.formalize()?;
+        Ok(())
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+pub struct Scenario {
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    pub start: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    pub nodes: Option<Nodes>,
+    pub features: Option<FeatureMap>,
+    #[serde(default, rename = "infrastructure", skip_serializing)]
+    infrastructure_helper: Option<InfrastructureHelper>,
+    #[serde(default, skip_deserializing)]
+    pub infrastructure: Option<Infrastructure>,
+    pub conditions: Option<ConditionMap>,
+}
+
+impl Scenario {
+    fn map_infrastructure(&mut self) -> Result<()> {
+        if let Some(infrastructure_helper) = &self.infrastructure_helper {
+            let mut infrastructure = Infrastructure::new();
+            for (name, helpernode) in infrastructure_helper.iter() {
+                infrastructure.insert(name.to_string(), helpernode.clone().into());
+            }
+            self.infrastructure = Some(infrastructure);
+        }
+        Ok(())
+    }
+
+    pub fn get_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
+        if let Some(nodes_value) = &self.nodes {
+            for (node_name, _) in nodes_value.iter() {
+                dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
+            }
+        }
+        if let Some(infrastructure) = &self.infrastructure {
+            for (node_name, infra_node) in infrastructure.iter() {
+                let mut dependencies: Vec<String> = vec![];
+                if let Some(links) = &infra_node.links {
+                    let links = links
+                        .iter()
+                        .map(|link| link.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(links.as_slice());
+                }
+                if let Some(node_dependencies) = &infra_node.dependencies {
+                    let node_dependencies = node_dependencies
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(node_dependencies.as_slice());
+                }
+                dependency_builder =
+                    dependency_builder.add_element(node_name.clone(), dependencies);
+            }
+        }
+        dependency_builder.build()
+    }
+
+    fn verify_dependencies(&self) -> Result<()> {
+        self.get_dependencies()?;
+        Ok(())
+    }
+
+    fn verify_node_counts(&self) -> Result<()> {
+        if let Some(infrastructure) = &self.infrastructure {
+            if let Some(nodes) = &self.nodes {
+                for (node_name, infra_node) in infrastructure.iter() {
+                    if infra_node.count > 1 {
+                        if let Some(node) = nodes.get(node_name) {
+                            if node.type_field == NodeType::Switch {
+                                return Err(anyhow!(
+                                    "Node {} is a switch and has count higher than 1",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Formalize for Scenario {
+    fn formalize(&mut self) -> Result<()> {
+        //add feature verification and mapping
+
+        if let Some(mut nodes) = self.nodes.clone() {
+            nodes.iter_mut().try_for_each(move |(_, node)| {
+                node.formalize()?;
+                Ok(())
+            })?;
+            self.nodes = Some(nodes);
+        }
+        if let Some(features) = &mut self.features {
+            features
+                .iter_mut()
+                .for_each(|(_, feature)| feature.map_source());
+        }
+
+        self.map_infrastructure()?;
+        self.verify_node_counts()?;
+        self.verify_dependencies()?;
+        Ok(())
+    }
+}
+
 pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
-
-    if let Some(nodes) = &mut schema.scenario.nodes {
-        nodes.iter_mut().for_each(|(_, node)| node.map_source());
-    }
-    if let Some(features) = &mut schema.scenario.features {
-        features
-            .iter_mut()
-            .for_each(|(_, feature)| feature.map_source());
-    }
-    if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
-        schema.scenario.infrastructure = Some(
-            schema
-                .scenario
-                .clone()
-                .map_infrastructure(infrastructure_helper.clone()),
-        );
-    }
-
+    schema.formalize()?;
     Ok(schema)
 }
 
@@ -182,36 +258,9 @@ mod tests {
                         - deb10
                 deb10: 3
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let schema = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
-        });
-    }
-
-    #[test]
-    fn includes_a_list_of_conditions() {
-        let sdl = r#"
-        scenario:
-            name: test-scenario
-            description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
-            conditions:
-                condition-1:
-                    vm-name: windows-10
-                    command: executable/path.sh
-                    interval: 30
-                condition-2:
-                    vm-name: green-evelation-machine
-                    library: digital-library-package
-                condition-3:
-                    vm-name: green-evelation-machine
-                    command: executable/path.sh
-                    interval: 30
-        "#;
-        let nodes = parse_sdl(sdl).unwrap();
-        insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
+                insta::assert_yaml_snapshot!(schema);
         });
     }
 

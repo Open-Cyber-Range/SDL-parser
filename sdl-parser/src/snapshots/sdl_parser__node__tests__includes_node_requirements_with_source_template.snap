@@ -12,7 +12,11 @@ expression: nodes
                 cpu: 2,
             },
         ),
-        _source_helper: None,
+        source_helper: Some(
+            ShortSource(
+                "windows10",
+            ),
+        ),
         source: Some(
             Source {
                 name: "windows10",

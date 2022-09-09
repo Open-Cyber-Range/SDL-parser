@@ -1,0 +1,22 @@
+---
+source: sdl-parser/src/lib.rs
+assertion_line: 334
+expression: features
+---
+my-cool-artifact:
+  type: Artifact
+  source: ~
+  dependencies:
+    - my-cool-service
+my-cool-config:
+  type: Configuration
+  source: ~
+  dependencies: ~
+my-cool-service:
+  type: Service
+  source: ~
+  dependencies:
+    - some-virtual-machine
+    - some-switch
+    - something-else
+

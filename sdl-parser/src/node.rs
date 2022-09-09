@@ -1,3 +1,4 @@
+use crate::Formalize;
 use anyhow::Result;
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -17,7 +18,7 @@ where
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
-    Network,
+    Switch,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -29,7 +30,7 @@ pub struct Resources {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
-pub enum SourceArray {
+pub enum HelperSource {
     Source(Source),
     ShortSource(String),
 }
@@ -60,29 +61,36 @@ pub struct Node {
         alias = "SOURCE",
         skip_serializing
     )]
-    _source_helper: Option<SourceArray>,
+    source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
 }
 
-impl Node {
-    pub fn map_source(&mut self) {
-        match &mut self._source_helper.take() {
-            Some(SourceArray::Source(source)) => {
-                self.source = Some(source.to_owned());
-            }
-            Some(SourceArray::ShortSource(source)) => {
-                self.source = Some(Source {
-                    name: source.to_owned(),
-                    version: "*".to_string(),
-                });
-            }
-            None => {}
+impl Formalize for Node {
+    fn formalize(&mut self) -> Result<()> {
+        if let Some(source_helper) = &self.source_helper {
+            self.source = Some(source_helper.to_owned().into());
+            return Ok(());
+        } else if self.type_field == NodeType::VM {
+            return Err(anyhow::anyhow!("No source found"));
+        }
+        Ok(())
+    }
+}
+
+impl From<HelperSource> for Source {
+    fn from(helper_source: HelperSource) -> Self {
+        match helper_source {
+            HelperSource::Source(source) => source,
+            HelperSource::ShortSource(source) => Source {
+                name: source,
+                version: "*".to_string(),
+            },
         }
     }
 }
 
-pub type NodeMap = HashMap<String, Node>;
+pub type Nodes = HashMap<String, Node>;
 
 #[cfg(test)]
 mod tests {
@@ -121,27 +129,34 @@ mod tests {
             source: 
                 name: package-name
                 version: 1.2.3
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
     }
+
     #[test]
     fn node_source_shorthand_is_parsed() {
         let shorthand_source = r#"
             type: VM
             source: package-name
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
-    fn includes_node_requirements_with_network_type() {
+    fn switch_source_is_not_required() {
+        let shorthand_source = r#"
+            type: Switch
+        "#;
+        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+    }
+
+    #[test]
+    fn includes_node_requirements_with_switch_type() {
         let node_sdl = r#"
-            type: Network
-            description: a network
+            type: Switch
+            description: a network switch
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);

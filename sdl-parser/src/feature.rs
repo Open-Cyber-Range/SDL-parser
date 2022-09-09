@@ -1,4 +1,4 @@
-use crate::node::{Source, SourceArray};
+use crate::node::{Source, HelperSource};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -8,7 +8,6 @@ pub enum FeatureType {
     Configuration,
     Artifact,
 }
-
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Feature {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
@@ -20,7 +19,7 @@ pub struct Feature {
         alias = "SOURCE",
         skip_serializing
     )]
-    _source_helper: Option<SourceArray>,
+    _source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
     pub dependencies: Option<Vec<String>>,
@@ -31,10 +30,10 @@ pub type FeatureMap = HashMap<String, Feature>;
 impl Feature {
     pub fn map_source(&mut self) {
         match &mut self._source_helper.take() {
-            Some(SourceArray::Source(source)) => {
+            Some(HelperSource::Source(source)) => {
                 self.source = Some(source.to_owned());
             }
-            Some(SourceArray::ShortSource(source)) => {
+            Some(HelperSource::ShortSource(source)) => {
                 self.source = Some(Source {
                     name: source.to_owned(),
                     version: "*".to_string(),
