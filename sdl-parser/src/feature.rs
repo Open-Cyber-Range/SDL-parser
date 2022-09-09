@@ -1,4 +1,4 @@
-use crate::node::{Source, HelperSource};
+use crate::node::{HelperSource, Source};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -25,7 +25,7 @@ pub struct Feature {
     pub dependencies: Option<Vec<String>>,
 }
 
-pub type FeatureMap = HashMap<String, Feature>;
+pub type Features = HashMap<String, Feature>;
 
 impl Feature {
     pub fn map_source(&mut self) {
@@ -106,5 +106,58 @@ mod tests {
         "#;
         let feature = serde_yaml::from_str::<Feature>(feature_sdl).unwrap();
         insta::assert_debug_snapshot!(feature);
+    }
+
+    #[test]
+    fn cyclic_feature_dependency_is_detected() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            features:
+                my-cool-feature:
+                    type: Service
+                    source: some-service
+                    dependencies: 
+                        - my-less-cool-feature
+                my-less-cool-feature:
+                    type: Service
+                    source:
+                        name: cool-config
+                        version: 1.0.0
+                    dependencies: 
+                        - my-cool-feature
+        "#;
+        let features = parse_sdl(sdl);
+        assert!(features.is_err());
+        assert_eq!(
+            features.err().unwrap().to_string(),
+            "Cyclic dependency detected"
+        );
+    }
+
+    #[test]
+    fn feature_cyclic_self_dependency_is_detected() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            features:
+                my-cool-feature:
+                    type: Service
+                    source: some-service
+                    dependencies: 
+                        - my-cool-feature
+        "#;
+        let features = parse_sdl(sdl);
+        assert!(features.is_err());
+        assert_eq!(
+            features.err().unwrap().to_string(),
+            "Cyclic dependency detected"
+        );
     }
 }

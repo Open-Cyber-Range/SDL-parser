@@ -14,14 +14,12 @@ my-cool-config:
   source:
     name: some-configuration
     version: "*"
-  dependencies: ~
+  dependencies:
+    - my-cool-service
 my-cool-service:
   type: Service
   source:
     name: some-service
     version: "*"
-  dependencies:
-    - some-virtual-machine
-    - some-switch
-    - something-else
+  dependencies: ~
 

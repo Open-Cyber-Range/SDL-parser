@@ -11,7 +11,7 @@ use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
 use conditions::ConditionMap;
 use depper::Dependencies;
-use feature::FeatureMap;
+use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
@@ -47,7 +47,7 @@ pub struct Scenario {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub nodes: Option<Nodes>,
-    pub features: Option<FeatureMap>,
+    pub features: Option<Features>,
     #[serde(default, rename = "infrastructure", skip_serializing)]
     infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
@@ -67,13 +67,30 @@ impl Scenario {
         Ok(())
     }
 
-    pub fn get_dependencies(&self) -> Result<Dependencies> {
-        let mut dependency_builder = Dependencies::builder();
+    pub fn get_dependencies(&self) -> Result<()> {
         if let Some(nodes_value) = &self.nodes {
+            let mut dependency_builder = Dependencies::builder();
             for (node_name, _) in nodes_value.iter() {
                 dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
             }
+            self.build_infrastructure_dependencies(dependency_builder)?;
         }
+
+        if let Some(features_value) = &self.features {
+            let mut dependency_builder = Dependencies::builder();
+            for (feature_name, _) in features_value.iter() {
+                dependency_builder =
+                    dependency_builder.add_element(feature_name.to_string(), vec![]);
+            }
+            self.build_feature_dependencies(dependency_builder)?;
+        }
+        Ok(())
+    }
+
+    fn build_infrastructure_dependencies(
+        &self,
+        mut dependency_builder: depper::DependenciesBuilder,
+    ) -> Result<Dependencies, anyhow::Error> {
         if let Some(infrastructure) = &self.infrastructure {
             for (node_name, infra_node) in infrastructure.iter() {
                 let mut dependencies: Vec<String> = vec![];
@@ -93,6 +110,34 @@ impl Scenario {
                 }
                 dependency_builder =
                     dependency_builder.add_element(node_name.clone(), dependencies);
+            }
+        }
+        dependency_builder.build()
+    }
+
+    fn build_feature_dependencies(
+        &self,
+        mut dependency_builder: depper::DependenciesBuilder,
+    ) -> Result<Dependencies, anyhow::Error> {
+        if let Some(features) = &self.features {
+            for (feature_name, feature) in features.iter() {
+                let mut dependencies: Vec<String> = vec![];
+                if let Some(links) = &feature.dependencies {
+                    let links = links
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(links.as_slice());
+                }
+                if let Some(feature_dependencies) = &feature.dependencies {
+                    let feature_dependencies = feature_dependencies
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(feature_dependencies.as_slice());
+                }
+                dependency_builder =
+                    dependency_builder.add_element(feature_name.clone(), dependencies);
             }
         }
         dependency_builder.build()
@@ -126,8 +171,6 @@ impl Scenario {
 
 impl Formalize for Scenario {
     fn formalize(&mut self) -> Result<()> {
-        //add feature verification and mapping
-
         if let Some(mut nodes) = self.nodes.clone() {
             nodes.iter_mut().try_for_each(move |(_, node)| {
                 node.formalize()?;
@@ -276,13 +319,11 @@ mod tests {
                 my-cool-service:
                     type: Service
                     source: some-service
-                    dependencies:
-                        - some-virtual-machine
-                        - some-switch
-                        - something-else
                 my-cool-config:
                     type: Configuration
                     source: some-configuration
+                    dependencies:
+                        - my-cool-service
                 my-cool-artifact:
                     type: Artifact
                     source:
