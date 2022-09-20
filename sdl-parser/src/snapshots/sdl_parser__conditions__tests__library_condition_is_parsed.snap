@@ -6,7 +6,7 @@ Condition {
     vm_name: "green-evaluation-machine",
     command: None,
     interval: None,
-    _source_helper: Some(
+    source_helper: Some(
         ShortSource(
             "digital-library-package",
         ),

@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
-use crate::common::{get_source, HelperSource, Source};
+use crate::common::{HelperSource, Source};
 
 fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
@@ -67,18 +67,6 @@ impl Formalize for Node {
     }
 }
 
-impl From<HelperSource> for Source {
-    fn from(helper_source: HelperSource) -> Self {
-        match helper_source {
-            HelperSource::Source(source) => source,
-            HelperSource::ShortSource(source) => Source {
-                name: source,
-                version: "*".to_string(),
-            },
-        }
-    }
-}
-
 pub type Nodes = HashMap<String, Node>;
 
 #[cfg(test)]
@@ -104,6 +92,7 @@ mod tests {
                     source:
                         name: debian10
                         version: '*'
+
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -118,6 +107,7 @@ mod tests {
             source: 
                 name: package-name
                 version: 1.2.3
+
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -128,6 +118,7 @@ mod tests {
         let shorthand_source = r#"
             type: VM
             source: package-name
+
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -137,6 +128,7 @@ mod tests {
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
+
         "#;
         serde_yaml::from_str::<Node>(shorthand_source).unwrap();
     }
@@ -146,6 +138,7 @@ mod tests {
         let node_sdl = r#"
             type: Switch
             description: a network switch
+
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -166,6 +159,7 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    
         "#;
         let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
         insta::assert_debug_snapshot!(nodes);

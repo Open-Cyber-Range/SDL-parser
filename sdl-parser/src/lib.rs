@@ -9,7 +9,7 @@ pub mod test;
 
 use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
-use conditions::{Condition, ConditionMap};
+use conditions::Conditions;
 use depper::Dependencies;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
@@ -50,7 +50,7 @@ pub struct Scenario {
     infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
     pub infrastructure: Option<Infrastructure>,
-    pub conditions: Option<ConditionMap>,
+    pub conditions: Option<Conditions>,
 }
 
 impl Scenario {
@@ -101,7 +101,7 @@ impl Scenario {
         Ok(())
     }
 
-    fn verify_node_counts(&self) -> Result<()> {
+    fn verify_switch_counts(&self) -> Result<()> {
         if let Some(infrastructure) = &self.infrastructure {
             if let Some(nodes) = &self.nodes {
                 for (node_name, infra_node) in infrastructure.iter() {
@@ -109,7 +109,7 @@ impl Scenario {
                         if let Some(node) = nodes.get(node_name) {
                             if node.type_field == NodeType::Switch {
                                 return Err(anyhow!(
-                                    "Node {} is a switch and has count higher than 1",
+                                    "Node {} is a switch with a count higher than 1",
                                     node_name
                                 ));
                             }
@@ -132,7 +132,18 @@ impl Formalize for Scenario {
             self.nodes = Some(nodes);
         }
         self.map_infrastructure()?;
-        self.verify_node_counts()?;
+        let infrastructure = self.infrastructure.clone();
+        if let Some(mut conditions) = self.conditions.clone() {
+            conditions.iter_mut().try_for_each(move |(_, condition)| {
+                condition.formalize()?;
+                if infrastructure.is_some() {
+                    condition.check_vm_count(infrastructure.as_ref().unwrap())?;
+                }
+                Ok(())
+            })?;
+            self.conditions = Some(conditions);
+        }
+        self.verify_switch_counts()?;
         self.verify_dependencies()?;
         Ok(())
     }
@@ -155,6 +166,7 @@ mod tests {
                 name: test-scenario
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
+                
         "#;
         let parsed_schema = parse_sdl(minimal_sdl).unwrap();
         insta::assert_yaml_snapshot!(parsed_schema);
@@ -185,6 +197,7 @@ mod tests {
                     resources:
                         ram: 2 gib
                         cpu: 1
+
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -247,6 +260,7 @@ mod tests {
                     dependencies:
                         - deb10
                 deb10: 3
+
         "#;
         let schema = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -262,18 +276,42 @@ mod tests {
             description: some-description
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                deb10:
+                    type: VM
+                    description: deb-10-description
+                    source:
+                        name: debian10
+                        version: '*'
+                    resources:
+                        ram: 2 gib
+                        cpu: 1
+            infrastructure:
+                win10:
+                    count: 1
+                    dependencies:
+                        - deb10
+                deb10: 1
             conditions:
                 condition-1:
-                    vm-name: windows-10
+                    vm-name: win10
                     command: executable/path.sh
                     interval: 30
                 condition-2:
-                    vm-name: green-evelation-machine
+                    vm-name: deb10
                     source: digital-library-package
                 condition-3:
-                    vm-name: green-evelation-machine
+                    vm-name: deb10
                     command: executable/path.sh
                     interval: 30
+
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {

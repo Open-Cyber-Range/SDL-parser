@@ -13,14 +13,14 @@ pub enum HelperSource {
     ShortSource(String),
 }
 
-pub fn get_source(mut source_helper: Option<HelperSource>) -> Option<Source> {
-    match &mut source_helper {
-        Some(HelperSource::Source(source)) => Some(source.to_owned()),
-
-        Some(HelperSource::ShortSource(source)) => Some(Source {
-            name: source.to_owned(),
-            version: "*".to_string(),
-        }),
-        None => None,
+impl From<HelperSource> for Source {
+    fn from(helper_source: HelperSource) -> Self {
+        match helper_source {
+            HelperSource::Source(source) => source,
+            HelperSource::ShortSource(source) => Source {
+                name: source,
+                version: "*".to_string(),
+            },
+        }
     }
 }

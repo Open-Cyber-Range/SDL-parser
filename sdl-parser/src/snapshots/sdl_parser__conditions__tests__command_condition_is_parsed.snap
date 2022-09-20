@@ -10,6 +10,6 @@ Condition {
     interval: Some(
         30,
     ),
-    _source_helper: None,
+    source_helper: None,
     source: None,
 }
