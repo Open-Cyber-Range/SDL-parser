@@ -8,16 +8,16 @@ pub struct Source {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
-pub enum SourceArray {
+pub enum HelperSource {
     Source(Source),
     ShortSource(String),
 }
 
-pub fn get_source(mut source_helper: Option<SourceArray>) -> Option<Source> {
+pub fn get_source(mut source_helper: Option<HelperSource>) -> Option<Source> {
     match &mut source_helper {
-        Some(SourceArray::Source(source)) => Some(source.to_owned()),
+        Some(HelperSource::Source(source)) => Some(source.to_owned()),
 
-        Some(SourceArray::ShortSource(source)) => Some(Source {
+        Some(HelperSource::ShortSource(source)) => Some(Source {
             name: source.to_owned(),
             version: "*".to_string(),
         }),

@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1"
 bytesize = { version = "1", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+depper = "0.3"
 lazy_static = { version = "1.4" }
 insta = { version = "1", features = ["yaml"] }
 serde = { version = "1", features = ["derive"] }

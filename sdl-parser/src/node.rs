@@ -1,10 +1,11 @@
+use crate::Formalize;
 use anyhow::Result;
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
-use crate::common::{get_source, Source, SourceArray};
+use crate::common::{get_source, HelperSource, Source};
 
 fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
@@ -19,7 +20,7 @@ where
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
-    Network,
+    Switch,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -49,18 +50,36 @@ pub struct Node {
         alias = "SOURCE",
         skip_serializing
     )]
-    _source_helper: Option<SourceArray>,
+    source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
 }
 
-impl Node {
-    pub fn map_source(&mut self) {
-        self.source = get_source(self._source_helper.take());
+impl Formalize for Node {
+    fn formalize(&mut self) -> Result<()> {
+        if let Some(source_helper) = &self.source_helper {
+            self.source = Some(source_helper.to_owned().into());
+            return Ok(());
+        } else if self.type_field == NodeType::VM {
+            return Err(anyhow::anyhow!("No source found"));
+        }
+        Ok(())
     }
 }
 
-pub type NodeMap = HashMap<String, Node>;
+impl From<HelperSource> for Source {
+    fn from(helper_source: HelperSource) -> Self {
+        match helper_source {
+            HelperSource::Source(source) => source,
+            HelperSource::ShortSource(source) => Source {
+                name: source,
+                version: "*".to_string(),
+            },
+        }
+    }
+}
+
+pub type Nodes = HashMap<String, Node>;
 
 #[cfg(test)]
 mod tests {
@@ -99,27 +118,34 @@ mod tests {
             source: 
                 name: package-name
                 version: 1.2.3
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
     }
+
     #[test]
     fn node_source_shorthand_is_parsed() {
         let shorthand_source = r#"
             type: VM
             source: package-name
-                    
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
-    fn includes_node_requirements_with_network_type() {
+    fn switch_source_is_not_required() {
+        let shorthand_source = r#"
+            type: Switch
+        "#;
+        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+    }
+
+    #[test]
+    fn includes_node_requirements_with_switch_type() {
         let node_sdl = r#"
-            type: Network
-            description: a network
+            type: Switch
+            description: a network switch
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);

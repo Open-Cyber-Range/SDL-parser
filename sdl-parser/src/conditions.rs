@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::{
-    common::{get_source, Source, SourceArray},
+    common::{get_source, HelperSource, Source},
     infrastructure::Infrastructure,
 };
 
@@ -21,7 +21,7 @@ pub struct Condition {
         alias = "SOURCE",
         skip_serializing
     )]
-    _source_helper: Option<SourceArray>,
+    _source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
 }
@@ -31,17 +31,17 @@ impl Condition {
         self.source = get_source(self._source_helper.take());
     }
 
-    pub fn check_vm_count(&self, infrastructure: Infrastructure) {
-        for (node_name, node) in infrastructure.iter() {
-            match self.vm_name {
-                node_name => {
-                    if node.count != 1 {
-                        Err("Node count not 1");
-                    }
-                }
-            }
-        }
-    }
+    // pub fn check_vm_count(&self, infrastructure: Infrastructure) {
+    //     for (node_name, node) in infrastructure.iter() {
+    //         match self.vm_name {
+    //             node_name => {
+    //                 if node.count != 1 {
+    //                     Err("Node count not 1");
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 pub type ConditionMap = HashMap<String, Condition>;
