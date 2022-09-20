@@ -4,6 +4,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
+use crate::common::{get_source, Source, SourceArray};
+
 fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
@@ -25,19 +27,6 @@ pub struct Resources {
     #[serde(deserialize_with = "parse_bytesize")]
     pub ram: u64,
     pub cpu: u32,
-}
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-#[serde(untagged)]
-pub enum SourceArray {
-    Source(Source),
-    ShortSource(String),
-}
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub struct Source {
-    pub name: String,
-    pub version: String,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -67,18 +56,7 @@ pub struct Node {
 
 impl Node {
     pub fn map_source(&mut self) {
-        match &mut self._source_helper.take() {
-            Some(SourceArray::Source(source)) => {
-                self.source = Some(source.to_owned());
-            }
-            Some(SourceArray::ShortSource(source)) => {
-                self.source = Some(Source {
-                    name: source.to_owned(),
-                    version: "*".to_string(),
-                });
-            }
-            None => {}
-        }
+        self.source = get_source(self._source_helper.take());
     }
 }
 

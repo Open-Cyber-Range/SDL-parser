@@ -3,10 +3,13 @@ source: sdl-parser/src/conditions.rs
 expression: condition
 ---
 Condition {
-    vm_name: "green-evelation-machine",
+    vm_name: "green-evaluation-machine",
     command: None,
     interval: None,
-    library: Some(
-        "digital-library-package",
+    _source_helper: Some(
+        ShortSource(
+            "digital-library-package",
+        ),
     ),
+    source: None,
 }

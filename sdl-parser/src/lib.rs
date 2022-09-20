@@ -1,4 +1,5 @@
-mod conditions;
+pub mod common;
+pub mod conditions;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
@@ -7,7 +8,7 @@ pub mod test;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use conditions::ConditionMap;
+use conditions::{Condition, ConditionMap};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::NodeMap;
@@ -56,6 +57,11 @@ pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
     let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
     if let Some(nodes) = &mut schema.scenario.nodes {
         nodes.iter_mut().for_each(|(_, node)| node.map_source());
+    }
+    if let Some(conditions) = &mut schema.scenario.conditions {
+        conditions
+            .iter_mut()
+            .for_each(|(_, condition)| condition.map_source());
     }
     if let Some(infrastructure_helper) = &schema.scenario._infrastructure_helper {
         schema.scenario.infrastructure = Some(
@@ -193,7 +199,7 @@ mod tests {
                     interval: 30
                 condition-2:
                     vm-name: green-evelation-machine
-                    library: digital-library-package
+                    source: digital-library-package
                 condition-3:
                     vm-name: green-evelation-machine
                     command: executable/path.sh
