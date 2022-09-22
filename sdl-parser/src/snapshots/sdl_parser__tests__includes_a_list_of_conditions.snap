@@ -17,6 +17,9 @@ scenario:
       source:
         name: debian10
         version: "*"
+      conditions:
+        - condition-2
+        - condition-3
     win10:
       type: VM
       description: win-10-description
@@ -26,6 +29,8 @@ scenario:
       source:
         name: windows10
         version: "*"
+      conditions:
+        - condition-1
   infrastructure:
     deb10:
       count: 1
@@ -38,19 +43,16 @@ scenario:
         - deb10
   conditions:
     condition-1:
-      vm-name: win10
       command: executable/path.sh
       interval: 30
       source: ~
     condition-2:
-      vm-name: deb10
       command: ~
       interval: ~
       source:
         name: digital-library-package
         version: "*"
     condition-3:
-      vm-name: deb10
       command: executable/path.sh
       interval: 30
       source: ~

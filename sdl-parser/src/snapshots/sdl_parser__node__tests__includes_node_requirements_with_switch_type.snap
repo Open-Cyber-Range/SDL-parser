@@ -10,4 +10,5 @@ Node {
     resources: None,
     source_helper: None,
     source: None,
+    conditions: None,
 }

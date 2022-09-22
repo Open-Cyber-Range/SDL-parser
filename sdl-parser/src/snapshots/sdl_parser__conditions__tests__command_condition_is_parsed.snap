@@ -3,7 +3,6 @@ source: sdl-parser/src/conditions.rs
 expression: condition
 ---
 Condition {
-    vm_name: "windows-10",
     command: Some(
         "executable/path.sh",
     ),

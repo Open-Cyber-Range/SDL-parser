@@ -15,6 +15,8 @@ scenario:
       source:
         name: debian10
         version: "*"
+      conditions:
+        - condition-2
     win-10:
       type: VM
       description: ~
@@ -22,15 +24,15 @@ scenario:
       source:
         name: windows10
         version: "*"
+      conditions:
+        - condition-1
   infrastructure: ~
   conditions:
     condition-1:
-      vm-name: win-10
       command: executable/path.sh
       interval: 30
       source: ~
     condition-2:
-      vm-name: deb-10
       command: ~
       interval: ~
       source:

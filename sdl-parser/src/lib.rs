@@ -120,6 +120,42 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_conditions(&self) -> Result<()> {
+        if let Some(nodes) = &self.nodes {
+            for (node_name, node) in nodes.iter() {
+                if let Some(node_conditions) = &node.conditions {
+                    if self.conditions.is_none() {
+                        return Err(anyhow!(
+                            "Conditions list is empty under scenario, but node {} has conditions",
+                            node_name
+                        ));
+                    }
+                    if let Some(conditions) = &self.conditions {
+                        for node_condition in node_conditions.iter() {
+                            if !conditions.contains_key(node_condition) {
+                                return Err(anyhow!(
+                                    "Condition {} not found under scenario",
+                                    node_condition
+                                ));
+                            }
+                        }
+                    }
+                    if let Some(infrastructure) = &self.infrastructure {
+                        if let Some(infra_node) = infrastructure.get(node_name) {
+                            if infra_node.count != 1 {
+                                return Err(anyhow!(
+                                    "Condition VM {} has a count other than 1",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -131,19 +167,16 @@ impl Formalize for Scenario {
             })?;
             self.nodes = Some(nodes);
         }
-        self.map_infrastructure()?;
-        let infrastructure = self.infrastructure.clone();
         if let Some(mut conditions) = self.conditions.clone() {
             conditions.iter_mut().try_for_each(move |(_, condition)| {
                 condition.formalize()?;
-                if infrastructure.is_some() {
-                    condition.check_vm_count(infrastructure.as_ref().unwrap())?;
-                }
                 Ok(())
             })?;
             self.conditions = Some(conditions);
         }
+        self.map_infrastructure()?;
         self.verify_switch_counts()?;
+        self.verify_conditions()?;
         self.verify_dependencies()?;
         Ok(())
     }
@@ -284,6 +317,62 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    conditions:
+                        - condition-1
+                deb10:
+                    type: VM
+                    description: deb-10-description
+                    source:
+                        name: debian10
+                        version: '*'
+                    resources:
+                        ram: 2 gib
+                        cpu: 1
+                    conditions:
+                        - condition-2
+                        - condition-3
+            infrastructure:
+                win10:
+                    count: 1
+                    dependencies:
+                        - deb10
+                deb10: 1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+                condition-3:
+                    command: executable/path.sh
+                    interval: 30
+
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_vm_count_in_infrastructure_over_1() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
                 deb10:
                     type: VM
                     description: deb-10-description
@@ -295,22 +384,43 @@ mod tests {
                         cpu: 1
             infrastructure:
                 win10:
-                    count: 1
+                    count: 3
                     dependencies:
                         - deb10
                 deb10: 1
             conditions:
                 condition-1:
-                    vm-name: win10
                     command: executable/path.sh
                     interval: 30
-                condition-2:
-                    vm-name: deb10
-                    source: digital-library-package
-                condition-3:
-                    vm-name: deb10
-                    command: executable/path.sh
-                    interval: 30
+
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_doesnt_exist() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
+            infrastructure:
+                win10: 1
 
         "#;
         let nodes = parse_sdl(sdl).unwrap();

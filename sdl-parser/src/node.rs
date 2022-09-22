@@ -53,6 +53,8 @@ pub struct Node {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
+    pub conditions: Option<Vec<String>>,
 }
 
 impl Formalize for Node {
@@ -125,6 +127,19 @@ mod tests {
     }
 
     #[test]
+    fn node_conditions_are_parsed() {
+        let shorthand_source = r#"
+            type: VM
+            conditions:
+                - condition-1
+                - condition-2
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
@@ -145,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn includes_node_requirements_with_source_template() {
+    fn includes_node_requirements_with_source_template_and_conditions() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -159,6 +174,15 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    conditions:
+                        - condition-1
+                        - condition-2
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
                     
         "#;
         let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();

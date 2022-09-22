@@ -23,5 +23,11 @@ expression: nodes
                 version: "*",
             },
         ),
+        conditions: Some(
+            [
+                "condition-1",
+                "condition-2",
+            ],
+        ),
     },
 }
