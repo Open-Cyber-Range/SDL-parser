@@ -29,10 +29,8 @@ impl Formalize for Condition {
     fn formalize(&mut self) -> Result<()> {
         if self.command.is_some() && self.interval.is_some() {
             self.source_helper = None;
-            Ok(())
         } else if let Some(source_helper) = &self.source_helper {
             self.source = Some(source_helper.to_owned().into());
-            Ok(())
         } else if self.command.is_some() && self.interval.is_none() {
             return Err(anyhow::anyhow!("No interval found for command"));
         } else if self.command.is_none() && self.interval.is_some() {
@@ -44,6 +42,7 @@ impl Formalize for Condition {
                 "Command or source missing for the condition"
             ));
         }
+        Ok(())
     }
 }
 
