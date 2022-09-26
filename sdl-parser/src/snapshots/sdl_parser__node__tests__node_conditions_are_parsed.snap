@@ -6,11 +6,12 @@ Node {
     type_field: VM,
     description: None,
     resources: None,
-    source_helper: Some(
-        ShortSource(
-            "package-name",
-        ),
-    ),
+    source_helper: None,
     source: None,
-    conditions: None,
+    conditions: Some(
+        [
+            "condition-1",
+            "condition-2",
+        ],
+    ),
 }

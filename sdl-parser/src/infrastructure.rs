@@ -1,20 +1,10 @@
+use crate::constants::default_node_count;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-fn default_count() -> u32 {
-    1
-}
-
-fn new_infranode(count_value: u32) -> InfraNode {
-    InfraNode {
-        count: count_value,
-        ..Default::default()
-    }
-}
-
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct InfraNode {
-    #[serde(default = "default_count", alias = "Count", alias = "COUNT")]
+    #[serde(default = "default_node_count", alias = "Count", alias = "COUNT")]
     pub count: u32,
     #[serde(default, alias = "Links", alias = "LINKS")]
     pub links: Option<Vec<String>>,
@@ -22,29 +12,51 @@ pub struct InfraNode {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl InfraNode {
+    pub fn new(potential_count: Option<u32>) -> Self {
+        Self {
+            count: match potential_count {
+                Some(count) => count,
+                None => default_node_count(),
+            },
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum HelperNode {
+    EmptyNode,
     ShortNode(u32),
     LongNode(InfraNode),
-}
-
-impl HelperNode {
-    pub fn map_into_infranode(&mut self) -> InfraNode {
-        match self {
-            HelperNode::ShortNode(value) => new_infranode(*value),
-            HelperNode::LongNode(infranode) => infranode.clone(),
-        }
-    }
 }
 
 pub type InfrastructureHelper = HashMap<String, HelperNode>;
 
 pub type Infrastructure = HashMap<String, InfraNode>;
 
+impl From<HelperNode> for InfraNode {
+    fn from(helper_node: HelperNode) -> Self {
+        match helper_node {
+            HelperNode::ShortNode(value) => InfraNode::new(Some(value)),
+            HelperNode::LongNode(infranode) => infranode,
+            HelperNode::EmptyNode => InfraNode::new(None),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn from_helper(infrastructure_helper: InfrastructureHelper) -> Infrastructure {
+        let mut infrastructure: Infrastructure = HashMap::new();
+        for (name, helpernode) in infrastructure_helper.iter() {
+            infrastructure.insert(name.to_string(), helpernode.clone().into());
+        }
+        infrastructure
+    }
 
     #[test]
     fn infranode_count_longhand_is_parsed() {
@@ -60,9 +72,7 @@ mod tests {
         let sdl = r#"
             23
         "#;
-        let infra_node = serde_yaml::from_str::<HelperNode>(sdl)
-            .unwrap()
-            .map_into_infranode();
+        let infra_node: InfraNode = serde_yaml::from_str::<HelperNode>(sdl).unwrap().into();
         insta::assert_debug_snapshot!(infra_node);
     }
 
@@ -101,11 +111,9 @@ mod tests {
             debian-2:
                 count: 4      
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -119,11 +127,9 @@ mod tests {
             windows-10-vuln-1: 10
             ubuntu-10: 5
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -147,11 +153,9 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -177,13 +181,19 @@ mod tests {
                     - windows-10
                     - windows-10-vuln-1
         "#;
-        let mut infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter_mut() {
-            infrastructure.insert(name.to_string(), helpernode.map_into_infranode());
-        }
+        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+        let infrastructure = from_helper(infrastructure_helper);
+
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
         });
+    }
+
+    #[test]
+    fn empty_count_is_allowed() {
+        let sdl = r#"
+            switch-1:
+        "#;
+        serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
     }
 }

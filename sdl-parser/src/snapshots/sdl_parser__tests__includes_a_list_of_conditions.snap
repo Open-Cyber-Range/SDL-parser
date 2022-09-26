@@ -7,22 +7,53 @@ scenario:
   description: some-description
   start: "2022-01-20T13:00:00Z"
   end: "2022-01-20T23:00:00Z"
-  nodes: ~
-  infrastructure: ~
+  nodes:
+    deb10:
+      type: VM
+      description: deb-10-description
+      resources:
+        ram: 2147483648
+        cpu: 1
+      source:
+        name: debian10
+        version: "*"
+      conditions:
+        - condition-2
+        - condition-3
+    win10:
+      type: VM
+      description: win-10-description
+      resources:
+        ram: 4294967296
+        cpu: 2
+      source:
+        name: windows10
+        version: "*"
+      conditions:
+        - condition-1
+  infrastructure:
+    deb10:
+      count: 1
+      links: ~
+      dependencies: ~
+    win10:
+      count: 1
+      links: ~
+      dependencies:
+        - deb10
   conditions:
     condition-1:
-      vm-name: windows-10
       command: executable/path.sh
       interval: 30
-      library: ~
+      source: ~
     condition-2:
-      vm-name: green-evelation-machine
       command: ~
       interval: ~
-      library: digital-library-package
+      source:
+        name: digital-library-package
+        version: "*"
     condition-3:
-      vm-name: green-evelation-machine
       command: executable/path.sh
       interval: 30
-      library: ~
+      source: ~
 

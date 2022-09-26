@@ -6,7 +6,7 @@ Node {
     type_field: VM,
     description: None,
     resources: None,
-    _source_helper: Some(
+    source_helper: Some(
         Source(
             Source {
                 name: "package-name",
@@ -15,4 +15,5 @@ Node {
         ),
     ),
     source: None,
+    conditions: None,
 }

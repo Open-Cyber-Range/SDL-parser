@@ -1,0 +1,14 @@
+---
+source: sdl-parser/src/node.rs
+expression: node
+---
+Node {
+    type_field: Switch,
+    description: Some(
+        "a network switch",
+    ),
+    resources: None,
+    source_helper: None,
+    source: None,
+    conditions: None,
+}
