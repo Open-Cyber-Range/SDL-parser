@@ -1,25 +1,34 @@
 ---
 source: sdl-parser/src/lib.rs
-expression: features
+expression: nodes
 ---
-my-cool-artifact:
-  type: Artifact
-  source:
-    name: dl_library
-    version: 1.2.3
-  dependencies:
-    - my-cool-service
-my-cool-config:
-  type: Configuration
-  source:
-    name: some-configuration
-    version: "*"
-  dependencies:
-    - my-cool-service
-my-cool-service:
-  type: Service
-  source:
-    name: some-service
-    version: "*"
-  dependencies: ~
+scenario:
+  name: test-scenario
+  description: some-description
+  start: "2022-01-20T13:00:00Z"
+  end: "2022-01-20T23:00:00Z"
+  nodes: ~
+  features:
+    my-cool-artifact:
+      type: Artifact
+      source:
+        name: dl_library
+        version: 1.2.3
+      dependencies:
+        - my-cool-service
+    my-cool-config:
+      type: Configuration
+      source:
+        name: some-configuration
+        version: "*"
+      dependencies:
+        - my-cool-service
+    my-cool-service:
+      type: Service
+      source:
+        name: some-service
+        version: "*"
+      dependencies: ~
+  infrastructure: ~
+  conditions: ~
 

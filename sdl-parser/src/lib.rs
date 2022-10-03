@@ -1,3 +1,4 @@
+pub mod common;
 mod conditions;
 mod constants;
 pub mod feature;
@@ -9,7 +10,7 @@ pub mod test;
 
 use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
-use conditions::ConditionMap;
+use conditions::Conditions;
 use depper::Dependencies;
 use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -52,7 +53,7 @@ pub struct Scenario {
     infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
     pub infrastructure: Option<Infrastructure>,
-    pub conditions: Option<ConditionMap>,
+    pub conditions: Option<Conditions>,
 }
 
 impl Scenario {
@@ -148,7 +149,7 @@ impl Scenario {
         Ok(())
     }
 
-    fn verify_node_counts(&self) -> Result<()> {
+    fn verify_switch_counts(&self) -> Result<()> {
         if let Some(infrastructure) = &self.infrastructure {
             if let Some(nodes) = &self.nodes {
                 for (node_name, infra_node) in infrastructure.iter() {
@@ -156,7 +157,43 @@ impl Scenario {
                         if let Some(node) = nodes.get(node_name) {
                             if node.type_field == NodeType::Switch {
                                 return Err(anyhow!(
-                                    "Node {} is a switch and has count higher than 1",
+                                    "Node {} is a switch with a count higher than 1",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_conditions(&self) -> Result<()> {
+        if let Some(nodes) = &self.nodes {
+            for (node_name, node) in nodes.iter() {
+                if let Some(node_conditions) = &node.conditions {
+                    if self.conditions.is_none() {
+                        return Err(anyhow!(
+                            "Conditions list is empty under scenario, but node {} has conditions",
+                            node_name
+                        ));
+                    }
+                    if let Some(conditions) = &self.conditions {
+                        for node_condition in node_conditions.iter() {
+                            if !conditions.contains_key(node_condition) {
+                                return Err(anyhow!(
+                                    "Condition {} not found under scenario",
+                                    node_condition
+                                ));
+                            }
+                        }
+                    }
+                    if let Some(infrastructure) = &self.infrastructure {
+                        if let Some(infra_node) = infrastructure.get(node_name) {
+                            if infra_node.count != 1 {
+                                return Err(anyhow!(
+                                    "Condition VM {} has a count other than 1",
                                     node_name
                                 ));
                             }
@@ -184,8 +221,16 @@ impl Formalize for Scenario {
                 .for_each(|(_, feature)| feature.map_source());
         }
 
+        if let Some(mut conditions) = self.conditions.clone() {
+            conditions.iter_mut().try_for_each(move |(_, condition)| {
+                condition.formalize()?;
+                Ok(())
+            })?;
+            self.conditions = Some(conditions);
+        }
         self.map_infrastructure()?;
-        self.verify_node_counts()?;
+        self.verify_switch_counts()?;
+        self.verify_conditions()?;
         self.verify_dependencies()?;
         Ok(())
     }
@@ -208,6 +253,7 @@ mod tests {
                 name: test-scenario
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
+                
         "#;
         let parsed_schema = parse_sdl(minimal_sdl).unwrap();
         insta::assert_yaml_snapshot!(parsed_schema);
@@ -238,6 +284,7 @@ mod tests {
                     resources:
                         ram: 2 gib
                         cpu: 1
+
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -300,6 +347,7 @@ mod tests {
                     dependencies:
                         - deb10
                 deb10: 3
+
         "#;
         let schema = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -309,7 +357,7 @@ mod tests {
 
     #[test]
     fn includes_a_list_of_features() {
-        let feature_sdl = r#"
+        let sdl = r#"
         scenario:
             name: test-scenario
             description: some-description
@@ -332,7 +380,135 @@ mod tests {
                     dependencies: 
                         - my-cool-service
         "#;
-        let features = parse_sdl(feature_sdl).unwrap().scenario.features.unwrap();
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    fn includes_a_list_of_conditions() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
+                deb10:
+                    type: VM
+                    description: deb-10-description
+                    source:
+                        name: debian10
+                        version: '*'
+                    resources:
+                        ram: 2 gib
+                        cpu: 1
+                    conditions:
+                        - condition-2
+                        - condition-3
+            infrastructure:
+                win10:
+                    count: 1
+                    dependencies:
+                        - deb10
+                deb10: 1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+                condition-3:
+                    command: executable/path.sh
+                    interval: 30
+
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_vm_count_in_infrastructure_over_1() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
+                deb10:
+                    type: VM
+                    description: deb-10-description
+                    source:
+                        name: debian10
+                        version: '*'
+                    resources:
+                        ram: 2 gib
+                        cpu: 1
+            infrastructure:
+                win10:
+                    count: 3
+                    dependencies:
+                        - deb10
+                deb10: 1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_doesnt_exist() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
+            infrastructure:
+                win10: 1
+
+        "#;
+        let features = parse_sdl(sdl).unwrap().scenario.features.unwrap();
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(features);
         });

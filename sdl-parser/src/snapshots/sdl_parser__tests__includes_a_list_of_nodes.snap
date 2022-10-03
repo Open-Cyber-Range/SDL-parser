@@ -17,6 +17,7 @@ scenario:
       source:
         name: debian10
         version: "*"
+      conditions: ~
     win10:
       type: VM
       description: win-10-description
@@ -26,6 +27,7 @@ scenario:
       source:
         name: windows10
         version: "*"
+      conditions: ~
   features: ~
   infrastructure: ~
   conditions: ~

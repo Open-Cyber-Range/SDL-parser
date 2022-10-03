@@ -5,6 +5,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
+use crate::common::{HelperSource, Source};
+
 fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
@@ -26,19 +28,6 @@ pub struct Resources {
     #[serde(deserialize_with = "parse_bytesize")]
     pub ram: u64,
     pub cpu: u32,
-}
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-#[serde(untagged)]
-pub enum HelperSource {
-    Source(Source),
-    ShortSource(String),
-}
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub struct Source {
-    pub name: String,
-    pub version: String,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -64,6 +53,8 @@ pub struct Node {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
+    pub conditions: Option<Vec<String>>,
 }
 
 impl Formalize for Node {
@@ -75,18 +66,6 @@ impl Formalize for Node {
             return Err(anyhow::anyhow!("No source found"));
         }
         Ok(())
-    }
-}
-
-impl From<HelperSource> for Source {
-    fn from(helper_source: HelperSource) -> Self {
-        match helper_source {
-            HelperSource::Source(source) => source,
-            HelperSource::ShortSource(source) => Source {
-                name: source,
-                version: "*".to_string(),
-            },
-        }
     }
 }
 
@@ -115,6 +94,7 @@ mod tests {
                     source:
                         name: debian10
                         version: '*'
+
         "#;
         let nodes = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -129,6 +109,7 @@ mod tests {
             source: 
                 name: package-name
                 version: 1.2.3
+
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -139,6 +120,20 @@ mod tests {
         let shorthand_source = r#"
             type: VM
             source: package-name
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn node_conditions_are_parsed() {
+        let shorthand_source = r#"
+            type: VM
+            conditions:
+                - condition-1
+                - condition-2
+
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -148,6 +143,7 @@ mod tests {
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
+
         "#;
         serde_yaml::from_str::<Node>(shorthand_source).unwrap();
     }
@@ -157,13 +153,14 @@ mod tests {
         let node_sdl = r#"
             type: Switch
             description: a network switch
+
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
-    fn includes_node_requirements_with_source_template() {
+    fn includes_node_requirements_with_source_template_and_conditions() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -177,6 +174,16 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    conditions:
+                        - condition-1
+                        - condition-2
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+                    
         "#;
         let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
         insta::assert_debug_snapshot!(nodes);

@@ -1,4 +1,4 @@
-use crate::node::{HelperSource, Source};
+use crate::common::{HelperSource, Source};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
