@@ -1,4 +1,8 @@
-use crate::common::{HelperSource, Source};
+use crate::{
+    common::{HelperSource, Source},
+    Formalize,
+};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -30,19 +34,21 @@ pub struct Feature {
 
 pub type Features = HashMap<String, Feature>;
 
-impl Feature {
-    pub fn map_source(&mut self) {
+impl Formalize for Feature {
+    fn formalize(&mut self) -> Result<()> {
         match &mut self._source_helper.take() {
             Some(HelperSource::Source(source)) => {
                 self.source = Some(source.to_owned());
+                Ok(())
             }
             Some(HelperSource::ShortSource(source)) => {
                 self.source = Some(Source {
                     name: source.to_owned(),
                     version: "*".to_string(),
                 });
+                Ok(())
             }
-            None => {}
+            None => Err(anyhow!("No source found for Feature")),
         }
     }
 }

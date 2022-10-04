@@ -215,10 +215,12 @@ impl Formalize for Scenario {
             })?;
             self.nodes = Some(nodes);
         }
+
         if let Some(features) = &mut self.features {
-            features
-                .iter_mut()
-                .for_each(|(_, feature)| feature.map_source());
+            features.iter_mut().try_for_each(move |(_, feature)| {
+                feature.formalize()?;
+                Ok(())
+            })?;
         }
 
         if let Some(mut conditions) = self.conditions.clone() {
