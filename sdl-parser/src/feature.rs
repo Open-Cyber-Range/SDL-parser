@@ -7,18 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub enum FeatureType {
-    #[serde(alias = "service", alias = "SERVICE")]
-    Service,
-    #[serde(alias = "configuration", alias = "CONFIGURATION")]
-    Configuration,
-    #[serde(alias = "artifact", alias = "ARTIFACT")]
-    Artifact,
-}
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Feature {
-    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
-    pub feature_type: FeatureType,
     #[serde(
         default,
         rename = "source",
@@ -68,10 +57,8 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             features:
                 my-cool-feature:
-                    type: Service
                     source: some-service
                 my-cool-feature-config:
-                    type: Configuration
                     source:
                         name: cool-config
                         version: 1.0.0
@@ -85,7 +72,6 @@ mod tests {
     #[test]
     fn feature_source_longhand_is_parsed() {
         let longhand_source = r#"
-            type: Artifact
             source:
                 name: artifact-name
                 version: 1.2.3
@@ -96,7 +82,6 @@ mod tests {
     #[test]
     fn feature_source_shorthand_is_parsed() {
         let shorthand_source = r#"
-            type: Artifact
             source: artifact-name
         "#;
         let feature = serde_yaml::from_str::<Feature>(shorthand_source).unwrap();
@@ -106,7 +91,6 @@ mod tests {
     #[test]
     fn feature_includes_dependencies() {
         let feature_sdl = r#"
-            type: Service
             source: some-service
             dependencies:
                 - some-virtual-machine
@@ -127,12 +111,10 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             features:
                 my-cool-feature:
-                    type: Service
                     source: some-service
                     dependencies: 
                         - my-less-cool-feature
                 my-less-cool-feature:
-                    type: Service
                     source:
                         name: cool-config
                         version: 1.0.0
@@ -157,7 +139,6 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             features:
                 my-cool-feature:
-                    type: Service
                     source: some-service
                     dependencies: 
                         - my-cool-feature

@@ -1,6 +1,6 @@
 ---
 source: sdl-parser/src/feature.rs
-expression: nodes
+expression: features
 ---
 scenario:
   name: test-scenario
@@ -10,13 +10,11 @@ scenario:
   nodes: ~
   features:
     my-cool-feature:
-      type: Service
       source:
         name: some-service
         version: "*"
       dependencies: ~
     my-cool-feature-config:
-      type: Configuration
       source:
         name: cool-config
         version: 1.0.0

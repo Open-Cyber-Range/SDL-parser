@@ -367,15 +367,12 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             features:
                 my-cool-service:
-                    type: Service
                     source: some-service
                 my-cool-config:
-                    type: Configuration
                     source: some-configuration
                     dependencies:
                         - my-cool-service
                 my-cool-artifact:
-                    type: Artifact
                     source:
                         name: dl_library
                         version: 1.2.3

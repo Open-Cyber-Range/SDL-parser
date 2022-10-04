@@ -3,7 +3,6 @@ source: sdl-parser/src/feature.rs
 expression: feature
 ---
 Feature {
-    feature_type: Service,
     _source_helper: Some(
         ShortSource(
             "some-service",
