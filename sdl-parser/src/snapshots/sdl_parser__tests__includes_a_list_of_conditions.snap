@@ -31,6 +31,7 @@ scenario:
         version: "*"
       conditions:
         - condition-1
+  features: ~
   infrastructure:
     deb10:
       count: 1

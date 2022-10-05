@@ -1,6 +1,7 @@
 pub mod common;
-pub mod conditions;
+mod conditions;
 mod constants;
+pub mod feature;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
@@ -11,6 +12,7 @@ use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
 use conditions::Conditions;
 use depper::Dependencies;
+use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
@@ -46,6 +48,7 @@ pub struct Scenario {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub nodes: Option<Nodes>,
+    pub features: Option<Features>,
     #[serde(default, rename = "infrastructure", skip_serializing)]
     infrastructure_helper: Option<InfrastructureHelper>,
     #[serde(default, skip_deserializing)]
@@ -65,13 +68,30 @@ impl Scenario {
         Ok(())
     }
 
-    pub fn get_dependencies(&self) -> Result<Dependencies> {
-        let mut dependency_builder = Dependencies::builder();
+    pub fn get_dependencies(&self) -> Result<()> {
         if let Some(nodes_value) = &self.nodes {
+            let mut dependency_builder = Dependencies::builder();
             for (node_name, _) in nodes_value.iter() {
                 dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
             }
+            self.build_infrastructure_dependencies(dependency_builder)?;
         }
+
+        if let Some(features_value) = &self.features {
+            let mut dependency_builder = Dependencies::builder();
+            for (feature_name, _) in features_value.iter() {
+                dependency_builder =
+                    dependency_builder.add_element(feature_name.to_string(), vec![]);
+            }
+            self.build_feature_dependencies(dependency_builder)?;
+        }
+        Ok(())
+    }
+
+    fn build_infrastructure_dependencies(
+        &self,
+        mut dependency_builder: depper::DependenciesBuilder,
+    ) -> Result<Dependencies, anyhow::Error> {
         if let Some(infrastructure) = &self.infrastructure {
             for (node_name, infra_node) in infrastructure.iter() {
                 let mut dependencies: Vec<String> = vec![];
@@ -91,6 +111,34 @@ impl Scenario {
                 }
                 dependency_builder =
                     dependency_builder.add_element(node_name.clone(), dependencies);
+            }
+        }
+        dependency_builder.build()
+    }
+
+    fn build_feature_dependencies(
+        &self,
+        mut dependency_builder: depper::DependenciesBuilder,
+    ) -> Result<Dependencies, anyhow::Error> {
+        if let Some(features) = &self.features {
+            for (feature_name, feature) in features.iter() {
+                let mut dependencies: Vec<String> = vec![];
+                if let Some(links) = &feature.dependencies {
+                    let links = links
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(links.as_slice());
+                }
+                if let Some(feature_dependencies) = &feature.dependencies {
+                    let feature_dependencies = feature_dependencies
+                        .iter()
+                        .map(|dependency| dependency.to_string())
+                        .collect::<Vec<String>>();
+                    dependencies.extend_from_slice(feature_dependencies.as_slice());
+                }
+                dependency_builder =
+                    dependency_builder.add_element(feature_name.clone(), dependencies);
             }
         }
         dependency_builder.build()
@@ -167,6 +215,14 @@ impl Formalize for Scenario {
             })?;
             self.nodes = Some(nodes);
         }
+
+        if let Some(features) = &mut self.features {
+            features.iter_mut().try_for_each(move |(_, feature)| {
+                feature.formalize()?;
+                Ok(())
+            })?;
+        }
+
         if let Some(mut conditions) = self.conditions.clone() {
             conditions.iter_mut().try_for_each(move |(_, condition)| {
                 condition.formalize()?;
@@ -302,6 +358,34 @@ mod tests {
     }
 
     #[test]
+    fn includes_a_list_of_features() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            features:
+                my-cool-service:
+                    source: some-service
+                my-cool-config:
+                    source: some-configuration
+                    dependencies:
+                        - my-cool-service
+                my-cool-artifact:
+                    source:
+                        name: dl_library
+                        version: 1.2.3
+                    dependencies: 
+                        - my-cool-service
+        "#;
+        let nodes = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
     fn includes_a_list_of_conditions() {
         let sdl = r#"
         scenario:
@@ -423,9 +507,9 @@ mod tests {
                 win10: 1
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let features = parse_sdl(sdl).unwrap().scenario.features.unwrap();
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
+            insta::assert_yaml_snapshot!(features);
         });
     }
 }

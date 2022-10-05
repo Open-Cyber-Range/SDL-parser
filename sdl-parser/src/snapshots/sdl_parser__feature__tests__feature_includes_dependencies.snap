@@ -1,0 +1,19 @@
+---
+source: sdl-parser/src/feature.rs
+expression: feature
+---
+Feature {
+    _source_helper: Some(
+        ShortSource(
+            "some-service",
+        ),
+    ),
+    source: None,
+    dependencies: Some(
+        [
+            "some-virtual-machine",
+            "some-switch",
+            "something-else",
+        ],
+    ),
+}

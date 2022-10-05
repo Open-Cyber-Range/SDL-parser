@@ -26,6 +26,7 @@ scenario:
         version: "*"
       conditions:
         - condition-1
+  features: ~
   infrastructure: ~
   conditions:
     condition-1:
