@@ -13,4 +13,5 @@ Feature {
     ),
     source: None,
     dependencies: None,
+    vulnerabilities: None,
 }

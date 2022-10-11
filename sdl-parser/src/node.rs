@@ -55,6 +55,7 @@ pub struct Node {
     pub source: Option<Source>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
+    pub vulnerabilities: Option<Vec<String>>,
 }
 
 impl Formalize for Node {
@@ -96,7 +97,7 @@ mod tests {
                         version: '*'
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });

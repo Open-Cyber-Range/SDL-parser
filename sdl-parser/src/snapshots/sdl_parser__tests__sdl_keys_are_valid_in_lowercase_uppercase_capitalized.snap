@@ -18,7 +18,9 @@ scenario:
         name: windows10
         version: "*"
       conditions: ~
+      vulnerabilities: ~
   features: ~
   infrastructure: ~
   conditions: ~
+  vulnerabilities: ~
 

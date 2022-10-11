@@ -1,5 +1,5 @@
 pub mod common;
-mod conditions;
+pub mod conditions;
 mod constants;
 pub mod feature;
 pub mod infrastructure;
@@ -7,6 +7,7 @@ mod library_item;
 pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
+pub mod vulnerabilities;
 
 use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
@@ -18,6 +19,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
+use vulnerabilities::Vulnerabilities;
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
@@ -54,6 +56,7 @@ pub struct Scenario {
     #[serde(default, skip_deserializing)]
     pub infrastructure: Option<Infrastructure>,
     pub conditions: Option<Conditions>,
+    pub vulnerabilities: Option<Vulnerabilities>,
 }
 
 impl Scenario {
@@ -262,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn includes_a_list_of_nodes() {
+    fn includes_nodes() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -288,7 +291,7 @@ mod tests {
                         cpu: 1
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });
@@ -314,8 +317,7 @@ mod tests {
                         version: '*'
 
         "#;
-        let parsed_schema = parse_sdl(sdl).unwrap();
-        insta::assert_yaml_snapshot!(parsed_schema);
+        parse_sdl(sdl).unwrap();
     }
 
     #[test]
@@ -351,14 +353,14 @@ mod tests {
                 deb10: 3
 
         "#;
-        let schema = parse_sdl(sdl).unwrap();
+        let infrastrcture = parse_sdl(sdl).unwrap().scenario.infrastructure;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(schema);
+                insta::assert_yaml_snapshot!(infrastrcture);
         });
     }
 
     #[test]
-    fn includes_a_list_of_features() {
+    fn includes_features() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -379,14 +381,14 @@ mod tests {
                     dependencies: 
                         - my-cool-service
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let features = parse_sdl(sdl).unwrap().scenario.features;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
+                insta::assert_yaml_snapshot!(features);
         });
     }
 
     #[test]
-    fn includes_a_list_of_conditions() {
+    fn includes_conditions() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -432,9 +434,9 @@ mod tests {
                     interval: 30
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let conditions = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
+                insta::assert_yaml_snapshot!(conditions);
         });
     }
 
@@ -478,10 +480,7 @@ mod tests {
                     interval: 30
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
-        insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(nodes);
-        });
+        parse_sdl(sdl).unwrap();
     }
 
     #[test]
@@ -507,9 +506,6 @@ mod tests {
                 win10: 1
 
         "#;
-        let features = parse_sdl(sdl).unwrap().scenario.features.unwrap();
-        insta::with_settings!({sort_maps => true}, {
-            insta::assert_yaml_snapshot!(features);
-        });
+        parse_sdl(sdl).unwrap();
     }
 }

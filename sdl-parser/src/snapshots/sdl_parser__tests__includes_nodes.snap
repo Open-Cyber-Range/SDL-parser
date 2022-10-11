@@ -1,20 +1,24 @@
 ---
-source: sdl-parser/src/node.rs
+source: sdl-parser/src/lib.rs
 expression: nodes
 ---
-deb-10:
+deb10:
   type: VM
-  description: ~
-  resources: ~
+  description: deb-10-description
+  resources:
+    ram: 2147483648
+    cpu: 1
   source:
     name: debian10
     version: "*"
   conditions: ~
   vulnerabilities: ~
-win-10:
+win10:
   type: VM
-  description: ~
-  resources: ~
+  description: win-10-description
+  resources:
+    ram: 4294967296
+    cpu: 2
   source:
     name: windows10
     version: "*"

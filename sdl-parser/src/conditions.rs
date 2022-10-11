@@ -69,9 +69,9 @@ mod tests {
                     source: digital-library-package
 
         "#;
-        let schema = parse_sdl(sdl).unwrap();
+        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(schema);
+                insta::assert_yaml_snapshot!(conditions);
         });
     }
 
@@ -126,9 +126,9 @@ mod tests {
                     source: digital-library-package
 
         "#;
-        let schema = parse_sdl(sdl).unwrap();
+        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(schema);
+                insta::assert_yaml_snapshot!(conditions);
         });
     }
 }

@@ -15,17 +15,21 @@ scenario:
         version: 1.2.3
       dependencies:
         - my-cool-service
+      vulnerabilities: ~
     my-cool-config:
       source:
         name: some-configuration
         version: "*"
       dependencies:
         - my-cool-service
+      vulnerabilities: ~
     my-cool-service:
       source:
         name: some-service
         version: "*"
       dependencies: ~
+      vulnerabilities: ~
   infrastructure: ~
   conditions: ~
+  vulnerabilities: ~
 

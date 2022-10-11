@@ -19,6 +19,7 @@ pub struct Feature {
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
     pub dependencies: Option<Vec<String>>,
+    pub vulnerabilities: Option<Vec<String>>,
 }
 
 pub type Features = HashMap<String, Feature>;
@@ -63,7 +64,7 @@ mod tests {
                         name: cool-config
                         version: 1.0.0
         "#;
-        let features = parse_sdl(sdl).unwrap();
+        let features = parse_sdl(sdl).unwrap().scenario.features;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(features);
         });

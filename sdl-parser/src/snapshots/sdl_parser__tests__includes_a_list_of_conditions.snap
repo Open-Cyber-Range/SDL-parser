@@ -20,6 +20,7 @@ scenario:
       conditions:
         - condition-2
         - condition-3
+      vulnerabilities: ~
     win10:
       type: VM
       description: win-10-description
@@ -31,6 +32,7 @@ scenario:
         version: "*"
       conditions:
         - condition-1
+      vulnerabilities: ~
   features: ~
   infrastructure:
     deb10:
@@ -57,4 +59,5 @@ scenario:
       command: executable/path.sh
       interval: 30
       source: ~
+  vulnerabilities: ~
 
