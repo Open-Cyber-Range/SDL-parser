@@ -1,5 +1,6 @@
 use crate::{
     common::{HelperSource, Source},
+    vulnerabilities::VulnerabilityConnection,
     Formalize,
 };
 use anyhow::{anyhow, Result};
@@ -20,6 +21,32 @@ pub struct Feature {
     pub source: Option<Source>,
     pub dependencies: Option<Vec<String>>,
     pub vulnerabilities: Option<Vec<String>>,
+}
+
+impl VulnerabilityConnection for (&String, &Feature) {
+    fn valid_vulnerabilities(
+        &self,
+        potential_vulnerability_names: &Option<Vec<String>>,
+    ) -> Result<()> {
+        if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
+            if let Some(vulnerabilities) = potential_vulnerability_names {
+                for node_vulnerability in node_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(node_vulnerability) {
+                        return Err(anyhow!(
+                            "Vulnerability {} not found under scenario",
+                            node_vulnerability
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Vulnerability list is empty under scenario, but feature {} has vulnerabilities",
+                    self.0
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 pub type Features = HashMap<String, Feature>;

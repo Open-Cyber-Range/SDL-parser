@@ -19,7 +19,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use vulnerabilities::Vulnerabilities;
+use vulnerabilities::{Vulnerabilities, VulnerabilityConnection};
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
@@ -207,6 +207,24 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_vulnerabilities(&self) -> Result<()> {
+        let vulnerabilities = self
+            .vulnerabilities
+            .as_ref()
+            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(nodes) = &self.nodes {
+            for combined_value in nodes.iter() {
+                combined_value.valid_vulnerabilities(&vulnerabilities)?;
+            }
+        }
+        if let Some(features) = &self.features {
+            for combined_value in features.iter() {
+                combined_value.valid_vulnerabilities(&vulnerabilities)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -237,6 +255,7 @@ impl Formalize for Scenario {
         self.verify_switch_counts()?;
         self.verify_conditions()?;
         self.verify_dependencies()?;
+        self.verify_vulnerabilities()?;
         Ok(())
     }
 }
