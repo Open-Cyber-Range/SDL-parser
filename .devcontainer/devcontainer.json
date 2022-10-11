@@ -35,7 +35,8 @@
 				"rust-lang.rust-analyzer",
 				"tamasfe.even-better-toml",
 				"serayuzgur.crates",
-				"eamodio.gitlens"
+				"eamodio.gitlens",
+				"github.copilot"
 			]
 		}
 	},
