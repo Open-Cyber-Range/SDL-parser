@@ -209,18 +209,18 @@ impl Scenario {
     }
 
     fn verify_vulnerabilities(&self) -> Result<()> {
-        let vulnerabilities = self
+        let vulnernability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for combined_value in nodes.iter() {
-                combined_value.valid_vulnerabilities(&vulnerabilities)?;
+                combined_value.valid_vulnerabilities(&vulnernability_names)?;
             }
         }
         if let Some(features) = &self.features {
             for combined_value in features.iter() {
-                combined_value.valid_vulnerabilities(&vulnerabilities)?;
+                combined_value.valid_vulnerabilities(&vulnernability_names)?;
             }
         }
         Ok(())
