@@ -43,7 +43,10 @@ mod tests {
                 vuln-2:
                     description: some-description
         "#;
-        parse_sdl(sdl).unwrap();
+        let vulnerabilities = parse_sdl(sdl).unwrap().scenario.vulnerabilities;
+        insta::with_settings!({sort_maps => true}, {
+            insta::assert_yaml_snapshot!(vulnerabilities);
+    });
     }
 
     #[test]
