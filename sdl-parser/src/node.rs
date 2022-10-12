@@ -1,5 +1,5 @@
-use crate::Formalize;
-use anyhow::Result;
+use crate::{vulnerabilities::VulnerabilityConnection, Formalize};
+use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
@@ -55,6 +55,33 @@ pub struct Node {
     pub source: Option<Source>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
+    pub vulnerabilities: Option<Vec<String>>,
+}
+
+impl VulnerabilityConnection for (&String, &Node) {
+    fn valid_vulnerabilities(
+        &self,
+        potential_vulnerability_names: &Option<Vec<String>>,
+    ) -> Result<()> {
+        if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
+            if let Some(vulnerabilities) = potential_vulnerability_names {
+                for node_vulnerability in node_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(node_vulnerability) {
+                        return Err(anyhow!(
+                            "Vulnerability {} not found under scenario",
+                            node_vulnerability
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Vulnerability list is empty under scenario, but node {} has vulnerabilities",
+                    self.0
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Node {
@@ -96,7 +123,7 @@ mod tests {
                         version: '*'
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap();
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });

@@ -11,4 +11,5 @@ Node {
     source_helper: None,
     source: None,
     conditions: None,
+    vulnerabilities: None,
 }

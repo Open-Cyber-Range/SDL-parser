@@ -27,9 +27,9 @@ impl InfraNode {
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum HelperNode {
-    EmptyNode,
-    ShortNode(u32),
-    LongNode(InfraNode),
+    Empty,
+    Short(u32),
+    Long(InfraNode),
 }
 
 pub type InfrastructureHelper = HashMap<String, HelperNode>;
@@ -39,9 +39,9 @@ pub type Infrastructure = HashMap<String, InfraNode>;
 impl From<HelperNode> for InfraNode {
     fn from(helper_node: HelperNode) -> Self {
         match helper_node {
-            HelperNode::ShortNode(value) => InfraNode::new(Some(value)),
-            HelperNode::LongNode(infranode) => infranode,
-            HelperNode::EmptyNode => InfraNode::new(None),
+            HelperNode::Short(value) => InfraNode::new(Some(value)),
+            HelperNode::Long(infranode) => infranode,
+            HelperNode::Empty => InfraNode::new(None),
         }
     }
 }

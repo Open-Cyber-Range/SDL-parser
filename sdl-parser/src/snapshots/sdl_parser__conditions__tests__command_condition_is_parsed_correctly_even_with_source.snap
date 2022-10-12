@@ -1,42 +1,15 @@
 ---
 source: sdl-parser/src/conditions.rs
-expression: schema
+expression: conditions
 ---
-scenario:
-  name: test-scenario
-  description: some-description
-  start: "2022-01-20T13:00:00Z"
-  end: "2022-01-20T23:00:00Z"
-  nodes:
-    deb-10:
-      type: VM
-      description: ~
-      resources: ~
-      source:
-        name: debian10
-        version: "*"
-      conditions:
-        - condition-2
-    win-10:
-      type: VM
-      description: ~
-      resources: ~
-      source:
-        name: windows10
-        version: "*"
-      conditions:
-        - condition-1
-  features: ~
-  infrastructure: ~
-  conditions:
-    condition-1:
-      command: executable/path.sh
-      interval: 30
-      source: ~
-    condition-2:
-      command: ~
-      interval: ~
-      source:
-        name: digital-library-package
-        version: "*"
+condition-1:
+  command: executable/path.sh
+  interval: 30
+  source: ~
+condition-2:
+  command: ~
+  interval: ~
+  source:
+    name: digital-library-package
+    version: "*"
 

@@ -16,4 +16,5 @@ Feature {
             "something-else",
         ],
     ),
+    vulnerabilities: None,
 }

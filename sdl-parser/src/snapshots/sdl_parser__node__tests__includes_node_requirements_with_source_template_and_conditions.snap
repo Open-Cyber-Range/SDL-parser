@@ -29,5 +29,6 @@ expression: nodes
                 "condition-2",
             ],
         ),
+        vulnerabilities: None,
     },
 }
