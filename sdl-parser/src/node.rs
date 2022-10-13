@@ -1,4 +1,4 @@
-use crate::{vulnerability::VulnerabilityConnection, Formalize};
+use crate::{helpers::Connection, vulnerability::Vulnerability, Formalize};
 use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -61,8 +61,8 @@ pub struct Node {
     pub vulnerabilities: Option<Vec<String>>,
 }
 
-impl VulnerabilityConnection for (&String, &Node) {
-    fn valid_vulnerabilities(
+impl Connection<Vulnerability> for (&String, &Node) {
+    fn validate_connections(
         &self,
         potential_vulnerability_names: &Option<Vec<String>>,
     ) -> Result<()> {

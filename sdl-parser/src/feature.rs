@@ -1,6 +1,7 @@
 use crate::{
     common::{HelperSource, Source},
-    vulnerability::VulnerabilityConnection,
+    helpers::Connection,
+    vulnerability::Vulnerability,
     Formalize,
 };
 use anyhow::{anyhow, Result};
@@ -23,18 +24,18 @@ pub struct Feature {
     pub vulnerabilities: Option<Vec<String>>,
 }
 
-impl VulnerabilityConnection for (&String, &Feature) {
-    fn valid_vulnerabilities(
+impl Connection<Vulnerability> for (&String, &Feature) {
+    fn validate_connections(
         &self,
         potential_vulnerability_names: &Option<Vec<String>>,
     ) -> Result<()> {
-        if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
+        if let Some(feature_vulnerabilities) = &self.1.vulnerabilities {
             if let Some(vulnerabilities) = potential_vulnerability_names {
-                for node_vulnerability in node_vulnerabilities.iter() {
-                    if !vulnerabilities.contains(node_vulnerability) {
+                for feature_vulnerability in feature_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(feature_vulnerability) {
                         return Err(anyhow!(
                             "Vulnerability {} not found under scenario",
-                            node_vulnerability
+                            feature_vulnerability
                         ));
                     }
                 }

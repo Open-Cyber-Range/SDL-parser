@@ -12,4 +12,5 @@ scenario:
   infrastructure: ~
   conditions: ~
   vulnerabilities: ~
+  capabilities: ~
 
