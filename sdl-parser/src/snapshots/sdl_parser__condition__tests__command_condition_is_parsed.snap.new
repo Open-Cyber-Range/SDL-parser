@@ -1,5 +1,6 @@
 ---
-source: sdl-parser/src/conditions.rs
+source: sdl-parser/src/condition.rs
+assertion_line: 86
 expression: condition
 ---
 Condition {
