@@ -1,4 +1,4 @@
-use crate::{vulnerabilities::VulnerabilityConnection, Formalize};
+use crate::{vulnerability::VulnerabilityConnection, Formalize};
 use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};

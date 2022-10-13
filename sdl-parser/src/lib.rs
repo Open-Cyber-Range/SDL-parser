@@ -1,5 +1,5 @@
 pub mod common;
-pub mod conditions;
+pub mod condition;
 mod constants;
 pub mod feature;
 pub mod infrastructure;
@@ -7,11 +7,11 @@ mod library_item;
 pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
-pub mod vulnerabilities;
+pub mod vulnerability;
 
 use anyhow::{anyhow, Ok, Result};
 use chrono::{DateTime, Utc};
-use conditions::Conditions;
+use condition::Conditions;
 use depper::Dependencies;
 use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -19,7 +19,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use vulnerabilities::{Vulnerabilities, VulnerabilityConnection};
+use vulnerability::{Vulnerabilities, VulnerabilityConnection};
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
