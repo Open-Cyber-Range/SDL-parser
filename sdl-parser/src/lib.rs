@@ -1,7 +1,9 @@
+pub mod capability;
 pub mod common;
 pub mod condition;
 mod constants;
 pub mod feature;
+mod helpers;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
@@ -9,7 +11,9 @@ pub mod node;
 pub mod test;
 pub mod vulnerability;
 
+use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
+use capability::Capabilities;
 use chrono::{DateTime, Utc};
 use condition::Conditions;
 use depper::Dependencies;
@@ -19,7 +23,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use vulnerability::{Vulnerabilities, VulnerabilityConnection};
+use vulnerability::Vulnerabilities;
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
@@ -57,6 +61,7 @@ pub struct Scenario {
     pub infrastructure: Option<Infrastructure>,
     pub conditions: Option<Conditions>,
     pub vulnerabilities: Option<Vulnerabilities>,
+    pub capabilities: Option<Capabilities>,
 }
 
 impl Scenario {
@@ -215,12 +220,17 @@ impl Scenario {
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for combined_value in nodes.iter() {
-                combined_value.valid_vulnerabilities(&vulnernability_names)?;
+                combined_value.validate_connections(&vulnernability_names)?;
             }
         }
         if let Some(features) = &self.features {
             for combined_value in features.iter() {
-                combined_value.valid_vulnerabilities(&vulnernability_names)?;
+                combined_value.validate_connections(&vulnernability_names)?;
+            }
+        }
+        if let Some(capabilities) = &self.capabilities {
+            for combined_value in capabilities.iter() {
+                combined_value.validate_connections(&vulnernability_names)?;
             }
         }
         Ok(())
