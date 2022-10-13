@@ -188,6 +188,31 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_features(&self) -> Result<()> {
+        if let Some(nodes) = &self.nodes {
+            let scenario_has_features = &self.features.is_some();
+            for (node_name, node) in nodes.iter() {
+                if let Some(node_features) = &node.features {
+                    if !scenario_has_features {
+                        return Err(anyhow!(
+                            "Node \"{node_name}\" has features but none are defined under scenario"
+                        ));
+                    }
+                    if let Some(features) = &self.features {
+                        for node_feature in node_features.iter() {
+                            if !features.contains_key(node_feature) {
+                                return Err(anyhow!(
+                                    "Feature \"{node_feature}\" for node \"{node_name}\" not found in scenario.features"
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn verify_conditions(&self) -> Result<()> {
         if let Some(nodes) = &self.nodes {
             for (node_name, node) in nodes.iter() {
@@ -270,6 +295,7 @@ impl Formalize for Scenario {
         self.map_infrastructure()?;
         self.verify_node_name_length()?;
         self.verify_switch_counts()?;
+        self.verify_features()?;
         self.verify_conditions()?;
         self.verify_dependencies()?;
         self.verify_vulnerabilities()?;

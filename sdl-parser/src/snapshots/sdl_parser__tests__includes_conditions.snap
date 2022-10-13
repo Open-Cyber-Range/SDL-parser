@@ -17,6 +17,7 @@ scenario:
       source:
         name: debian10
         version: "*"
+      features: ~
       conditions:
         - condition-2
         - condition-3
@@ -30,6 +31,7 @@ scenario:
       source:
         name: windows10
         version: "*"
+      features: ~
       conditions:
         - condition-1
       vulnerabilities: ~

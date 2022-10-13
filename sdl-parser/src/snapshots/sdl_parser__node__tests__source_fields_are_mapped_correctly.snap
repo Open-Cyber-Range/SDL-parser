@@ -9,6 +9,7 @@ deb-10:
   source:
     name: debian10
     version: "*"
+  features: ~
   conditions: ~
   vulnerabilities: ~
 win-10:
@@ -18,6 +19,7 @@ win-10:
   source:
     name: windows10
     version: "*"
+  features: ~
   conditions: ~
   vulnerabilities: ~
 
