@@ -1,6 +1,6 @@
 use crate::{
     common::{HelperSource, Source},
-    vulnerabilities::VulnerabilityConnection,
+    vulnerability::VulnerabilityConnection,
     Formalize,
 };
 use anyhow::{anyhow, Result};
