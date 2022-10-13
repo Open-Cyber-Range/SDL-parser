@@ -137,4 +137,81 @@ mod tests {
                 insta::assert_yaml_snapshot!(capabilities);
         });
     }
+
+    #[test]
+    #[should_panic]
+    fn fails_parsing_when_missing_condition() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            vulnerabilities:
+              vulnerability-1:
+                description: some-description
+              vulnerability-2:
+                description: some-description
+            conditions:
+              condition-1:
+                command: executable/path.sh
+                interval: 30
+                source: digital-library-package
+              condition-2:
+                source: digital-library-package
+            capabilities:
+              capability-1:
+                description: "Can execute Dirty Cow"
+                condition: condition-1
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+              capability-2:
+                description: "Can defend against Dirty Cow"
+                condition: condition-3
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_parsing_when_missing_vulnerability() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            vulnerabilities:
+              vulnerability-1:
+                description: some-description
+              vulnerability-2:
+                description: some-description
+            conditions:
+              condition-1:
+                command: executable/path.sh
+                interval: 30
+                source: digital-library-package
+              condition-2:
+                source: digital-library-package
+            capabilities:
+              capability-1:
+                description: "Can execute Dirty Cow"
+                condition: condition-1
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+                  - vulnerability-4
+              capability-2:
+                description: "Can defend against Dirty Cow"
+                condition: condition-2
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
 }
