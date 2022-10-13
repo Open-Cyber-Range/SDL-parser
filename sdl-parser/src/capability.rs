@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Ok, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{helpers::Connection, vulnerability::Vulnerability};
+use crate::{condition::Condition, helpers::Connection, vulnerability::Vulnerability, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Capability {
@@ -13,6 +13,15 @@ pub struct Capability {
     pub condition: String,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Vec<String>,
+}
+
+impl Formalize for Capability {
+    fn formalize(&mut self) -> Result<()> {
+        if self.vulnerabilities.is_empty() {
+            return Err(anyhow!("Capability must have atleast one vulnerability"));
+        }
+        Ok(())
+    }
 }
 
 pub type Capabilities = HashMap<String, Capability>;
@@ -41,5 +50,91 @@ impl Connection<Vulnerability> for (&String, &Capability) {
         }
 
         Ok(())
+    }
+}
+
+impl Connection<Condition> for (&String, &Capability) {
+    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
+        let condition = &self.1.condition;
+
+        if let Some(condition_names) = potential_condition_names {
+            if !condition_names.contains(condition) {
+                return Err(anyhow!("Condition {} not found under scenario", condition));
+            }
+        } else {
+            return Err(anyhow!("Condition list is empty under scenario, but having a capability requires a condition"));
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parse_sdl;
+
+    #[test]
+    fn capability_is_parsed() {
+        let sdl = r#"
+          description: "Can defend against Dirty Cow"
+          condition: condition-4
+          vulnerabilities:
+            - vulnerability-1
+            - vulnerability-2
+        "#;
+        serde_yaml::from_str::<Capability>(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn capability_with_zero_vulnerabilities_fails_formalization() {
+        let sdl = r#"
+          description: "Can defend against Dirty Cow"
+          condition: condition-4
+          vulnerabilities:
+        "#;
+        let mut capability = serde_yaml::from_str::<Capability>(sdl).unwrap();
+        capability.formalize().unwrap();
+    }
+
+    #[test]
+    fn can_parse_capabilities_in_sdl() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            vulnerabilities:
+              vulnerability-1:
+                description: some-description
+              vulnerability-2:
+                description: some-description
+            conditions:
+              condition-1:
+                command: executable/path.sh
+                interval: 30
+                source: digital-library-package
+              condition-2:
+                source: digital-library-package
+            capabilities:
+              capability-1:
+                description: "Can execute Dirty Cow"
+                condition: condition-1
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+              capability-2:
+                description: "Can defend against Dirty Cow"
+                condition: condition-2
+                vulnerabilities:
+                  - vulnerability-1
+                  - vulnerability-2
+        "#;
+        let capabilities = parse_sdl(sdl).unwrap().scenario.capabilities;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(capabilities);
+        });
     }
 }

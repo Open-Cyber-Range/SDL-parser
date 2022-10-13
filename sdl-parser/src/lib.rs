@@ -15,7 +15,7 @@ use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
 use capability::Capabilities;
 use chrono::{DateTime, Utc};
-use condition::Conditions;
+use condition::{Condition, Conditions};
 use depper::Dependencies;
 use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -23,7 +23,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use vulnerability::Vulnerabilities;
+use vulnerability::{Vulnerabilities, Vulnerability};
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
@@ -178,6 +178,10 @@ impl Scenario {
     }
 
     fn verify_conditions(&self) -> Result<()> {
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for (node_name, node) in nodes.iter() {
                 if let Some(node_conditions) = &node.conditions {
@@ -210,6 +214,11 @@ impl Scenario {
                 }
             }
         }
+        if let Some(capabilities) = &self.capabilities {
+            for combined_value in capabilities.iter() {
+                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
+            }
+        }
         Ok(())
     }
 
@@ -230,7 +239,10 @@ impl Scenario {
         }
         if let Some(capabilities) = &self.capabilities {
             for combined_value in capabilities.iter() {
-                combined_value.validate_connections(&vulnernability_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
             }
         }
         Ok(())
@@ -260,6 +272,15 @@ impl Formalize for Scenario {
                 Ok(())
             })?;
             self.conditions = Some(conditions);
+        }
+
+        if let Some(mut capabilities) = self.capabilities.clone() {
+            capabilities
+                .iter_mut()
+                .try_for_each(move |(_, condition)| {
+                    condition.formalize()?;
+                    Ok(())
+                })?;
         }
         self.map_infrastructure()?;
         self.verify_switch_counts()?;
