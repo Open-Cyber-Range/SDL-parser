@@ -12,13 +12,15 @@ pub struct Capability {
     #[serde(default, alias = "Condition", alias = "CONDITION")]
     pub condition: String,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
-    pub vulnerabilities: Vec<String>,
+    pub vulnerabilities: Option<Vec<String>>,
 }
 
 impl Formalize for Capability {
     fn formalize(&mut self) -> Result<()> {
-        if self.vulnerabilities.is_empty() {
-            return Err(anyhow!("Capability must have atleast one vulnerability"));
+        if let Some(vulnerabilities) = &self.vulnerabilities {
+            if vulnerabilities.is_empty() {
+                return Err(anyhow!("Capability must have at least one vulnerability"));
+            }
         }
         Ok(())
     }
@@ -31,24 +33,23 @@ impl Connection<Vulnerability> for (&String, &Capability) {
         &self,
         potential_vulnerability_names: &Option<Vec<String>>,
     ) -> Result<()> {
-        let capability_vulnerabilities = &self.1.vulnerabilities;
-
-        if let Some(vulnerabilities) = potential_vulnerability_names {
-            for capability_vulnerability in capability_vulnerabilities.iter() {
-                if !vulnerabilities.contains(capability_vulnerability) {
-                    return Err(anyhow!(
-                        "Vulnerability {} not found under scenario",
-                        capability_vulnerability
-                    ));
+        if let Some(capability_vulnerabilities) = &self.1.vulnerabilities {
+            if let Some(vulnerabilities) = potential_vulnerability_names {
+                for capability_vulnerability in capability_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(capability_vulnerability) {
+                        return Err(anyhow!(
+                            "Vulnerability {} not found under scenario",
+                            capability_vulnerability
+                        ));
+                    }
                 }
-            }
-        } else if !capability_vulnerabilities.is_empty() {
-            return Err(anyhow!(
+            } else if !capability_vulnerabilities.is_empty() {
+                return Err(anyhow!(
                 "Vulnerability list is empty under scenario, but capability {} has vulnerabilities",
                 self.0
             ));
+            }
         }
-
         Ok(())
     }
 }
@@ -92,7 +93,7 @@ mod tests {
         let sdl = r#"
           description: "Can defend against Dirty Cow"
           condition: condition-4
-          vulnerabilities:
+          vulnerabilities: {}
         "#;
         let mut capability = serde_yaml::from_str::<Capability>(sdl).unwrap();
         capability.formalize().unwrap();
