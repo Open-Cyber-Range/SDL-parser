@@ -18,7 +18,7 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
-use feature::Features;
+use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
@@ -194,25 +194,13 @@ impl Scenario {
     }
 
     fn verify_features(&self) -> Result<()> {
+        let feature_names = self
+            .features
+            .as_ref()
+            .map(|feature_map| feature_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
-            let scenario_has_features = &self.features.is_some();
-            for (node_name, node) in nodes.iter() {
-                if let Some(node_features) = &node.features {
-                    if !scenario_has_features {
-                        return Err(anyhow!(
-                            "Node \"{node_name}\" has features but none are defined under scenario"
-                        ));
-                    }
-                    if let Some(features) = &self.features {
-                        for node_feature in node_features.iter() {
-                            if !features.contains_key(node_feature) {
-                                return Err(anyhow!(
-                                    "Feature \"{node_feature}\" for node \"{node_name}\" not found in scenario.features"
-                                ));
-                            }
-                        }
-                    }
-                }
+            for combined_value in nodes.iter() {
+                Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
             }
         }
         Ok(())
@@ -270,7 +258,10 @@ impl Scenario {
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for combined_value in nodes.iter() {
-                combined_value.validate_connections(&vulnernability_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
             }
         }
         if let Some(features) = &self.features {
