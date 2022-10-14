@@ -16,6 +16,7 @@ use anyhow::{anyhow, Ok, Result};
 use capability::Capabilities;
 use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
+use constants::MAX_LONG_NAME;
 use depper::Dependencies;
 use feature::Features;
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -177,6 +178,21 @@ impl Scenario {
         Ok(())
     }
 
+    pub fn verify_node_name_length(&self) -> Result<()> {
+        if let Some(nodes) = &self.nodes {
+            for name in nodes.keys() {
+                if name.len() > MAX_LONG_NAME {
+                    return Err(anyhow!(
+                        "{} is too long, maximum node name length is {:?}",
+                        name,
+                        MAX_LONG_NAME
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn verify_conditions(&self) -> Result<()> {
         let condition_names = self
             .conditions
@@ -283,6 +299,7 @@ impl Formalize for Scenario {
                 })?;
         }
         self.map_infrastructure()?;
+        self.verify_node_name_length()?;
         self.verify_switch_counts()?;
         self.verify_conditions()?;
         self.verify_dependencies()?;
@@ -555,6 +572,29 @@ mod tests {
             infrastructure:
                 win10: 1
 
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn too_long_node_name_is_disallowed() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                my-really-really-superlong-non-compliant-name:
+                    type: VM
+                    description: win-10-description
+                    source: windows10
+                    resources:
+                        ram: 4 gib
+                        cpu: 2
+                    conditions:
+                        - condition-1
         "#;
         parse_sdl(sdl).unwrap();
     }
