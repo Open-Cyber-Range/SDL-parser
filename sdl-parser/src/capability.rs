@@ -19,7 +19,7 @@ impl Formalize for Capability {
     fn formalize(&mut self) -> Result<()> {
         if let Some(vulnerabilities) = &self.vulnerabilities {
             if vulnerabilities.is_empty() {
-                return Err(anyhow!("Capability must have at least one vulnerability"));
+                return Err(anyhow!("When vulnerabilities is declared, capability must have at least one vulnerability"));
             }
         }
         Ok(())
