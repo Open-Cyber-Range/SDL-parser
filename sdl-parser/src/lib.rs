@@ -18,7 +18,7 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
-use feature::Features;
+use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
@@ -193,6 +193,19 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_features(&self) -> Result<()> {
+        let feature_names = self
+            .features
+            .as_ref()
+            .map(|feature_map| feature_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(nodes) = &self.nodes {
+            for combined_value in nodes.iter() {
+                Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
+            }
+        }
+        Ok(())
+    }
+
     fn verify_conditions(&self) -> Result<()> {
         let condition_names = self
             .conditions
@@ -245,7 +258,10 @@ impl Scenario {
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for combined_value in nodes.iter() {
-                combined_value.validate_connections(&vulnernability_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
             }
         }
         if let Some(features) = &self.features {
@@ -301,6 +317,7 @@ impl Formalize for Scenario {
         self.map_infrastructure()?;
         self.verify_node_name_length()?;
         self.verify_switch_counts()?;
+        self.verify_features()?;
         self.verify_conditions()?;
         self.verify_dependencies()?;
         self.verify_vulnerabilities()?;

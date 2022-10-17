@@ -23,6 +23,7 @@ expression: nodes
                 version: "*",
             },
         ),
+        features: None,
         conditions: Some(
             [
                 "condition-1",

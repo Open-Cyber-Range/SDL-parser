@@ -15,6 +15,7 @@ Node {
         ),
     ),
     source: None,
+    features: None,
     conditions: None,
     vulnerabilities: None,
 }

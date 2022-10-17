@@ -10,6 +10,7 @@ Node {
     resources: None,
     source_helper: None,
     source: None,
+    features: None,
     conditions: None,
     vulnerabilities: None,
 }

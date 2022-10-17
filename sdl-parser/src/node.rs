@@ -53,8 +53,11 @@ pub struct Node {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(default, alias = "Features", alias = "FEATURES")]
+    pub features: Option<Vec<String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
+    #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
 }
 
@@ -184,6 +187,54 @@ mod tests {
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn includes_node_with_features() {
+        let node_sdl = r#"
+            type: VM
+            features:
+                - feature-1
+                - feature-2
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn includes_nodes_with_defined_features() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+                    features:
+                        - feature-1
+                        - feature-2
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+                feature-2:
+                    type: artifact
+                    source:
+                        name: my-cool-artifact
+                        version: 1.0.0
+                    
+        "#;
+        let scenario = parse_sdl(sdl).unwrap().scenario;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
     }
 
     #[test]
