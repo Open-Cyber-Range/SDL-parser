@@ -60,4 +60,5 @@ scenario:
       interval: 30
       source: ~
   vulnerabilities: ~
+  capabilities: ~
 

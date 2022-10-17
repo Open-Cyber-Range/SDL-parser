@@ -1,5 +1,5 @@
 ---
-source: sdl-parser/src/conditions.rs
+source: sdl-parser/src/condition.rs
 expression: condition
 ---
 Condition {

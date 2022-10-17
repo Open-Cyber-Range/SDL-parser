@@ -1,17 +1,21 @@
+pub mod capability;
 pub mod common;
-pub mod conditions;
+pub mod condition;
 mod constants;
 pub mod feature;
+mod helpers;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
-pub mod vulnerabilities;
+pub mod vulnerability;
 
+use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
+use capability::Capabilities;
 use chrono::{DateTime, Utc};
-use conditions::Conditions;
+use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
 use feature::Features;
@@ -20,7 +24,7 @@ pub use library_item::LibraryItem;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use vulnerabilities::{Vulnerabilities, VulnerabilityConnection};
+use vulnerability::{Vulnerabilities, Vulnerability};
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
@@ -58,6 +62,7 @@ pub struct Scenario {
     pub infrastructure: Option<Infrastructure>,
     pub conditions: Option<Conditions>,
     pub vulnerabilities: Option<Vulnerabilities>,
+    pub capabilities: Option<Capabilities>,
 }
 
 impl Scenario {
@@ -189,6 +194,10 @@ impl Scenario {
     }
 
     fn verify_conditions(&self) -> Result<()> {
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for (node_name, node) in nodes.iter() {
                 if let Some(node_conditions) = &node.conditions {
@@ -221,6 +230,11 @@ impl Scenario {
                 }
             }
         }
+        if let Some(capabilities) = &self.capabilities {
+            for combined_value in capabilities.iter() {
+                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
+            }
+        }
         Ok(())
     }
 
@@ -231,12 +245,20 @@ impl Scenario {
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
             for combined_value in nodes.iter() {
-                combined_value.valid_vulnerabilities(&vulnernability_names)?;
+                combined_value.validate_connections(&vulnernability_names)?;
             }
         }
         if let Some(features) = &self.features {
             for combined_value in features.iter() {
-                combined_value.valid_vulnerabilities(&vulnernability_names)?;
+                combined_value.validate_connections(&vulnernability_names)?;
+            }
+        }
+        if let Some(capabilities) = &self.capabilities {
+            for combined_value in capabilities.iter() {
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
             }
         }
         Ok(())
@@ -266,6 +288,15 @@ impl Formalize for Scenario {
                 Ok(())
             })?;
             self.conditions = Some(conditions);
+        }
+
+        if let Some(mut capabilities) = self.capabilities.clone() {
+            capabilities
+                .iter_mut()
+                .try_for_each(move |(_, condition)| {
+                    condition.formalize()?;
+                    Ok(())
+                })?;
         }
         self.map_infrastructure()?;
         self.verify_node_name_length()?;
