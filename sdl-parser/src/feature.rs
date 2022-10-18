@@ -144,7 +144,6 @@ mod tests {
         let longhand_source = r#"
             type: artifact
             source:
-                type: Artifact
                 name: artifact-name
                 version: 1.2.3
         "#;
