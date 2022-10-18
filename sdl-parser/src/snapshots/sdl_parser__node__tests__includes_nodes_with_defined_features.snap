@@ -23,12 +23,14 @@ nodes:
     vulnerabilities: ~
 features:
   feature-1:
+    type: Service
     source:
       name: dl-library
       version: "*"
     dependencies: ~
     vulnerabilities: ~
   feature-2:
+    type: Artifact
     source:
       name: my-cool-artifact
       version: 1.0.0
