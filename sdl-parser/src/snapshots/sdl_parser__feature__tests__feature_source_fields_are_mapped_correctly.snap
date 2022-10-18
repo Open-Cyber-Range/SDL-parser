@@ -3,12 +3,14 @@ source: sdl-parser/src/feature.rs
 expression: features
 ---
 my-cool-feature:
+  type: Service
   source:
     name: some-service
     version: "*"
   dependencies: ~
   vulnerabilities: ~
 my-cool-feature-config:
+  type: Configuration
   source:
     name: cool-config
     version: 1.0.0
