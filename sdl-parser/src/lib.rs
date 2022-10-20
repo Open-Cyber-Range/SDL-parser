@@ -30,7 +30,7 @@ pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Schema {
     #[serde(
         alias = "Scenario",
