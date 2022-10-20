@@ -1,0 +1,14 @@
+---
+source: sdl-parser/src/lib.rs
+expression: infrastrcture
+---
+deb10:
+  count: 3
+  links: ~
+  dependencies: ~
+win10:
+  count: 10
+  links: ~
+  dependencies:
+    - deb10
+

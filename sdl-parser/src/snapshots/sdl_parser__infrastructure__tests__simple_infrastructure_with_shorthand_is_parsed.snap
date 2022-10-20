@@ -1,0 +1,17 @@
+---
+source: sdl-parser/src/infrastructure.rs
+expression: infrastructure
+---
+ubuntu-10:
+  count: 5
+  links: ~
+  dependencies: ~
+windows-10-vuln-1:
+  count: 10
+  links: ~
+  dependencies: ~
+windows-10-vuln-2:
+  count: 10
+  links: ~
+  dependencies: ~
+

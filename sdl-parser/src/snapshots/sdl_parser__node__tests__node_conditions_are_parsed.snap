@@ -1,0 +1,19 @@
+---
+source: sdl-parser/src/node.rs
+expression: node
+---
+Node {
+    type_field: VM,
+    description: None,
+    resources: None,
+    source_helper: None,
+    source: None,
+    features: None,
+    conditions: Some(
+        [
+            "condition-1",
+            "condition-2",
+        ],
+    ),
+    vulnerabilities: None,
+}

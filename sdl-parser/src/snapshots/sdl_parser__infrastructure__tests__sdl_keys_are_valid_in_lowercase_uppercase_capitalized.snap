@@ -1,0 +1,30 @@
+---
+source: sdl-parser/src/infrastructure.rs
+expression: infrastructure
+---
+switch-1:
+  count: 1
+  links: ~
+  dependencies: ~
+switch-2:
+  count: 2
+  links:
+    - switch-1
+  dependencies: ~
+ubuntu-10:
+  count: 1
+  links:
+    - switch-1
+  dependencies:
+    - windows-10
+    - windows-10-vuln-1
+windows-10:
+  count: 3
+  links: ~
+  dependencies: ~
+windows-10-vuln-1:
+  count: 1
+  links: ~
+  dependencies:
+    - windows-10
+

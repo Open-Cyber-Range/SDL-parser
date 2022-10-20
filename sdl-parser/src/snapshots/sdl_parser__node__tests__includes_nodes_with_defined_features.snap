@@ -1,0 +1,43 @@
+---
+source: sdl-parser/src/node.rs
+expression: scenario
+---
+name: test-scenario
+description: some-description
+start: "2022-01-20T13:00:00Z"
+end: "2022-01-20T23:00:00Z"
+nodes:
+  win-10:
+    type: VM
+    description: ~
+    resources:
+      ram: 2147483648
+      cpu: 2
+    source:
+      name: windows10
+      version: "*"
+    features:
+      - feature-1
+      - feature-2
+    conditions: ~
+    vulnerabilities: ~
+features:
+  feature-1:
+    type: Service
+    source:
+      name: dl-library
+      version: "*"
+    dependencies: ~
+    vulnerabilities: ~
+  feature-2:
+    type: Artifact
+    source:
+      name: my-cool-artifact
+      version: 1.0.0
+    dependencies: ~
+    vulnerabilities: ~
+infrastructure: ~
+conditions: ~
+vulnerabilities: ~
+capabilities: ~
+

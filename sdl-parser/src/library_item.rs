@@ -1,27 +1,33 @@
-use crate::node::Node;
 use anyhow::{Ok, Result};
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+use crate::parse_sdl;
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Ord, PartialOrd, Eq)]
 pub struct LibraryItem {
     pub name: String,
     pub version: String,
 }
 
 impl LibraryItem {
+    #[allow(dead_code)]
     fn new(name: String, version: String) -> Self {
         Self { name, version }
     }
 }
 
+#[allow(dead_code)]
 pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
-    let nodes: Vec<Node> = serde_yaml::from_str(sdl_string)?;
+    let nodes = parse_sdl(sdl_string)?.scenario.nodes;
     let mut result = Vec::new();
 
-    for node in nodes {
-        if let Some(source) = node.source {
-            if let Some(package) = source.package {
-                result.push(LibraryItem::new(package.name, package.version));
+    if let Some(nodes) = nodes {
+        for (_, node) in nodes {
+            if let Some(source) = &node.source {
+                result.push(LibraryItem::new(
+                    source.name.clone(),
+                    source.version.clone(),
+                ));
             }
         }
     }
@@ -35,42 +41,47 @@ mod tests {
     #[test]
     fn generate_package_list_based_on_sdl() {
         let node_sdl = r#"
-              - type: VM
-                template: windows10
-                description: win10 node for OCR
-                flavor:
-                    ram: 4gb
-                    cpu: 4
-                source:
-                    package:
+        scenario:
+            name: test-scenario
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win10-1:
+                    type: VM
+                    description: win10 node for OCR
+                    resources:
+                        ram: 4 gib
+                        cpu: 4
+                    source:
                         name: basic-windows10
-                        version: '*'
-              - type: VM
-                template: debian10
-                description: deb-10-description
-                flavor:
-                    ram: 4gb
-                    cpu: 4
-                source:
-                    package:
+                        version: "1.0"
+                deb-10-1:
+                    type: VM
+                    description: deb-10-description
+                    resources:
+                        ram: 4 gib
+                        cpu: 4
+                    source:
                         name: debian10
-                        version: '*'
-              - type: VM
-                template: windows10
-                description: win10 node for OCR
-                flavor:
-                    ram: 4gb
-                    cpu: 4
-                source:
-                    template: windows10-template
-              - type: VM
-                template: windows10
-                description: win10 node for OCR
-                flavor:
-                    ram: 4gb
-                    cpu: 4
+                        version: "1.2.4"
+                win-10-2:
+                    type: VM
+                    description: win10 node for OCR
+                    resources:
+                        ram: 4 gib
+                        cpu: 4
+                    source: windows10-template
+                win-10-3:
+                    type: VM
+                    description: win10 node for OCR
+                    resources:
+                        ram: 4 gib
+                        cpu: 4
+                    source: windows10
         "#;
-        let library_items = generate_package_list(node_sdl).unwrap();
+        let mut library_items = generate_package_list(node_sdl).unwrap();
+        library_items.sort();
+
         insta::assert_debug_snapshot!(library_items);
     }
 }

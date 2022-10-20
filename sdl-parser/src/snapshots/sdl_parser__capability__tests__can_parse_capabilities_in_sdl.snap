@@ -1,0 +1,17 @@
+---
+source: sdl-parser/src/capability.rs
+expression: capabilities
+---
+capability-1:
+  description: Can execute Dirty Cow
+  condition: condition-1
+  vulnerabilities:
+    - vulnerability-1
+    - vulnerability-2
+capability-2:
+  description: Can defend against Dirty Cow
+  condition: condition-2
+  vulnerabilities:
+    - vulnerability-1
+    - vulnerability-2
+

@@ -1,196 +1,269 @@
-use anyhow::Result;
+use crate::{helpers::Connection, vulnerability::Vulnerability, Formalize};
+use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_aux::prelude::*;
 use std::collections::HashMap;
 
-fn parse_bytesize<'de, D>(deserializer: D) -> Result<u32, D::Error>
+use crate::common::{HelperSource, Source};
+
+fn parse_bytesize<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
     Ok(s.parse::<ByteSize>()
         .map_err(|_| serde::de::Error::custom("Failed"))?
-        .0 as u32)
+        .0 as u64)
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
     VM,
-    Network,
+    Switch,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub enum Direction {
-    Ingress,
-    Egress,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Flavor {
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+pub struct Resources {
     #[serde(deserialize_with = "parse_bytesize")]
-    pub ram: u32,
+    pub ram: u64,
     pub cpu: u32,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Source {
-    pub template: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_struct_case_insensitive")]
-    pub package: Option<Package>,
-}
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Package {
-    pub name: String,
-    pub version: String,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Address {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub cidr: String,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Policy {
-    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
-    pub type_field: String,
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
-    pub rule: Rule,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Rule {
-    pub direction: Direction,
-    pub description: String,
-    #[serde(
-        rename = "allowed-address",
-        alias = "Allowed-Address",
-        alias = "ALLOWED-ADDRESS"
-    )]
-    pub allowed_address: Option<Vec<String>>,
-    pub port: u16,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,
-    #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
-    pub dependencies: Option<Vec<String>>,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(default, alias = "Address", alias = "ADDRESS")]
-    pub address: Option<Address>,
     #[serde(
         default,
-        alias = "Policy",
-        alias = "POLICY",
+        alias = "Resources",
+        alias = "RESOURCES",
         deserialize_with = "deserialize_struct_case_insensitive"
     )]
-    pub policy: Option<Policy>,
+    pub resources: Option<Resources>,
     #[serde(
         default,
-        alias = "Flavor",
-        alias = "FLAVOR",
-        deserialize_with = "deserialize_struct_case_insensitive"
-    )]
-    pub flavor: Option<Flavor>,
-    #[serde(
-        default,
+        rename = "source",
         alias = "Source",
         alias = "SOURCE",
-        deserialize_with = "deserialize_struct_case_insensitive"
+        skip_serializing
     )]
+    source_helper: Option<HelperSource>,
+    #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(default, alias = "Features", alias = "FEATURES")]
+    pub features: Option<Vec<String>>,
+    #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
+    pub conditions: Option<Vec<String>>,
+    #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
+    pub vulnerabilities: Option<Vec<String>>,
 }
 
-pub type NodeMap = HashMap<String, Node>;
+impl Connection<Vulnerability> for (&String, &Node) {
+    fn validate_connections(
+        &self,
+        potential_vulnerability_names: &Option<Vec<String>>,
+    ) -> Result<()> {
+        if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
+            if let Some(vulnerabilities) = potential_vulnerability_names {
+                for node_vulnerability in node_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(node_vulnerability) {
+                        return Err(anyhow!(
+                            "Vulnerability {} not found under scenario",
+                            node_vulnerability
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Vulnerability list is empty under scenario, but node {} has vulnerabilities",
+                    self.0
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Formalize for Node {
+    fn formalize(&mut self) -> Result<()> {
+        if let Some(source_helper) = &self.source_helper {
+            self.source = Some(source_helper.to_owned().into());
+            return Ok(());
+        } else if self.type_field == NodeType::VM {
+            return Err(anyhow::anyhow!("No source found"));
+        }
+        Ok(())
+    }
+}
+
+pub type Nodes = HashMap<String, Node>;
 
 #[cfg(test)]
 mod tests {
+    use crate::parse_sdl;
+
     use super::*;
 
     #[test]
-    fn includes_node_requirements_with_network_type() {
+    fn source_fields_are_mapped_correctly() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                deb-10:
+                    type: VM
+                    source:
+                        name: debian10
+                        version: '*'
+
+        "#;
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(nodes);
+        });
+    }
+
+    #[test]
+    fn node_source_longhand_is_parsed() {
+        let longhand_source = r#"
+            type: VM
+            source: 
+                name: package-name
+                version: 1.2.3
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn node_source_shorthand_is_parsed() {
+        let shorthand_source = r#"
+            type: VM
+            source: package-name
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn node_conditions_are_parsed() {
+        let shorthand_source = r#"
+            type: VM
+            conditions:
+                - condition-1
+                - condition-2
+
+        "#;
+        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
+    fn switch_source_is_not_required() {
+        let shorthand_source = r#"
+            type: Switch
+
+        "#;
+        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+    }
+
+    #[test]
+    fn includes_node_requirements_with_switch_type() {
         let node_sdl = r#"
-            type: Network
-            dependencies:
-                - 1
-                - kolm
-                - serde
-            description: a network
-            address:
-                type: ipv4
-                cidr: 10.10.10.0/24
-            policy:
-                type: network
-                rule:
-                    direction: Ingress
-                    description: a-description
-                    allowed-address:
-                        - some-ip
-                        - some-address
-                        - some-number-5
-                    port: 8080
+            type: Switch
+            description: a network switch
+
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
     #[test]
-    fn includes_node_requirements_with_source_template() {
+    fn includes_node_with_features() {
         let node_sdl = r#"
             type: VM
-            template: windows10
-            flavor:
-                ram: 4gb
-                cpu: 4
-            source:
-                template: windows10-template
+            features:
+                - feature-1
+                - feature-2
+
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        assert_eq!(node.source.unwrap().template.unwrap(), "windows10-template");
+        insta::assert_debug_snapshot!(node);
     }
 
     #[test]
-    fn includes_all_node_requirements_with_source_package() {
-        let node_sdl = r#"
-            type: VM
-            dependencies: [pub-net]
-            template: windows10
-            description: win10 node for OCR
-            flavor:
-                ram: 4gb
-                cpu: 4
-            source:
-                package:
-                    name: basic-windows10
-                    version: '*'
+    fn includes_nodes_with_defined_features() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+                    features:
+                        - feature-1
+                        - feature-2
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+                feature-2:
+                    type: artifact
+                    source:
+                        name: my-cool-artifact
+                        version: 1.0.0
+                    
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        assert_eq!(node.description.unwrap(), "win10 node for OCR");
-        assert_eq!(
-            node.source.clone().unwrap().package.unwrap().name,
-            "basic-windows10"
-        );
-        assert_eq!(node.source.unwrap().package.unwrap().version, "*");
+        let scenario = parse_sdl(sdl).unwrap().scenario;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
     }
 
     #[test]
-    fn includes_minimal_node_requirements() {
-        let node_sdl = r#"
-            type: VM
-            template: windows10
-            flavor:
-                ram: 4gb
-                cpu: 2
+    fn includes_node_requirements_with_source_template_and_conditions() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+                    conditions:
+                        - condition-1
+                        - condition-2
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+                    
         "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        let flavor = node.flavor.unwrap();
-        assert_eq!(flavor.ram, 4000000000);
-        assert_eq!(flavor.cpu, 2);
-        assert_eq!(node.description, None);
+        let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
+        insta::assert_debug_snapshot!(nodes);
     }
 }

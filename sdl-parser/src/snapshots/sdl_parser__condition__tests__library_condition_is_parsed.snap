@@ -1,0 +1,14 @@
+---
+source: sdl-parser/src/condition.rs
+expression: condition
+---
+Condition {
+    command: None,
+    interval: None,
+    source_helper: Some(
+        ShortSource(
+            "digital-library-package",
+        ),
+    ),
+    source: None,
+}

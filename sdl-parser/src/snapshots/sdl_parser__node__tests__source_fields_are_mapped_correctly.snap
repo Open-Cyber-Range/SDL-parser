@@ -1,0 +1,25 @@
+---
+source: sdl-parser/src/node.rs
+expression: nodes
+---
+deb-10:
+  type: VM
+  description: ~
+  resources: ~
+  source:
+    name: debian10
+    version: "*"
+  features: ~
+  conditions: ~
+  vulnerabilities: ~
+win-10:
+  type: VM
+  description: ~
+  resources: ~
+  source:
+    name: windows10
+    version: "*"
+  features: ~
+  conditions: ~
+  vulnerabilities: ~
+
