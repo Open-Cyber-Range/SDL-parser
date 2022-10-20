@@ -40,6 +40,19 @@ pub struct Schema {
     pub scenario: Scenario,
 }
 
+impl Schema {
+    pub fn to_yaml(&self) -> Result<String> {
+        serde_yaml::to_string(&self).map_err(|e| anyhow!("Failed to serialize to yaml: {}", e))
+    }
+
+    pub fn from_yaml(yaml: &str) -> Result<Self> {
+        let mut schema: Self = serde_yaml::from_str(yaml)
+            .map_err(|e| anyhow!("Failed to deserialize from yaml: {}", e))?;
+        schema.formalize()?;
+        Ok(schema)
+    }
+}
+
 impl Formalize for Schema {
     fn formalize(&mut self) -> Result<()> {
         self.scenario.formalize()?;
@@ -326,9 +339,7 @@ impl Formalize for Scenario {
 }
 
 pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
-    let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
-    schema.formalize()?;
-    Ok(schema)
+    Schema::from_yaml(sdl_string)
 }
 
 #[cfg(test)]
