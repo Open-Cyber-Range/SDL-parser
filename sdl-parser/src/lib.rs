@@ -30,7 +30,7 @@ pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Schema {
     #[serde(
         alias = "Scenario",
@@ -38,6 +38,19 @@ pub struct Schema {
         deserialize_with = "deserialize_struct_case_insensitive"
     )]
     pub scenario: Scenario,
+}
+
+impl Schema {
+    pub fn to_yaml(&self) -> Result<String> {
+        serde_yaml::to_string(&self).map_err(|e| anyhow!("Failed to serialize to yaml: {}", e))
+    }
+
+    pub fn from_yaml(yaml: &str) -> Result<Self> {
+        let mut schema: Self = serde_yaml::from_str(yaml)
+            .map_err(|e| anyhow!("Failed to deserialize from yaml: {}", e))?;
+        schema.formalize()?;
+        Ok(schema)
+    }
 }
 
 impl Formalize for Schema {
@@ -77,24 +90,26 @@ impl Scenario {
         Ok(())
     }
 
-    pub fn get_dependencies(&self) -> Result<()> {
+    pub fn get_node_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
         if let Some(nodes_value) = &self.nodes {
-            let mut dependency_builder = Dependencies::builder();
             for (node_name, _) in nodes_value.iter() {
                 dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
             }
-            self.build_infrastructure_dependencies(dependency_builder)?;
         }
 
+        self.build_infrastructure_dependencies(dependency_builder)
+    }
+
+    pub fn get_feature_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
         if let Some(features_value) = &self.features {
-            let mut dependency_builder = Dependencies::builder();
             for (feature_name, _) in features_value.iter() {
                 dependency_builder =
                     dependency_builder.add_element(feature_name.to_string(), vec![]);
             }
-            self.build_feature_dependencies(dependency_builder)?;
         }
-        Ok(())
+        self.build_feature_dependencies(dependency_builder)
     }
 
     fn build_infrastructure_dependencies(
@@ -154,7 +169,8 @@ impl Scenario {
     }
 
     fn verify_dependencies(&self) -> Result<()> {
-        self.get_dependencies()?;
+        self.get_node_dependencies()?;
+        self.get_feature_dependencies()?;
         Ok(())
     }
 
@@ -326,9 +342,7 @@ impl Formalize for Scenario {
 }
 
 pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
-    let mut schema: Schema = serde_yaml::from_str(sdl_string)?;
-    schema.formalize()?;
-    Ok(schema)
+    Schema::from_yaml(sdl_string)
 }
 
 #[cfg(test)]
