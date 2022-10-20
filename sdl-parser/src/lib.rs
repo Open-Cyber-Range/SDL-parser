@@ -90,24 +90,26 @@ impl Scenario {
         Ok(())
     }
 
-    pub fn get_dependencies(&self) -> Result<()> {
+    pub fn get_node_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
         if let Some(nodes_value) = &self.nodes {
-            let mut dependency_builder = Dependencies::builder();
             for (node_name, _) in nodes_value.iter() {
                 dependency_builder = dependency_builder.add_element(node_name.to_string(), vec![]);
             }
-            self.build_infrastructure_dependencies(dependency_builder)?;
         }
 
+        self.build_infrastructure_dependencies(dependency_builder)
+    }
+
+    pub fn get_feature_dependencies(&self) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
         if let Some(features_value) = &self.features {
-            let mut dependency_builder = Dependencies::builder();
             for (feature_name, _) in features_value.iter() {
                 dependency_builder =
                     dependency_builder.add_element(feature_name.to_string(), vec![]);
             }
-            self.build_feature_dependencies(dependency_builder)?;
         }
-        Ok(())
+        self.build_feature_dependencies(dependency_builder)
     }
 
     fn build_infrastructure_dependencies(
@@ -167,7 +169,8 @@ impl Scenario {
     }
 
     fn verify_dependencies(&self) -> Result<()> {
-        self.get_dependencies()?;
+        self.get_node_dependencies()?;
+        self.get_feature_dependencies()?;
         Ok(())
     }
 
