@@ -191,12 +191,13 @@ mod tests {
     }
 
     #[test]
-    fn includes_node_with_features() {
+    fn includes_node_with_feature_and_role() {
         let node_sdl = r#"
             type: VM
+            roles:
+                admin: "username"
             features:
-                - feature-1
-                - feature-2
+                feature-1: "admin" 
 
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
@@ -218,9 +219,12 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    roles:
+                        admin: "username"
+                        moderator: "name"
                     features:
-                        - feature-1
-                        - feature-2
+                        feature-1: "admin" 
+                        feature-2: "moderator" 
             features:
                 feature-1:
                     type: service
