@@ -191,20 +191,6 @@ mod tests {
     }
 
     #[test]
-    fn includes_node_with_feature_and_role() {
-        let node_sdl = r#"
-            type: VM
-            roles:
-                admin: "username"
-            features:
-                feature-1: "admin" 
-
-        "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        insta::assert_debug_snapshot!(node);
-    }
-
-    #[test]
     fn includes_nodes_with_defined_features() {
         let sdl = r#"
         scenario:
@@ -235,6 +221,101 @@ mod tests {
                         name: my-cool-artifact
                         version: 1.0.0
                     
+        "#;
+        let scenario = parse_sdl(sdl).unwrap().scenario;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn feature_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn roles_missing_when_features_exist() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn role_under_feature_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn same_name_for_role_only_saves_one_role() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        admin: "username"
+                        admin: "username2"
+
         "#;
         let scenario = parse_sdl(sdl).unwrap().scenario;
         insta::with_settings!({sort_maps => true}, {
