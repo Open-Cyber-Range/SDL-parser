@@ -159,14 +159,14 @@ mod tests {
 
     #[test]
     fn node_conditions_are_parsed() {
-        let shorthand_source = r#"
+        let node_sdl = r#"
             type: VM
             conditions:
                 - condition-1
                 - condition-2
 
         "#;
-        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
@@ -176,7 +176,10 @@ mod tests {
             type: Switch
 
         "#;
-        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        serde_yaml::from_str::<Node>(shorthand_source)
+            .unwrap()
+            .formalize()
+            .unwrap();
     }
 
     #[test]
