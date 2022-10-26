@@ -15,4 +15,5 @@ Node {
     features: None,
     conditions: None,
     vulnerabilities: None,
+    roles: None,
 }

@@ -54,11 +54,12 @@ pub struct Node {
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
     #[serde(default, alias = "Features", alias = "FEATURES")]
-    pub features: Option<Vec<String>>,
+    pub features: Option<HashMap<String, String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
+    pub roles: Option<HashMap<String, String>>,
 }
 
 impl Connection<Vulnerability> for (&String, &Node) {

@@ -21,6 +21,7 @@ nodes:
       - feature-2
     conditions: ~
     vulnerabilities: ~
+    roles: ~
 features:
   feature-1:
     type: Service

@@ -14,6 +14,7 @@ deb10:
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 win10:
   type: VM
   description: win-10-description
@@ -26,4 +27,5 @@ win10:
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 
