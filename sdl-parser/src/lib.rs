@@ -295,6 +295,30 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_roles(&self) -> Result<()> {
+        if let Some(nodes) = &self.nodes {
+            for (node_name, node) in nodes.iter() {
+                if let Some(features) = &node.features {
+                    if let Some(roles) = &node.roles {
+                        for feature_role in features.values() {
+                            if !roles.contains_key(feature_role) {
+                                return Err(anyhow!(
+                                    "Role {} not found in node {}",
+                                    feature_role,
+                                    node_name
+                                ));
+                            }
+                        }
+                    } else {
+                        return Err(anyhow::anyhow!("No roles found for feature(s)"));
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -337,6 +361,7 @@ impl Formalize for Scenario {
         self.verify_conditions()?;
         self.verify_dependencies()?;
         self.verify_vulnerabilities()?;
+        self.verify_roles()?;
         Ok(())
     }
 }

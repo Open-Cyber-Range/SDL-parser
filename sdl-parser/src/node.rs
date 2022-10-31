@@ -54,11 +54,12 @@ pub struct Node {
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
     #[serde(default, alias = "Features", alias = "FEATURES")]
-    pub features: Option<Vec<String>>,
+    pub features: Option<HashMap<String, String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
+    pub roles: Option<HashMap<String, String>>,
 }
 
 impl Connection<Vulnerability> for (&String, &Node) {
@@ -158,14 +159,14 @@ mod tests {
 
     #[test]
     fn node_conditions_are_parsed() {
-        let shorthand_source = r#"
+        let node_sdl = r#"
             type: VM
             conditions:
                 - condition-1
                 - condition-2
 
         "#;
-        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
@@ -175,7 +176,10 @@ mod tests {
             type: Switch
 
         "#;
-        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        serde_yaml::from_str::<Node>(shorthand_source)
+            .unwrap()
+            .formalize()
+            .unwrap();
     }
 
     #[test]
@@ -183,19 +187,6 @@ mod tests {
         let node_sdl = r#"
             type: Switch
             description: a network switch
-
-        "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        insta::assert_debug_snapshot!(node);
-    }
-
-    #[test]
-    fn includes_node_with_features() {
-        let node_sdl = r#"
-            type: VM
-            features:
-                - feature-1
-                - feature-2
 
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
@@ -217,9 +208,12 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    roles:
+                        admin: "username"
+                        moderator: "name"
                     features:
-                        - feature-1
-                        - feature-2
+                        feature-1: "admin" 
+                        feature-2: "moderator" 
             features:
                 feature-1:
                     type: service
@@ -230,6 +224,101 @@ mod tests {
                         name: my-cool-artifact
                         version: 1.0.0
                     
+        "#;
+        let scenario = parse_sdl(sdl).unwrap().scenario;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn feature_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn roles_missing_when_features_exist() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn role_under_feature_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn same_name_for_role_only_saves_one_role() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        admin: "username"
+                        admin: "username2"
+
         "#;
         let scenario = parse_sdl(sdl).unwrap().scenario;
         insta::with_settings!({sort_maps => true}, {

@@ -43,7 +43,7 @@ impl Connection<Feature> for (&String, &Node) {
     fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(node_features) = &self.1.features {
             if let Some(features) = potential_feature_names {
-                for node_feature in node_features.iter() {
+                for node_feature in node_features.keys() {
                     if !features.contains(node_feature) {
                         return Err(anyhow!(
                             "Node {} has feature {} that is not defined under scenario",

@@ -12,6 +12,7 @@ deb-10:
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 win-10:
   type: VM
   description: ~
@@ -22,4 +23,5 @@ win-10:
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 

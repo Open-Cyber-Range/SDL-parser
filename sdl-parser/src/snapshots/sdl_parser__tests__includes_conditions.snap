@@ -22,6 +22,7 @@ scenario:
         - condition-2
         - condition-3
       vulnerabilities: ~
+      roles: ~
     win10:
       type: VM
       description: win-10-description
@@ -35,6 +36,7 @@ scenario:
       conditions:
         - condition-1
       vulnerabilities: ~
+      roles: ~
   features: ~
   infrastructure:
     deb10:

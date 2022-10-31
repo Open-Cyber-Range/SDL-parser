@@ -31,5 +31,6 @@ expression: nodes
             ],
         ),
         vulnerabilities: None,
+        roles: None,
     },
 }
