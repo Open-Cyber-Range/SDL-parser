@@ -514,7 +514,29 @@ mod tests {
     }
 
     #[test]
-    fn includes_conditions() {
+    #[should_panic]
+    fn feature_missing_from_scenario() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn includes_conditions_nodes_and_infrastructure() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -529,8 +551,10 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
                 deb10:
                     type: VM
                     description: deb-10-description
@@ -540,9 +564,12 @@ mod tests {
                     resources:
                         ram: 2 gib
                         cpu: 1
+                    roles:
+                        admin: "username"
+                        moderator: "name"
                     conditions:
-                        - condition-2
-                        - condition-3
+                        condition-2: "moderator"
+                        condition-3: "admin"
             infrastructure:
                 win10:
                     count: 1
@@ -583,8 +610,10 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
                 deb10:
                     type: VM
                     description: deb-10-description
@@ -626,8 +655,10 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
             infrastructure:
                 win10: 1
 
@@ -652,8 +683,6 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
-                    conditions:
-                        - condition-1
         "#;
         parse_sdl(sdl).unwrap();
     }
