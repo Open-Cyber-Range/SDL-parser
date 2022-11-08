@@ -237,7 +237,7 @@ impl Scenario {
                         ));
                     }
                     if let Some(conditions) = &self.conditions {
-                        for node_condition in node_conditions.iter() {
+                        for node_condition in node_conditions.keys() {
                             if !conditions.contains_key(node_condition) {
                                 return Err(anyhow!(
                                     "Condition {} not found under scenario",

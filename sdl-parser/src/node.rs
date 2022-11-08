@@ -56,7 +56,7 @@ pub struct Node {
     #[serde(default, alias = "Features", alias = "FEATURES")]
     pub features: Option<HashMap<String, String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
-    pub conditions: Option<Vec<String>>,
+    pub conditions: Option<HashMap<String, String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
     pub roles: Option<HashMap<String, String>>,
@@ -162,11 +162,9 @@ mod tests {
         let node_sdl = r#"
             type: VM
             roles:
-                admin: "username"
-                moderator: "name"     
+                admin: "username"   
             conditions:
                 condition-1: "admin"
-                condition-2: "moderator"
 
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
