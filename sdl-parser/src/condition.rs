@@ -54,7 +54,7 @@ mod tests {
     use crate::parse_sdl;
 
     #[test]
-    fn source_fields_are_mapped_correctly() {
+    fn conditions_are_mapped_correctly() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -97,32 +97,17 @@ mod tests {
     }
 
     #[test]
-    fn command_condition_is_parsed_correctly_even_with_source() {
+    fn command_condition_is_parsed_correctly_with_both_command_and_source() {
         let sdl = r#"
         scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
-            nodes:
-                win-10:
-                    type: VM
-                    source: windows10
-                    conditions:
-                        - condition-1
-                deb-10:
-                    type: VM
-                    source:
-                        name: debian10
-                        version: '*'
-                    conditions:
-                        - condition-2
             conditions:
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-                    source: digital-library-package
-                condition-2:
                     source: digital-library-package
 
         "#;

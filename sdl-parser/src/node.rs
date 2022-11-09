@@ -56,7 +56,7 @@ pub struct Node {
     #[serde(default, alias = "Features", alias = "FEATURES")]
     pub features: Option<HashMap<String, String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
-    pub conditions: Option<Vec<String>>,
+    pub conditions: Option<HashMap<String, String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
     pub roles: Option<HashMap<String, String>>,
@@ -109,7 +109,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn source_fields_are_mapped_correctly() {
+    fn vm_source_fields_are_mapped_correctly() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -124,7 +124,7 @@ mod tests {
                     type: VM
                     source:
                         name: debian10
-                        version: '*'
+                        version: 1.2.3
 
         "#;
         let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn node_source_longhand_is_parsed() {
+    fn vm_source_longhand_is_parsed() {
         let longhand_source = r#"
             type: VM
             source: 
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn node_source_shorthand_is_parsed() {
+    fn vm_source_shorthand_is_parsed() {
         let shorthand_source = r#"
             type: VM
             source: package-name
@@ -161,9 +161,10 @@ mod tests {
     fn node_conditions_are_parsed() {
         let node_sdl = r#"
             type: VM
+            roles:
+                admin: "username"   
             conditions:
-                - condition-1
-                - condition-2
+                condition-1: "admin"
 
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
@@ -229,28 +230,6 @@ mod tests {
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(scenario);
         });
-    }
-
-    #[test]
-    #[should_panic]
-    fn feature_missing_from_node() {
-        let sdl = r#"
-        scenario:
-            name: test-scenario
-            description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
-            nodes:
-                win-10:
-                    type: VM
-                    source: windows10
-                    roles:
-                        moderator: "name"
-                    features:
-                        feature-1: "admin"
-
-        "#;
-        parse_sdl(sdl).unwrap();
     }
 
     #[test]
@@ -324,35 +303,5 @@ mod tests {
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(scenario);
         });
-    }
-
-    #[test]
-    fn includes_node_requirements_with_source_template_and_conditions() {
-        let sdl = r#"
-        scenario:
-            name: test-scenario
-            description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
-            nodes:
-                win-10:
-                    type: VM
-                    resources:
-                        ram: 2 gib
-                        cpu: 2
-                    source: windows10
-                    conditions:
-                        - condition-1
-                        - condition-2
-            conditions:
-                condition-1:
-                    command: executable/path.sh
-                    interval: 30
-                condition-2:
-                    source: digital-library-package
-                    
-        "#;
-        let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
-        insta::assert_debug_snapshot!(nodes);
     }
 }

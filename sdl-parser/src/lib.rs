@@ -7,11 +7,9 @@ mod helpers;
 pub mod infrastructure;
 mod library_item;
 pub mod node;
-#[cfg(feature = "test")]
-pub mod test;
 pub mod vulnerability;
 
-use crate::helpers::Connection;
+use crate::helpers::{verify_roles_in_node, Connection};
 use anyhow::{anyhow, Ok, Result};
 use capability::Capabilities;
 use chrono::{DateTime, Utc};
@@ -237,7 +235,7 @@ impl Scenario {
                         ));
                     }
                     if let Some(conditions) = &self.conditions {
-                        for node_condition in node_conditions.iter() {
+                        for node_condition in node_conditions.keys() {
                             if !conditions.contains_key(node_condition) {
                                 return Err(anyhow!(
                                     "Condition {} not found under scenario",
@@ -302,21 +300,23 @@ impl Scenario {
                 if let Some(features) = &node.features {
                     if let Some(roles) = &node.roles {
                         for feature_role in features.values() {
-                            if !roles.contains_key(feature_role) {
-                                return Err(anyhow!(
-                                    "Role {} not found in node {}",
-                                    feature_role,
-                                    node_name
-                                ));
-                            }
+                            verify_roles_in_node(roles, feature_role, node_name).unwrap();
                         }
                     } else {
                         return Err(anyhow::anyhow!("No roles found for feature(s)"));
                     }
                 }
+                if let Some(conditions) = &node.conditions {
+                    if let Some(roles) = &node.roles {
+                        for condition_role in conditions.values() {
+                            verify_roles_in_node(roles, condition_role, node_name).unwrap();
+                        }
+                    } else {
+                        return Err(anyhow::anyhow!("No roles found for condition(s)"));
+                    }
+                }
             }
         }
-
         Ok(())
     }
 }
@@ -514,7 +514,55 @@ mod tests {
     }
 
     #[test]
-    fn includes_conditions() {
+    #[should_panic]
+    fn feature_missing_from_scenario() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        my-cool-service: "moderator"
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn feature_role_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        my-cool-service: "admin"
+            features:
+                my-cool-service:
+                    type: service
+                    source: some-service
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn includes_conditions_nodes_and_infrastructure() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -529,8 +577,10 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
                 deb10:
                     type: VM
                     description: deb-10-description
@@ -540,9 +590,12 @@ mod tests {
                     resources:
                         ram: 2 gib
                         cpu: 1
+                    roles:
+                        admin: "username"
+                        moderator: "name"
                     conditions:
-                        - condition-2
-                        - condition-3
+                        condition-2: "moderator"
+                        condition-3: "admin"
             infrastructure:
                 win10:
                     count: 1
@@ -583,8 +636,10 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
                 deb10:
                     type: VM
                     description: deb-10-description
@@ -626,10 +681,60 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
+                    roles:
+                        admin: "username"
                     conditions:
-                        - condition-1
+                        condition-1: "admin"
             infrastructure:
                 win10: 1
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_missing_from_scenario() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    conditions:
+                        condition-1: "moderator"
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn condition_role_missing_from_node() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    conditions:
+                        condition-1: "admin"
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
 
         "#;
         parse_sdl(sdl).unwrap();
@@ -652,8 +757,6 @@ mod tests {
                     resources:
                         ram: 4 gib
                         cpu: 2
-                    conditions:
-                        - condition-1
         "#;
         parse_sdl(sdl).unwrap();
     }
