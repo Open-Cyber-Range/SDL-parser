@@ -6,6 +6,7 @@ pub mod feature;
 mod helpers;
 pub mod infrastructure;
 mod library_item;
+pub mod metrics;
 pub mod node;
 #[cfg(feature = "test")]
 pub mod test;
@@ -21,6 +22,7 @@ use depper::Dependencies;
 use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
+use metrics::Metrics;
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
@@ -76,6 +78,7 @@ pub struct Scenario {
     pub conditions: Option<Conditions>,
     pub vulnerabilities: Option<Vulnerabilities>,
     pub capabilities: Option<Capabilities>,
+    pub metrics: Option<Metrics>,
 }
 
 impl Scenario {
@@ -264,6 +267,11 @@ impl Scenario {
                 Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
             }
         }
+        if let Some(metrics) = &self.metrics {
+            for metric in metrics.iter() {
+                Connection::<Condition>::validate_connections(&metric, &condition_names)?;
+            }
+        }
         Ok(())
     }
 
@@ -353,7 +361,17 @@ impl Formalize for Scenario {
                     condition.formalize()?;
                     Ok(())
                 })?;
+            self.capabilities = Some(capabilities);
         }
+
+        if let Some(mut metrics) = self.metrics.clone() {
+            metrics.iter_mut().try_for_each(move |(_, metric)| {
+                metric.formalize()?;
+                Ok(())
+            })?;
+            self.metrics = Some(metrics);
+        }
+
         self.map_infrastructure()?;
         self.verify_node_name_length()?;
         self.verify_switch_counts()?;

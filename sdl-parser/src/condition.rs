@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 use crate::{
     common::{HelperSource, Source},
+    helpers::Connection,
+    metrics::Metric,
     Formalize,
 };
 
@@ -48,6 +50,22 @@ impl Formalize for Condition {
 
 pub type Conditions = HashMap<String, Condition>;
 
+impl Connection<Condition> for (&String, &Metric) {
+    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(condition_names) = potential_condition_names {
+            if let Some(condition) = &self.1.condition {
+                if !condition_names.contains(condition) {
+                    return Err(anyhow::anyhow!(
+                        "Condition {} not found under scenario",
+                        condition
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -67,12 +85,69 @@ mod tests {
                     interval: 30
                 condition-2:
                     source: digital-library-package
-
         "#;
         let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });
+    }
+
+    #[test]
+    fn handles_metrics_with_conditions_correctly() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+            metrics:
+                metric-1:
+                    type: MANUAL
+                    artifact: true
+                    max-score: 10
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition:  condition-2
+        "#;
+        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(conditions);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn identifies_missing_condition() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                condition-2:
+                    source: digital-library-package
+            metrics:
+                metric-1:
+                    type: MANUAL
+                    artifact: true
+                    max-score: 10
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition:  condition-3
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 
     #[test]

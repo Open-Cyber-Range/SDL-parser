@@ -13,4 +13,5 @@ scenario:
   conditions: ~
   vulnerabilities: ~
   capabilities: ~
+  metrics: ~
 

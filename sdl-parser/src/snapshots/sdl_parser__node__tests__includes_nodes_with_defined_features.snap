@@ -43,4 +43,5 @@ infrastructure: ~
 conditions: ~
 vulnerabilities: ~
 capabilities: ~
+metrics: ~
 
