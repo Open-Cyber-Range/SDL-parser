@@ -65,4 +65,5 @@ scenario:
       source: ~
   vulnerabilities: ~
   capabilities: ~
+  metrics: ~
 
