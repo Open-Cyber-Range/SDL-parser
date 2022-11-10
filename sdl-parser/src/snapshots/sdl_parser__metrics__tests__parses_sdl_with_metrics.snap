@@ -1,6 +1,15 @@
 ---
 source: sdl-parser/src/metrics.rs
-expression: features
+expression: metrics
 ---
-~
+metric-1:
+  type: Manual
+  artifact: true
+  max_score: 10
+  condition: ~
+metric-2:
+  type: Conditional
+  artifact: ~
+  max_score: 10
+  condition: condition-1
 

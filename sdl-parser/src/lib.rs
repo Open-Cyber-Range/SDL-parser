@@ -2,6 +2,7 @@ pub mod capability;
 pub mod common;
 pub mod condition;
 mod constants;
+pub mod evaluation;
 pub mod feature;
 mod helpers;
 pub mod infrastructure;
@@ -17,10 +18,11 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
+use evaluation::Evaluations;
 use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
-use metrics::Metrics;
+use metrics::{Metric, Metrics};
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
@@ -77,6 +79,7 @@ pub struct Scenario {
     pub vulnerabilities: Option<Vulnerabilities>,
     pub capabilities: Option<Capabilities>,
     pub metrics: Option<Metrics>,
+    pub evaluations: Option<Evaluations>,
 }
 
 impl Scenario {
@@ -223,6 +226,19 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_metrics(&self) -> Result<()> {
+        let metric_names = self
+            .metrics
+            .as_ref()
+            .map(|evaluation_map| evaluation_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(evaluations) = &self.evaluations {
+            for combined_value in evaluations.iter() {
+                Connection::<Metric>::validate_connections(&combined_value, &metric_names)?;
+            }
+        }
+        Ok(())
+    }
+
     fn verify_conditions(&self) -> Result<()> {
         let condition_names = self
             .conditions
@@ -267,7 +283,7 @@ impl Scenario {
         }
         if let Some(metrics) = &self.metrics {
             for metric in metrics.iter() {
-                Connection::<Condition>::validate_connections(&metric, &condition_names)?;
+                metric.validate_connections(&condition_names)?;
             }
         }
         Ok(())
@@ -372,8 +388,19 @@ impl Formalize for Scenario {
             self.metrics = Some(metrics);
         }
 
+        if let Some(mut evaluations) = self.evaluations.clone() {
+            evaluations
+                .iter_mut()
+                .try_for_each(move |(_, evaluation)| {
+                    evaluation.formalize()?;
+                    Ok(())
+                })?;
+            self.evaluations = Some(evaluations);
+        }
+
         self.map_infrastructure()?;
         self.verify_node_name_length()?;
+        self.verify_metrics()?;
         self.verify_switch_counts()?;
         self.verify_features()?;
         self.verify_conditions()?;
