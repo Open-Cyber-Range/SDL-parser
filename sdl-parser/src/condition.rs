@@ -61,6 +61,11 @@ impl Connection<Condition> for (&String, &Metric) {
                     ));
                 }
             }
+        } else if self.1.condition.is_some() {
+            return Err(anyhow::anyhow!(
+                "Condition {} not found under scenario",
+                self.1.condition.as_ref().unwrap()
+            ));
         }
         Ok(())
     }

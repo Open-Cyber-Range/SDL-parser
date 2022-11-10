@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::Formalize;
+use crate::{evaluation::Evaluation, helpers::Connection, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum MetricType {
@@ -23,6 +23,26 @@ pub struct Metric {
     pub max_score: u32,
     #[serde(alias = "condition", alias = "CONDITION")]
     pub condition: Option<String>,
+}
+
+impl Connection<Metric> for (&String, &Evaluation) {
+    fn validate_connections(&self, potential_metric_names: &Option<Vec<String>>) -> Result<()> {
+        println!("Validating connections for metric {}", self.0);
+        println!("Potential metric names: {:?}", potential_metric_names);
+        if let Some(metric_names) = potential_metric_names {
+            for required_name in &self.1.metrics {
+                if !metric_names.contains(required_name) {
+                    return Err(anyhow::anyhow!(
+                        "Metric {} not found under scenario",
+                        required_name
+                    ));
+                }
+            }
+        } else {
+            return Err(anyhow::anyhow!("No metrics found under scenario"));
+        }
+        Ok(())
+    }
 }
 
 pub type Metrics = HashMap<String, Metric>;
@@ -72,11 +92,15 @@ mod tests {
                 metric-2:
                     type: CONDITIONAL
                     max-score: 10
-                    condition: "some-condition"
+                    condition: condition-1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
         "#;
-        let features = parse_sdl(sdl).unwrap().scenario.features;
+        let metrics = parse_sdl(sdl).unwrap().scenario.metrics;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(features);
+                insta::assert_yaml_snapshot!(metrics);
         });
     }
 

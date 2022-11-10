@@ -93,20 +93,12 @@ pub type Features = HashMap<String, Feature>;
 
 impl Formalize for Feature {
     fn formalize(&mut self) -> Result<()> {
-        match &mut self._source_helper.take() {
-            Some(HelperSource::Source(source)) => {
-                self.source = Some(source.to_owned());
-                Ok(())
-            }
-            Some(HelperSource::ShortSource(source)) => {
-                self.source = Some(Source {
-                    name: source.to_owned(),
-                    version: "*".to_string(),
-                });
-                Ok(())
-            }
-            None => Err(anyhow!("No source found for Feature")),
+        if let Some(helper_source) = &self._source_helper {
+            self.source = Some(helper_source.to_owned().into());
+        } else {
+            return Err(anyhow!("No source found for feature"));
         }
+        Ok(())
     }
 }
 
