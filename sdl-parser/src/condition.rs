@@ -4,8 +4,6 @@ use std::collections::HashMap;
 
 use crate::{
     common::{HelperSource, Source},
-    helpers::Connection,
-    metrics::Metric,
     Formalize,
 };
 
@@ -49,27 +47,6 @@ impl Formalize for Condition {
 }
 
 pub type Conditions = HashMap<String, Condition>;
-
-impl Connection<Condition> for (&String, &Metric) {
-    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
-        if let Some(condition_names) = potential_condition_names {
-            if let Some(condition) = &self.1.condition {
-                if !condition_names.contains(condition) {
-                    return Err(anyhow::anyhow!(
-                        "Condition {} not found under scenario",
-                        condition
-                    ));
-                }
-            }
-        } else if self.1.condition.is_some() {
-            return Err(anyhow::anyhow!(
-                "Condition {} not found under scenario",
-                self.1.condition.as_ref().unwrap()
-            ));
-        }
-        Ok(())
-    }
-}
 
 #[cfg(test)]
 mod tests {

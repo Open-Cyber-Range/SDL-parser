@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::Formalize;
+use crate::{helpers::Connection, metrics::Metric, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct MinScore {
@@ -46,6 +46,28 @@ pub struct Evaluation {
     pub _helper_min_score: Option<HelperScore>,
     #[serde(rename = "min-score", default, skip_deserializing)]
     pub min_score: Option<MinScore>,
+}
+
+impl Connection<Metric> for (&String, &Evaluation) {
+    fn validate_connections(&self, potential_metric_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(metric_names) = potential_metric_names {
+            for required_name in &self.1.metrics {
+                if !metric_names.contains(required_name) {
+                    return Err(anyhow::anyhow!(
+                        "Metric {} not found for elevation: {}",
+                        required_name,
+                        self.0
+                    ));
+                }
+            }
+        } else {
+            return Err(anyhow::anyhow!(
+                "No metrics found under scenario, but elevation {} exists",
+                self.0
+            ));
+        }
+        Ok(())
+    }
 }
 
 pub type Evaluations = HashMap<String, Evaluation>;

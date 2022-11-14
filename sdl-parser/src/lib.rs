@@ -9,16 +9,17 @@ pub mod infrastructure;
 mod library_item;
 pub mod metrics;
 pub mod node;
+pub mod training_learning_objective;
 pub mod vulnerability;
 
 use crate::helpers::{verify_roles_in_node, Connection};
 use anyhow::{anyhow, Ok, Result};
-use capability::Capabilities;
+use capability::{Capabilities, Capability};
 use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
-use evaluation::Evaluations;
+use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
@@ -26,6 +27,7 @@ use metrics::{Metric, Metrics};
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
+use training_learning_objective::TrainingLearningObjectives;
 use vulnerability::{Vulnerabilities, Vulnerability};
 
 pub trait Formalize {
@@ -80,6 +82,7 @@ pub struct Scenario {
     pub capabilities: Option<Capabilities>,
     pub metrics: Option<Metrics>,
     pub evaluations: Option<Evaluations>,
+    pub tlos: Option<TrainingLearningObjectives>,
 }
 
 impl Scenario {
@@ -198,9 +201,22 @@ impl Scenario {
         Ok(())
     }
 
-    pub fn verify_node_name_length(&self) -> Result<()> {
+    pub fn verify_nodes(&self) -> Result<()> {
+        let feature_names = self
+            .features
+            .as_ref()
+            .map(|feature_map| feature_map.keys().cloned().collect::<Vec<String>>());
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
+        let vulnernability_names = self
+            .vulnerabilities
+            .as_ref()
+            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
-            for name in nodes.keys() {
+            for combined_value in nodes.iter() {
+                let name = combined_value.0;
                 if name.len() > MAX_LONG_NAME {
                     return Err(anyhow!(
                         "{} is too long, maximum node name length is {:?}",
@@ -208,29 +224,25 @@ impl Scenario {
                         MAX_LONG_NAME
                     ));
                 }
-            }
-        }
-        Ok(())
-    }
-
-    fn verify_features(&self) -> Result<()> {
-        let feature_names = self
-            .features
-            .as_ref()
-            .map(|feature_map| feature_map.keys().cloned().collect::<Vec<String>>());
-        if let Some(nodes) = &self.nodes {
-            for combined_value in nodes.iter() {
                 Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
+                Connection::<Condition>::validate_connections(
+                    &(combined_value.0, combined_value.1, &self.infrastructure),
+                    &condition_names,
+                )?;
             }
         }
         Ok(())
     }
 
-    fn verify_metrics(&self) -> Result<()> {
+    pub fn verify_evaluations(&self) -> Result<()> {
         let metric_names = self
             .metrics
             .as_ref()
-            .map(|evaluation_map| evaluation_map.keys().cloned().collect::<Vec<String>>());
+            .map(|metric_map| metric_map.keys().cloned().collect::<Vec<String>>());
         if let Some(evaluations) = &self.evaluations {
             for combined_value in evaluations.iter() {
                 Connection::<Metric>::validate_connections(&combined_value, &metric_names)?;
@@ -239,48 +251,30 @@ impl Scenario {
         Ok(())
     }
 
-    fn verify_conditions(&self) -> Result<()> {
+    fn verify_training_learning_objectives(&self) -> Result<()> {
+        let evaluation_names = self
+            .evaluations
+            .as_ref()
+            .map(|evaluation_map| evaluation_map.keys().cloned().collect::<Vec<String>>());
+        let capability_names = self
+            .capabilities
+            .as_ref()
+            .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(training_learning_objectives) = &self.tlos {
+            for combined_value in training_learning_objectives {
+                Connection::<Evaluation>::validate_connections(&combined_value, &evaluation_names)?;
+                Connection::<Capability>::validate_connections(&combined_value, &capability_names)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_metrics(&self) -> Result<()> {
         let condition_names = self
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
-        if let Some(nodes) = &self.nodes {
-            for (node_name, node) in nodes.iter() {
-                if let Some(node_conditions) = &node.conditions {
-                    if self.conditions.is_none() {
-                        return Err(anyhow!(
-                            "Conditions list is empty under scenario, but node {} has conditions",
-                            node_name
-                        ));
-                    }
-                    if let Some(conditions) = &self.conditions {
-                        for node_condition in node_conditions.keys() {
-                            if !conditions.contains_key(node_condition) {
-                                return Err(anyhow!(
-                                    "Condition {} not found under scenario",
-                                    node_condition
-                                ));
-                            }
-                        }
-                    }
-                    if let Some(infrastructure) = &self.infrastructure {
-                        if let Some(infra_node) = infrastructure.get(node_name) {
-                            if infra_node.count != 1 {
-                                return Err(anyhow!(
-                                    "Condition VM {} has a count other than 1",
-                                    node_name
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if let Some(capabilities) = &self.capabilities {
-            for combined_value in capabilities.iter() {
-                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
-            }
-        }
         if let Some(metrics) = &self.metrics {
             for metric in metrics.iter() {
                 metric.validate_connections(&condition_names)?;
@@ -289,30 +283,35 @@ impl Scenario {
         Ok(())
     }
 
-    fn verify_vulnerabilities(&self) -> Result<()> {
+    fn verify_features(&self) -> Result<()> {
         let vulnernability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
-        if let Some(nodes) = &self.nodes {
-            for combined_value in nodes.iter() {
-                Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
-                    &vulnernability_names,
-                )?;
-            }
-        }
         if let Some(features) = &self.features {
             for combined_value in features.iter() {
                 combined_value.validate_connections(&vulnernability_names)?;
             }
         }
+        Ok(())
+    }
+
+    fn verify_capabilities(&self) -> Result<()> {
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
+        let vulnernability_names = self
+            .vulnerabilities
+            .as_ref()
+            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(capabilities) = &self.capabilities {
             for combined_value in capabilities.iter() {
                 Connection::<Vulnerability>::validate_connections(
                     &combined_value,
                     &vulnernability_names,
                 )?;
+                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
             }
         }
         Ok(())
@@ -398,14 +397,25 @@ impl Formalize for Scenario {
             self.evaluations = Some(evaluations);
         }
 
+        if let Some(mut training_learning_objectives) = self.tlos.clone() {
+            training_learning_objectives
+                .iter_mut()
+                .try_for_each(move |(_, evaluation)| {
+                    evaluation.formalize()?;
+                    Ok(())
+                })?;
+            self.tlos = Some(training_learning_objectives);
+        }
+
         self.map_infrastructure()?;
-        self.verify_node_name_length()?;
-        self.verify_metrics()?;
+        self.verify_nodes()?;
+        self.verify_evaluations()?;
         self.verify_switch_counts()?;
         self.verify_features()?;
-        self.verify_conditions()?;
+        self.verify_capabilities()?;
         self.verify_dependencies()?;
-        self.verify_vulnerabilities()?;
+        self.verify_metrics()?;
+        self.verify_training_learning_objectives()?;
         self.verify_roles()?;
         Ok(())
     }
@@ -704,7 +714,6 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-
         "#;
         parse_sdl(sdl).unwrap();
     }

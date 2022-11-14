@@ -1,7 +1,6 @@
 use crate::{
     common::{HelperSource, Source},
     helpers::Connection,
-    node::Node,
     vulnerability::Vulnerability,
     Formalize,
 };
@@ -37,30 +36,6 @@ pub struct Feature {
     pub dependencies: Option<Vec<String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
-}
-
-impl Connection<Feature> for (&String, &Node) {
-    fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
-        if let Some(node_features) = &self.1.features {
-            if let Some(features) = potential_feature_names {
-                for node_feature in node_features.keys() {
-                    if !features.contains(node_feature) {
-                        return Err(anyhow!(
-                            "Node {} has feature {} that is not defined under scenario",
-                            &self.0,
-                            node_feature
-                        ));
-                    }
-                }
-            } else if !node_features.is_empty() {
-                return Err(anyhow!(
-                    "Feature list is empty under scenario, but node {} has features",
-                    self.0
-                ));
-            }
-        }
-        Ok(())
-    }
 }
 
 impl Connection<Vulnerability> for (&String, &Feature) {
