@@ -1,4 +1,7 @@
-use crate::{helpers::Connection, vulnerability::Vulnerability, Formalize};
+use crate::{
+    condition::Condition, feature::Feature, helpers::Connection, infrastructure::Infrastructure,
+    vulnerability::Vulnerability, Formalize,
+};
 use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -81,6 +84,67 @@ impl Connection<Vulnerability> for (&String, &Node) {
                 return Err(anyhow!(
                     "Vulnerability list is empty under scenario, but node {} has vulnerabilities",
                     self.0
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Connection<Feature> for (&String, &Node) {
+    fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(node_features) = &self.1.features {
+            if let Some(features) = potential_feature_names {
+                for node_feature in node_features.keys() {
+                    if !features.contains(node_feature) {
+                        return Err(anyhow!(
+                            "Node {} has feature {} that is not defined under scenario",
+                            &self.0,
+                            node_feature
+                        ));
+                    }
+                }
+            } else if !node_features.is_empty() {
+                return Err(anyhow!(
+                    "Feature list is empty under scenario, but node {} has features",
+                    self.0
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
+    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
+        let (node_name, node, infrastructure) = self;
+        if let Some(node_conditions) = &node.conditions {
+            if let Some(conditions) = potential_condition_names {
+                for condition_name in node_conditions.keys() {
+                    if !conditions.contains(condition_name) {
+                        return Err(anyhow!(
+                            "Node {} has condition {} that is not defined under scenario",
+                            node_name,
+                            condition_name
+                        ));
+                    }
+                }
+                if node_conditions.keys().len() > 0 {
+                    if let Some(infrastructure) = infrastructure {
+                        if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
+                            if infra_node.count > 1 {
+                                return Err(anyhow!(
+                                    "Node {} has count bigger than 1, but conditions are defined",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            } else if !node_conditions.is_empty() {
+                return Err(anyhow!(
+                    "Condition list is empty under scenario, but node {} has features",
+                    node_name
                 ));
             }
         }

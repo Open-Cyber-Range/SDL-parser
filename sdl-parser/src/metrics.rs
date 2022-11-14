@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{evaluation::Evaluation, helpers::Connection, Formalize};
+use crate::{condition::Condition, helpers::Connection, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum MetricType {
@@ -23,26 +23,6 @@ pub struct Metric {
     pub max_score: u32,
     #[serde(alias = "condition", alias = "CONDITION")]
     pub condition: Option<String>,
-}
-
-impl Connection<Metric> for (&String, &Evaluation) {
-    fn validate_connections(&self, potential_metric_names: &Option<Vec<String>>) -> Result<()> {
-        println!("Validating connections for metric {}", self.0);
-        println!("Potential metric names: {:?}", potential_metric_names);
-        if let Some(metric_names) = potential_metric_names {
-            for required_name in &self.1.metrics {
-                if !metric_names.contains(required_name) {
-                    return Err(anyhow::anyhow!(
-                        "Metric {} not found under scenario",
-                        required_name
-                    ));
-                }
-            }
-        } else {
-            return Err(anyhow::anyhow!("No metrics found under scenario"));
-        }
-        Ok(())
-    }
 }
 
 pub type Metrics = HashMap<String, Metric>;
@@ -66,6 +46,27 @@ impl Formalize for Metric {
                     return Err(anyhow!("Conditional metric cannot have an artifact"));
                 }
             }
+        }
+        Ok(())
+    }
+}
+
+impl Connection<Condition> for (&String, &Metric) {
+    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(condition_names) = potential_condition_names {
+            if let Some(condition) = &self.1.condition {
+                if !condition_names.contains(condition) {
+                    return Err(anyhow::anyhow!(
+                        "Condition {} not found under scenario",
+                        condition
+                    ));
+                }
+            }
+        } else if self.1.condition.is_some() {
+            return Err(anyhow::anyhow!(
+                "Condition {} not found under scenario",
+                self.1.condition.as_ref().unwrap()
+            ));
         }
         Ok(())
     }

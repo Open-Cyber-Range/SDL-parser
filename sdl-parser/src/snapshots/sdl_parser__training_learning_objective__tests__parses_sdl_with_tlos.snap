@@ -1,0 +1,13 @@
+---
+source: sdl-parser/src/training_learning_objective.rs
+expression: tlos
+---
+tlo-1:
+  name: ~
+  description: some description
+  evaluations:
+    - evaluation-1
+  capabilities:
+    - capability-1
+    - capability-2
+
