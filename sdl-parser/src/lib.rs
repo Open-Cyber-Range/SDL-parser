@@ -397,16 +397,6 @@ impl Formalize for Scenario {
             self.evaluations = Some(evaluations);
         }
 
-        if let Some(mut training_learning_objectives) = self.tlos.clone() {
-            training_learning_objectives
-                .iter_mut()
-                .try_for_each(move |(_, evaluation)| {
-                    evaluation.formalize()?;
-                    Ok(())
-                })?;
-            self.tlos = Some(training_learning_objectives);
-        }
-
         self.map_infrastructure()?;
         self.verify_nodes()?;
         self.verify_evaluations()?;
