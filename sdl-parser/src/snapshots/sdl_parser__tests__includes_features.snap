@@ -10,6 +10,8 @@ my-cool-artifact:
   dependencies:
     - my-cool-service
   vulnerabilities: ~
+  variables: ~
+  destination: ~
 my-cool-config:
   type: Configuration
   source:
@@ -18,6 +20,8 @@ my-cool-config:
   dependencies:
     - my-cool-service
   vulnerabilities: ~
+  variables: ~
+  destination: ~
 my-cool-service:
   type: Service
   source:
@@ -25,4 +29,6 @@ my-cool-service:
     version: "*"
   dependencies: ~
   vulnerabilities: ~
+  variables: ~
+  destination: ~
 

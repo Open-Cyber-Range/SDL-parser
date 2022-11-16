@@ -36,6 +36,10 @@ pub struct Feature {
     pub dependencies: Option<Vec<String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
+    #[serde(default, alias = "Variables", alias = "VARIABLES")]
+    pub variables: Option<HashMap<String, String>>,
+    #[serde(default, alias = "Destination", alias = "DESTINATION")]
+    pub destination: Option<String>,
 }
 
 impl Connection<Vulnerability> for (&String, &Feature) {
@@ -192,5 +196,21 @@ mod tests {
             features.err().unwrap().to_string(),
             "Cyclic dependency detected"
         );
+    }
+
+    #[test]
+    fn can_parse_destination_variables() {
+        let feature = r#"
+                    type: Service
+                    source: some-service
+                    dependencies: 
+                        - my-cool-feature
+                    variables: 
+                        name: HAHAHA
+                        literally: OHHHOHO
+                    destination: some-destination
+        "#;
+
+        serde_yaml::from_str::<Feature>(feature).unwrap();
     }
 }
