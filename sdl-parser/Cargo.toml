@@ -12,8 +12,9 @@ chrono = { version = "0.4", features = ["serde"] }
 depper = "0.3"
 lazy_static = { version = "1.4" }
 insta = { version = "1", features = ["yaml"] }
+regex = "1"
 serde = { version = "1", features = ["derive"] }
-serde-aux = "3"
+serde-aux = "4"
 serde_yaml = "0.9"
 
 [features]

@@ -397,6 +397,16 @@ impl Formalize for Scenario {
             self.evaluations = Some(evaluations);
         }
 
+        if let Some(mut vulnerabilities) = self.vulnerabilities.clone() {
+            vulnerabilities
+                .iter_mut()
+                .try_for_each(move |(_, vulnerability)| {
+                    vulnerability.formalize()?;
+                    Ok(())
+                })?;
+            self.vulnerabilities = Some(vulnerabilities);
+        }
+
         self.map_infrastructure()?;
         self.verify_nodes()?;
         self.verify_evaluations()?;
