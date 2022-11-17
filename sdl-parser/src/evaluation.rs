@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{helpers::Connection, metrics::Metric, Formalize};
+use crate::{helpers::Connection, metric::Metric, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct MinScore {
