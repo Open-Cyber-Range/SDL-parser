@@ -91,9 +91,15 @@ mod tests {
                     condition: condition-1
             vulnerabilities:
                 vulnerability-1:
+                    name: Some other vulnerability
                     description: some-description
+                    technical: false
+                    class: CWE-1343
                 vulnerability-2:
+                    name: Some vulnerability
                     description: some-description
+                    technical: false
+                    class: CWE-1341
             evaluations:
                 evaluation-1:
                     description: some description
