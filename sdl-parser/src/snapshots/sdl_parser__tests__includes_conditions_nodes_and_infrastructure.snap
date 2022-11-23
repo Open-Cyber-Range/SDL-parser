@@ -71,4 +71,5 @@ scenario:
   metrics: ~
   evaluations: ~
   tlos: ~
+  entities: ~
 
