@@ -2,6 +2,7 @@ pub mod capability;
 pub mod common;
 pub mod condition;
 mod constants;
+pub mod entity;
 pub mod evaluation;
 pub mod feature;
 mod helpers;
@@ -19,6 +20,7 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::Dependencies;
+use entity::Entities;
 use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -83,6 +85,7 @@ pub struct Scenario {
     pub metrics: Option<Metrics>,
     pub evaluations: Option<Evaluations>,
     pub tlos: Option<TrainingLearningObjectives>,
+    pub entities: Option<Entities>,
 }
 
 impl Scenario {

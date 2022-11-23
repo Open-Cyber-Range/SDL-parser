@@ -1,6 +1,5 @@
 ---
 source: sdl-parser/src/metric.rs
-assertion_line: 104
 expression: metrics
 ---
 metric-1:
