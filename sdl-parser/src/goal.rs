@@ -31,8 +31,6 @@ impl Connection<TrainingLearningObjective> for (&String, &Goal) {
     fn validate_connections(&self, potential_tlo_names: &Option<Vec<String>>) -> Result<()> {
         let tlos = &self.1.tlos;
 
-        println!("Validating Goal: {}", self.0);
-
         if let Some(tlo_names) = potential_tlo_names {
             for tlo_name in tlos {
                 if !tlo_names.contains(tlo_name) {

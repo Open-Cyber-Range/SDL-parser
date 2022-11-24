@@ -12,7 +12,7 @@ my-organization:
     - Organization
   vulnerabilities:
     - vulnerability-2
-  tlos:
-    - tlo-1
+  goals:
+    - goal-1
   entities: ~
 

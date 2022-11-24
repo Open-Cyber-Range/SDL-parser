@@ -24,7 +24,7 @@ use depper::Dependencies;
 use entity::Entities;
 use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
-use goal::Goals;
+use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
@@ -302,6 +302,27 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_entities(&self) -> Result<()> {
+        let vulnernability_names = self
+            .vulnerabilities
+            .as_ref()
+            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
+        let goal_names = self
+            .goals
+            .as_ref()
+            .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(entities) = &self.entities {
+            for combined_value in entities.iter() {
+                Connection::<Goal>::validate_connections(&combined_value, &goal_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
     fn verify_goals(&self) -> Result<()> {
         let tlo_names = self
             .tlos
@@ -435,6 +456,7 @@ impl Formalize for Scenario {
         }
 
         self.map_infrastructure()?;
+        self.verify_entities()?;
         self.verify_goals()?;
         self.verify_nodes()?;
         self.verify_evaluations()?;

@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+
+use crate::{goal::Goal, helpers::Connection, vulnerability::Vulnerability};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum ExerciseRole {
@@ -24,10 +27,67 @@ pub struct Entity {
     pub categories: Option<Vec<String>>,
     #[serde(alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
-    #[serde(alias = "Tlos", alias = "TLOS")]
-    pub tlos: Option<Vec<String>>,
+    #[serde(alias = "Goals", alias = "GOALS")]
+    pub goals: Option<Vec<String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
+}
+
+impl Connection<Goal> for (&String, &Entity) {
+    fn validate_connections(&self, potential_goal_names: &Option<Vec<String>>) -> Result<()> {
+        let goals = &self.1.goals;
+
+        if let Some(goals) = goals {
+            if let Some(goal_names) = potential_goal_names {
+                for goal_name in goals {
+                    if !goal_names.contains(goal_name) {
+                        return Err(anyhow!(
+                            "Goal {} not found under scenario, but is required by entity {}",
+                            goal_name,
+                            self.0
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Goal list is empty under scenario, but entity {} requires goals",
+                    self.0
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl Connection<Vulnerability> for (&String, &Entity) {
+    fn validate_connections(
+        &self,
+        potential_vulnerability_names: &Option<Vec<String>>,
+    ) -> Result<()> {
+        let vulnerabilities = &self.1.vulnerabilities;
+
+        if let Some(vulnerabilities) = vulnerabilities {
+            if let Some(vulnerability_names) = potential_vulnerability_names {
+                for vulnerability_name in vulnerabilities {
+                    if !vulnerability_names.contains(vulnerability_name) {
+                        return Err(anyhow!(
+                            "Vulnerability {} not found under scenario, but is required by entity {}",
+                            vulnerability_name,
+                            self.0
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Vulnerability list is empty under scenario, but entity {} requires vulnerabilities",
+                    self.0
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub type Entities = HashMap<String, Entity>;
@@ -96,6 +156,11 @@ mod tests {
                   capabilities:
                       - capability-1
                       - capability-2
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos: 
+                    - tlo-1  
           entities:
               my-organization:
                   name: "My Organization"
@@ -103,12 +168,12 @@ mod tests {
                   role: White
                   mission: "defend"
                   categories:
-                  - Foundation
-                  - Organization
+                    - Foundation
+                    - Organization
                   vulnerabilities:
-                  - vulnerability-2
-                  tlos:
-                  - tlo-1
+                    - vulnerability-2
+                  goals:
+                    - goal-1
                   entities:
                   fish:
                       name: "Shark"
@@ -134,11 +199,10 @@ mod tests {
             - Foundation
             - Organization
           vulnerabilities:
-            - vulnerability-2
-          tlos:
-            - tlo-1
-            - tlo-2
-            - tlo-3
+            - vulnerability-2tlo-2
+          goals:
+            - goal-1
+            - goal-2
         "#;
         serde_yaml::from_str::<Entity>(entity_yml).unwrap();
     }
@@ -155,10 +219,9 @@ mod tests {
             - Organization
           vulnerabilities:
             - vulnerability-2
-          tlos:
-            - tlo-1
-            - tlo-2
-            - tlo-3
+          goals:
+            - goal-1
+            - goal-2
           entities:
             fish:
               name: "Shark"
