@@ -1,0 +1,20 @@
+---
+source: sdl-parser/src/lib.rs
+expression: tranches
+---
+[
+    [
+        "grandchild-config",
+        "child-config",
+    ],
+    [
+        "child-config",
+        "grandchild-artifact",
+    ],
+    [
+        "child-service",
+    ],
+    [
+        "parent-service",
+    ],
+]

@@ -20,7 +20,7 @@ use capability::{Capabilities, Capability};
 use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
-use depper::Dependencies;
+use depper::{Dependencies, DependenciesBuilder};
 use entity::Entities;
 use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
@@ -125,6 +125,23 @@ impl Scenario {
         self.build_feature_dependencies(dependency_builder)
     }
 
+    pub fn get_a_node_features_dependencies(
+        &self,
+        node_feature_name: &str,
+    ) -> Result<Dependencies> {
+        let mut dependency_builder = Dependencies::builder();
+
+        if let Some(features_value) = &self.features {
+            for (feature_name, _) in features_value.iter() {
+                if feature_name.eq_ignore_ascii_case(node_feature_name) {
+                    dependency_builder =
+                        dependency_builder.add_element(feature_name.to_string(), vec![]);
+                }
+            }
+        }
+        self.build_a_single_features_dependencies(dependency_builder, node_feature_name)
+    }
+
     fn build_infrastructure_dependencies(
         &self,
         mut dependency_builder: depper::DependenciesBuilder,
@@ -160,25 +177,50 @@ impl Scenario {
         if let Some(features) = &self.features {
             for (feature_name, feature) in features.iter() {
                 let mut dependencies: Vec<String> = vec![];
-                if let Some(links) = &feature.dependencies {
-                    let links = links
-                        .iter()
-                        .map(|dependency| dependency.to_string())
-                        .collect::<Vec<String>>();
-                    dependencies.extend_from_slice(links.as_slice());
-                }
+
                 if let Some(feature_dependencies) = &feature.dependencies {
-                    let feature_dependencies = feature_dependencies
-                        .iter()
-                        .map(|dependency| dependency.to_string())
-                        .collect::<Vec<String>>();
                     dependencies.extend_from_slice(feature_dependencies.as_slice());
                 }
                 dependency_builder =
-                    dependency_builder.add_element(feature_name.clone(), dependencies);
+                    dependency_builder.add_element(feature_name.to_owned(), dependencies);
             }
         }
         dependency_builder.build()
+    }
+
+    fn build_a_single_features_dependencies(
+        &self,
+        mut dependency_builder: DependenciesBuilder,
+        feature_name: &str,
+    ) -> Result<Dependencies, anyhow::Error> {
+        dependency_builder =
+            self.get_a_parent_features_dependencies(feature_name, dependency_builder);
+
+        dependency_builder.build()
+    }
+
+    pub fn get_a_parent_features_dependencies(
+        &self,
+        feature_name: &str,
+        mut dependency_builder: DependenciesBuilder,
+    ) -> DependenciesBuilder {
+        if let Some(features) = &self.features {
+            if let Some(feature) = features.get(feature_name) {
+                if let Some(dependencies) = &feature.dependencies {
+                    dependency_builder = dependency_builder
+                        .add_element(feature_name.to_owned(), dependencies.to_vec());
+
+                    for feature_name in dependencies.iter() {
+                        dependency_builder = self
+                            .get_a_parent_features_dependencies(feature_name, dependency_builder)
+                    }
+                    return dependency_builder;
+                } else {
+                    return dependency_builder.add_element(feature_name.to_owned(), vec![]);
+                }
+            }
+        }
+        dependency_builder
     }
 
     fn verify_dependencies(&self) -> Result<()> {
@@ -216,7 +258,7 @@ impl Scenario {
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
-        let vulnernability_names = self
+        let vulnerability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
@@ -233,7 +275,7 @@ impl Scenario {
                 Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
                 Connection::<Vulnerability>::validate_connections(
                     &combined_value,
-                    &vulnernability_names,
+                    &vulnerability_names,
                 )?;
                 Connection::<Condition>::validate_connections(
                     &(combined_value.0, combined_value.1, &self.infrastructure),
@@ -290,13 +332,13 @@ impl Scenario {
     }
 
     fn verify_features(&self) -> Result<()> {
-        let vulnernability_names = self
+        let vulnerability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(features) = &self.features {
             for combined_value in features.iter() {
-                combined_value.validate_connections(&vulnernability_names)?;
+                combined_value.validate_connections(&vulnerability_names)?;
             }
         }
         Ok(())
@@ -341,7 +383,7 @@ impl Scenario {
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
-        let vulnernability_names = self
+        let vulnerability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
@@ -349,7 +391,7 @@ impl Scenario {
             for combined_value in capabilities.iter() {
                 Connection::<Vulnerability>::validate_connections(
                     &combined_value,
-                    &vulnernability_names,
+                    &vulnerability_names,
                 )?;
                 Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
             }
@@ -581,9 +623,9 @@ mod tests {
                 deb10: 3
 
         "#;
-        let infrastrcture = parse_sdl(sdl).unwrap().scenario.infrastructure;
+        let infrastructure = parse_sdl(sdl).unwrap().scenario.infrastructure;
         insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(infrastrcture);
+                insta::assert_yaml_snapshot!(infrastructure);
         });
     }
 
@@ -863,5 +905,65 @@ mod tests {
                         cpu: 2
         "#;
         parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn parent_features_dependencies_are_built_correctly() {
+        let sdl = r#"
+        scenario:
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            features:
+                parent-service:
+                    type: Service
+                    source: some-service
+                    dependencies: 
+                        - child-service
+                        - child-config
+                child-config:
+                    type: Configuration
+                    source: some-config
+                child-service:
+                    type: Service
+                    source:
+                        name: child-service
+                        version: 1.0.0
+                    dependencies:
+                        - grandchild-config
+                        - grandchild-artifact
+                grandchild-config:
+                    type: Configuration
+                    source:
+                        name: some-config
+                        version: 1.0.0                
+                grandchild-artifact:
+                    type: Artifact
+                    source:
+                        name: cool-artifact
+                        version: 1.0.0
+                    dependencies:
+                        - grandgrandchild-artifact
+                grandgrandchild-artifact:
+                    type: Artifact
+                    source: some-artifact
+                    dependencies:
+                        - grandchild-config
+                unrelated-artifact:
+                    type: Artifact
+                    source: some-artifact
+                    dependencies:
+                        - very-unrelated-artifact
+                very-unrelated-artifact:
+                    type: Artifact
+                    source: some-artifact
+        "#;
+        let scenario = parse_sdl(sdl).unwrap().scenario;
+        let dependencies = scenario
+            .get_a_node_features_dependencies("parent-service")
+            .unwrap();
+
+        insta::assert_debug_snapshot!(dependencies.generate_tranches().unwrap());
     }
 }
