@@ -5,6 +5,7 @@ mod constants;
 pub mod entity;
 pub mod evaluation;
 pub mod feature;
+pub mod goal;
 mod helpers;
 pub mod infrastructure;
 mod library_item;
@@ -23,6 +24,7 @@ use depper::Dependencies;
 use entity::Entities;
 use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
+use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
@@ -86,6 +88,7 @@ pub struct Scenario {
     pub evaluations: Option<Evaluations>,
     pub tlos: Option<TrainingLearningObjectives>,
     pub entities: Option<Entities>,
+    pub goals: Option<Goals>,
 }
 
 impl Scenario {
@@ -299,6 +302,40 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_entities(&self) -> Result<()> {
+        let vulnernability_names = self
+            .vulnerabilities
+            .as_ref()
+            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
+        let goal_names = self
+            .goals
+            .as_ref()
+            .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(entities) = &self.entities {
+            for combined_value in entities.iter() {
+                Connection::<Goal>::validate_connections(&combined_value, &goal_names)?;
+                Connection::<Vulnerability>::validate_connections(
+                    &combined_value,
+                    &vulnernability_names,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_goals(&self) -> Result<()> {
+        let tlo_names = self
+            .tlos
+            .as_ref()
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+        if let Some(goals) = &self.goals {
+            for goal in goals.iter() {
+                goal.validate_connections(&tlo_names)?;
+            }
+        }
+        Ok(())
+    }
+
     fn verify_capabilities(&self) -> Result<()> {
         let condition_names = self
             .conditions
@@ -410,7 +447,17 @@ impl Formalize for Scenario {
             self.vulnerabilities = Some(vulnerabilities);
         }
 
+        if let Some(mut goals) = self.goals.clone() {
+            goals.iter_mut().try_for_each(move |(_, goal)| {
+                goal.formalize()?;
+                Ok(())
+            })?;
+            self.goals = Some(goals);
+        }
+
         self.map_infrastructure()?;
+        self.verify_entities()?;
+        self.verify_goals()?;
         self.verify_nodes()?;
         self.verify_evaluations()?;
         self.verify_switch_counts()?;
