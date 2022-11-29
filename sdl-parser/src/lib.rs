@@ -348,7 +348,7 @@ impl Scenario {
     }
 
     fn verify_entities(&self) -> Result<()> {
-        let vulnernability_names = self
+        let vulnerability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
@@ -361,7 +361,7 @@ impl Scenario {
                 Connection::<Goal>::validate_connections(&combined_value, &goal_names)?;
                 Connection::<Vulnerability>::validate_connections(
                     &combined_value,
-                    &vulnernability_names,
+                    &vulnerability_names,
                 )?;
             }
         }
