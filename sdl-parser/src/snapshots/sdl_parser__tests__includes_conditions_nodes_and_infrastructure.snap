@@ -74,4 +74,5 @@ scenario:
   entities: ~
   goals: ~
   injects: ~
+  events: ~
 

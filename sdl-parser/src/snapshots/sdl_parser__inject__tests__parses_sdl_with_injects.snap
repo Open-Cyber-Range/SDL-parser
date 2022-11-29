@@ -97,4 +97,5 @@ scenario:
         - tlo-1
       capabilities:
         - capability-2
+  events: ~
 
