@@ -4,6 +4,7 @@ pub mod condition;
 mod constants;
 pub mod entity;
 pub mod evaluation;
+pub mod event;
 pub mod feature;
 pub mod goal;
 mod helpers;
@@ -24,10 +25,11 @@ use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
 use entity::{Entities, Entity};
 use evaluation::{Evaluation, Evaluations};
+use event::Events;
 use feature::{Feature, Features};
 use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
-use inject::Injects;
+use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
@@ -40,7 +42,7 @@ pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Schema {
     #[serde(
         alias = "Scenario",
@@ -70,7 +72,7 @@ impl Formalize for Schema {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
     pub name: String,
     #[serde(default)]
@@ -92,6 +94,7 @@ pub struct Scenario {
     pub entities: Option<Entities>,
     pub goals: Option<Goals>,
     pub injects: Option<Injects>,
+    pub events: Option<Events>,
 }
 
 impl Scenario {
@@ -454,6 +457,25 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_events(&self) -> Result<()> {
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let inject_names = self
+            .injects
+            .as_ref()
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(events) = &self.events {
+            for combined_value in events.iter() {
+                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
+                Connection::<Inject>::validate_connections(&combined_value, &inject_names)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -535,6 +557,14 @@ impl Formalize for Scenario {
             self.injects = Some(injects);
         }
 
+        if let Some(mut events) = self.events.clone() {
+            events.iter_mut().try_for_each(move |(_, event)| {
+                event.formalize()?;
+                Ok(())
+            })?;
+            self.events = Some(events);
+        }
+
         self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
@@ -548,6 +578,7 @@ impl Formalize for Scenario {
         self.verify_training_learning_objectives()?;
         self.verify_roles()?;
         self.verify_injects()?;
+        self.verify_events()?;
         Ok(())
     }
 }
