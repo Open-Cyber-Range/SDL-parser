@@ -18,4 +18,5 @@ scenario:
   tlos: ~
   entities: ~
   goals: ~
+  injects: ~
 

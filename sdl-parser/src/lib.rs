@@ -8,6 +8,7 @@ pub mod feature;
 pub mod goal;
 mod helpers;
 pub mod infrastructure;
+pub mod inject;
 mod library_item;
 pub mod metric;
 pub mod node;
@@ -21,17 +22,18 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
-use entity::Entities;
+use entity::{Entities, Entity};
 use evaluation::{Evaluation, Evaluations};
 use feature::{Feature, Features};
 use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
+use inject::Injects;
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use training_learning_objective::TrainingLearningObjectives;
+use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
 
 pub trait Formalize {
@@ -89,6 +91,7 @@ pub struct Scenario {
     pub tlos: Option<TrainingLearningObjectives>,
     pub entities: Option<Entities>,
     pub goals: Option<Goals>,
+    pub injects: Option<Injects>,
 }
 
 impl Scenario {
@@ -399,6 +402,33 @@ impl Scenario {
         Ok(())
     }
 
+    fn verify_injects(&self) -> Result<()> {
+        let entity_names = self
+            .entities
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let tlo_names = self
+            .tlos
+            .as_ref()
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+        let capability_names = self
+            .capabilities
+            .as_ref()
+            .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(injects) = &self.injects {
+            for combined_value in injects.iter() {
+                Connection::<Entity>::validate_connections(&combined_value, &entity_names)?;
+                Connection::<TrainingLearningObjective>::validate_connections(
+                    &combined_value,
+                    &tlo_names,
+                )?;
+                Connection::<Capability>::validate_connections(&combined_value, &capability_names)?;
+            }
+        }
+        Ok(())
+    }
+
     fn verify_roles(&self) -> Result<()> {
         if let Some(nodes) = &self.nodes {
             for (node_name, node) in nodes.iter() {
@@ -497,6 +527,14 @@ impl Formalize for Scenario {
             self.goals = Some(goals);
         }
 
+        if let Some(mut injects) = self.injects.clone() {
+            injects.iter_mut().try_for_each(move |(_, inject)| {
+                inject.formalize()?;
+                Ok(())
+            })?;
+            self.injects = Some(injects);
+        }
+
         self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
@@ -509,6 +547,7 @@ impl Formalize for Scenario {
         self.verify_metrics()?;
         self.verify_training_learning_objectives()?;
         self.verify_roles()?;
+        self.verify_injects()?;
         Ok(())
     }
 }
