@@ -14,5 +14,15 @@ my-organization:
     - vulnerability-2
   goals:
     - goal-1
-  entities: ~
+  entities:
+    fish:
+      name: Shark
+      description: This is my organization
+      role: ~
+      mission: swim around
+      categories:
+        - Animal
+      vulnerabilities: ~
+      goals: ~
+      entities: ~
 
