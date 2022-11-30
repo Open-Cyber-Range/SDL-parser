@@ -20,4 +20,5 @@ scenario:
   goals: ~
   injects: ~
   events: ~
+  scripts: ~
 

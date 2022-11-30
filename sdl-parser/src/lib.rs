@@ -13,6 +13,7 @@ pub mod inject;
 mod library_item;
 pub mod metric;
 pub mod node;
+pub mod script;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
@@ -25,7 +26,7 @@ use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
 use entity::{Entities, Entity};
 use evaluation::{Evaluation, Evaluations};
-use event::Events;
+use event::{Event, Events};
 use feature::{Feature, Features};
 use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
@@ -33,6 +34,7 @@ use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
+use script::Scripts;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
@@ -95,6 +97,7 @@ pub struct Scenario {
     pub goals: Option<Goals>,
     pub injects: Option<Injects>,
     pub events: Option<Events>,
+    pub scripts: Option<Scripts>,
 }
 
 impl Scenario {
@@ -476,6 +479,20 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_scripts(&self) -> Result<()> {
+        let event_names = self
+            .events
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(scripts) = &self.scripts {
+            for combined_value in scripts.iter() {
+                Connection::<Event>::validate_connections(&combined_value, &event_names)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -565,6 +582,14 @@ impl Formalize for Scenario {
             self.events = Some(events);
         }
 
+        if let Some(mut scripts) = self.scripts.clone() {
+            scripts.iter_mut().try_for_each(move |(_, script)| {
+                script.formalize()?;
+                Ok(())
+            })?;
+            self.scripts = Some(scripts);
+        }
+
         self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
@@ -579,6 +604,7 @@ impl Formalize for Scenario {
         self.verify_roles()?;
         self.verify_injects()?;
         self.verify_events()?;
+        self.verify_scripts()?;
         Ok(())
     }
 }

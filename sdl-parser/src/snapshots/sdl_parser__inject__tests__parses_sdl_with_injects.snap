@@ -98,4 +98,5 @@ scenario:
       capabilities:
         - capability-2
   events: ~
+  scripts: ~
 

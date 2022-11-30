@@ -1,5 +1,5 @@
 ---
-source: sdl-parser/src/event.rs
+source: sdl-parser/src/script.rs
 expression: schema
 ---
 scenario:
@@ -16,29 +16,13 @@ scenario:
       interval: 30
       source: ~
   vulnerabilities: ~
-  capabilities:
-    capability-1:
-      description: Can defend against Dirty Cow
-      condition: condition-1
-      vulnerabilities: ~
-    capability-2:
-      description: Can defend against Dirty Cow
-      condition: condition-1
-      vulnerabilities: ~
+  capabilities: ~
   metrics: ~
   evaluations: ~
   tlos: ~
   entities: ~
   goals: ~
-  injects:
-    my-cool-inject:
-      source:
-        name: inject-package
-        version: "*"
-      from-entity: ~
-      to-entities: ~
-      tlos: ~
-      capabilities: ~
+  injects: ~
   events:
     my-cool-event:
       time: 0.2345678
@@ -46,5 +30,11 @@ scenario:
         - condition-1
       injects:
         - my-cool-inject
-  scripts: ~
+  scripts:
+    my-cool-script:
+      start-time: 602
+      end-time: 694800
+      speed: 1.5
+      events:
+        - my-cool-event
 
