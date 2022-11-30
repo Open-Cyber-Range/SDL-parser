@@ -222,16 +222,15 @@ mod tests {
     #[test]
     fn parses_single_inject() {
         let inject = r#"
-            my-cool-inject:
-                source: inject-package
-                from-entity: my-organization
-                to-entities:
-                    - red-team
-                    - blue-team
-                tlos:
-                    - tlo-1
-                capabilities:
-                    - capability-2
+            source: inject-package
+            from-entity: my-organization
+            to-entities:
+                - red-team
+                - blue-team
+            tlos:
+                - tlo-1
+            capabilities:
+                - capability-2
       "#;
         serde_yaml::from_str::<Inject>(inject).unwrap();
     }

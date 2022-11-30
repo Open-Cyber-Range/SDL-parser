@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_single_inject() {
+    fn parses_single_event() {
         let event = r#"
             time: 0.2345678
             conditions:
