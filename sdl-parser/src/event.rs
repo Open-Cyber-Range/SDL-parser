@@ -59,6 +59,10 @@ impl Connection<Inject> for (&String, &Event) {
                     ));
                 }
             }
+        } else {
+            return Err(anyhow!(
+                "Inject list is empty under Scenario, but having an Event requires an Inject"
+            ));
         }
 
         Ok(())

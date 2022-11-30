@@ -22,7 +22,15 @@ scenario:
   tlos: ~
   entities: ~
   goals: ~
-  injects: ~
+  injects:
+    my-cool-inject:
+      source:
+        name: inject-package
+        version: "*"
+      from-entity: ~
+      to-entities: ~
+      tlos: ~
+      capabilities: ~
   events:
     my-cool-event:
       time: 0.2345678

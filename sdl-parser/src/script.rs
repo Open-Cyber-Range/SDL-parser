@@ -99,6 +99,9 @@ mod tests {
                     speed: 1.5
                     events:
                         - my-cool-event
+            injects:
+                my-cool-inject:
+                    source: inject-package
             events:
                 my-cool-event:
                     time: 0.2345678
