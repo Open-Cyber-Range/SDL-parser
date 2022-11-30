@@ -67,7 +67,7 @@ where
         string = String::from("0sec");
     }
 
-    string.retain(|char| !char.is_whitespace());
+    string.retain(|char| !char.is_whitespace() && char != '_');
 
     let duration =
         parse(&string).map_err(|_| serde::de::Error::custom("failed to parse str to duration"))?;
@@ -155,5 +155,21 @@ mod tests {
             .unwrap()
             .formalize()
             .unwrap();
+    }
+
+    #[test]
+    fn parses_underscore_formatted_numbers() {
+        let script = r#"
+            start-time: _1_0__0__ min
+            end-time: 1_000_000s
+            speed: 1
+            events:
+                - my-cool-event
+      "#;
+
+        let script = serde_yaml::from_str::<Script>(script).unwrap();
+
+        assert_eq!(script.start_time, 6000);
+        assert_eq!(script.end_time, 1000000);
     }
 }
