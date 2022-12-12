@@ -37,6 +37,10 @@ impl Formalize for Script {
             return Err(anyhow::anyhow!("End-time must be greater than start-time"));
         }
 
+        if self.speed.is_sign_negative() {
+            return Err(anyhow::anyhow!("Speed must have a positive value"));
+        }
+
         Ok(())
     }
 }
@@ -86,7 +90,7 @@ mod tests {
     use crate::parse_sdl;
 
     #[test]
-    fn parses_sdl_with_events() {
+    fn parses_sdl_with_scripts() {
         let sdl = r#"
         scenario:
             name: test-scenario
@@ -180,6 +184,22 @@ mod tests {
 
         assert_eq!(script.start_time, 6000);
         assert_eq!(script.end_time, 1000000);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_negative_speed_value() {
+        let script = r#"
+            start-time: 0
+            end-time: 3 hour
+            speed: -1.234
+            events:
+                - my-cool-event
+      "#;
+        serde_yaml::from_str::<Script>(script)
+            .unwrap()
+            .formalize()
+            .unwrap();
     }
 
     #[test]
