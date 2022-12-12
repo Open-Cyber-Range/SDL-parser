@@ -97,7 +97,7 @@ impl Connection<TrainingLearningObjective> for (&String, &Inject) {
             if let Some(tlo_names) = potential_tlo_names {
                 for inject_tlo_name in required_tlos {
                     if !tlo_names.contains(inject_tlo_name) {
-                        return Err(anyhow!("TLO {inject_tlo_name} not found under scenario"));
+                        return Err(anyhow!("TLO {inject_tlo_name} not found under Scenario"));
                     }
                 }
             }
@@ -111,9 +111,9 @@ impl Connection<Capability> for (&String, &Inject) {
     fn validate_connections(&self, potential_capability_names: &Option<Vec<String>>) -> Result<()> {
         if self.1.capabilities.is_some() && potential_capability_names.is_none() {
             return Err(anyhow!(
-                    "Capability list is empty under scenario, but training learning objective {} has capabilities",
-                    self.0
-                ));
+                "Capability list is empty under Scenario, but Inject {} has Capabilities",
+                self.0
+            ));
         }
 
         if let Some(required_capabilities) = &self.1.capabilities {
@@ -121,7 +121,7 @@ impl Connection<Capability> for (&String, &Inject) {
                 for inject_capability_name in required_capabilities.iter() {
                     if !scenario_capability_names.contains(inject_capability_name) {
                         return Err(anyhow!(
-                            "Capability {inject_capability_name} not found under scenario"
+                            "Capability {inject_capability_name} not found under Scenario"
                         ));
                     }
                 }
@@ -271,5 +271,198 @@ mod tests {
             .unwrap()
             .formalize()
             .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_capabilities_not_defined_for_inject() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        capabilities:
+                            - capability-2
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_capability() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                capabilities:
+                    capability-9999:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        capabilities:
+                            - capability-1
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_capabilities_not_defined_for_tlo() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                capabilities:
+                    capability-9999:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                tlos:
+                    tlo-1:
+                        name: fungibly leverage client-focused e-tailers
+                        description: we learn to make charts of web page stats
+                        evaluation: evaluation-1
+                        capabilities:
+                            - capability-1
+                evaluations:
+                    evaluation-1:
+                        description: some description
+                        metrics:
+                            - metric-1
+                        min-score: 50
+                metrics:
+                        metric-1:
+                            type: MANUAL
+                            artifact: true
+                            max-score: 10
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_tlo_not_defined() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                evaluations:
+                    evaluation-1:
+                        description: some description
+                        metrics:
+                            - metric-1
+                        min-score: 50
+                metrics:
+                        metric-1:
+                            type: MANUAL
+                            artifact: true
+                            max-score: 10
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        tlos:
+                            - tlo-1
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_tlo_for_inject() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                evaluations:
+                    evaluation-1:
+                        description: some description
+                        metrics:
+                            - metric-1
+                        min-score: 50
+                metrics:
+                        metric-1:
+                            type: MANUAL
+                            artifact: true
+                            max-score: 10
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        tlos:
+                            - tlo-1
+                tlos:
+                    tlo-9999:
+                        name: fungibly leverage client-focused e-tailers
+                        description: we learn to make charts of web page stats
+                        evaluation: evaluation-1
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_entity_not_defined_for_inject() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        from-entity: my-organization
+                        to-entities:
+                            - red-team
+                            - blue-team
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_entity_for_inject() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                entities:
+                    red-team:
+                        name: "The Red Team"
+                    blue-team:
+                        name: "The Blue Team"
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                        from-entity: my-organization
+                        to-entities:
+                            - red-team
+                            - blue-team
+            "#;
+        parse_sdl(sdl).unwrap();
     }
 }

@@ -130,4 +130,85 @@ mod tests {
       "#;
         serde_yaml::from_str::<Event>(event).unwrap();
     }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_incorrect_time_value() {
+        let event = r#"
+            time: 600
+            conditions:
+                - condition-1
+            injects:
+                - my-cool-inject
+      "#;
+        serde_yaml::from_str::<Event>(event)
+            .unwrap()
+            .formalize()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_scenario_condition() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-3000:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                    capability-2:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                events:
+                    my-cool-event:
+                        time: 0.2345678
+                        conditions:
+                            - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_conditions() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                    capability-2:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                events:
+                    my-cool-event:
+                        time: 0.2345678
+                        conditions:
+                            - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
 }

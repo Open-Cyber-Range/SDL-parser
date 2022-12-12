@@ -43,6 +43,12 @@ impl Formalize for Script {
 
 impl Connection<Event> for (&String, &Script) {
     fn validate_connections(&self, potential_event_names: &Option<Vec<String>>) -> Result<()> {
+        if potential_event_names.is_none() {
+            return Err(anyhow!(
+                "Script is defined but no Events declared under Scenario"
+            ));
+        };
+
         if let Some(event_names) = potential_event_names {
             for script_event_name in &self.1.events {
                 if !event_names.contains(script_event_name) {
@@ -174,5 +180,65 @@ mod tests {
 
         assert_eq!(script.start_time, 6000);
         assert_eq!(script.end_time, 1000000);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_event_not_defined_for_script() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                scripts:
+                    my-cool-script:
+                        start-time: 10min 2 sec
+                        end-time: 1 week 1day 1h 10 ms
+                        speed: 1.5
+                        events:
+                            - my-cool-event
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_event_for_script() {
+        let sdl = r#"
+            scenario:
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                scripts:
+                    my-cool-script:
+                        start-time: 10min 2 sec
+                        end-time: 1 week 1day 1h 10 ms
+                        speed: 1.5
+                        events:
+                            - my-cool-event
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                events:
+                    my-embarrassing-event:
+                        time: 0.2345678
+                        conditions:
+                            - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
     }
 }
