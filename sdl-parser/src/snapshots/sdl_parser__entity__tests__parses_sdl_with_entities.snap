@@ -14,5 +14,18 @@ my-organization:
     - vulnerability-2
   goals:
     - goal-1
-  entities: ~
+  facts: ~
+  entities:
+    fish:
+      name: Shark
+      description: This is my organization
+      role: ~
+      mission: swim around
+      categories:
+        - Animal
+      vulnerabilities: ~
+      goals: ~
+      facts:
+        anatomy: sharks do not have bones
+      entities: ~
 

@@ -73,4 +73,7 @@ scenario:
   tlos: ~
   entities: ~
   goals: ~
+  injects: ~
+  events: ~
+  scripts: ~
 

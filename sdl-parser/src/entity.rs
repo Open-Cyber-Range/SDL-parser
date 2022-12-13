@@ -29,6 +29,8 @@ pub struct Entity {
     pub vulnerabilities: Option<Vec<String>>,
     #[serde(alias = "Goals", alias = "GOALS")]
     pub goals: Option<Vec<String>>,
+    #[serde(alias = "Facts", alias = "FACTS")]
+    pub facts: Option<HashMap<String, String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
 }
@@ -141,14 +143,14 @@ mod tests {
                   description: "Can defend against Dirty Cow"
                   condition: condition-1
                   vulnerabilities:
-                  - vulnerability-1
-                  - vulnerability-2
+                    - vulnerability-1
+                    - vulnerability-2
               capability-2:
                   description: "Can defend against Dirty Cow"
                   condition: condition-1
                   vulnerabilities:
-                  - vulnerability-1
-                  - vulnerability-2
+                    - vulnerability-1
+                    - vulnerability-2
           tlos:
               tlo-1:
                   description: some description
@@ -175,12 +177,14 @@ mod tests {
                   goals:
                     - goal-1
                   entities:
-                  fish:
-                      name: "Shark"
-                      description: "This is my organization"
-                      mission: "swim around"
-                      categories:
-                      - Animal
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        facts:
+                            anatomy: sharks do not have bones 
       "#;
         let entities = parse_sdl(sdl).unwrap().scenario.entities;
         insta::with_settings!({sort_maps => true}, {

@@ -4,13 +4,16 @@ pub mod condition;
 mod constants;
 pub mod entity;
 pub mod evaluation;
+pub mod event;
 pub mod feature;
 pub mod goal;
 mod helpers;
 pub mod infrastructure;
+pub mod inject;
 mod library_item;
 pub mod metric;
 pub mod node;
+pub mod script;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
@@ -21,24 +24,27 @@ use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
-use entity::Entities;
+use entity::{Entities, Entity};
 use evaluation::{Evaluation, Evaluations};
+use event::{Event, Events};
 use feature::{Feature, Features};
 use goal::{Goal, Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
+use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
+use script::Scripts;
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::*;
-use training_learning_objective::TrainingLearningObjectives;
+use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
 
 pub trait Formalize {
     fn formalize(&mut self) -> Result<()>;
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Schema {
     #[serde(
         alias = "Scenario",
@@ -68,7 +74,7 @@ impl Formalize for Schema {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Scenario {
     pub name: String,
     #[serde(default)]
@@ -89,6 +95,9 @@ pub struct Scenario {
     pub tlos: Option<TrainingLearningObjectives>,
     pub entities: Option<Entities>,
     pub goals: Option<Goals>,
+    pub injects: Option<Injects>,
+    pub events: Option<Events>,
+    pub scripts: Option<Scripts>,
 }
 
 impl Scenario {
@@ -263,8 +272,8 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
-            for combined_value in nodes.iter() {
-                let name = combined_value.0;
+            for named_node in nodes.iter() {
+                let name = named_node.0;
                 if name.len() > MAX_LONG_NAME {
                     return Err(anyhow!(
                         "{} is too long, maximum node name length is {:?}",
@@ -272,13 +281,13 @@ impl Scenario {
                         MAX_LONG_NAME
                     ));
                 }
-                Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
+                Connection::<Feature>::validate_connections(&named_node, &feature_names)?;
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
+                    &named_node,
                     &vulnerability_names,
                 )?;
                 Connection::<Condition>::validate_connections(
-                    &(combined_value.0, combined_value.1, &self.infrastructure),
+                    &(named_node.0, named_node.1, &self.infrastructure),
                     &condition_names,
                 )?;
             }
@@ -292,8 +301,8 @@ impl Scenario {
             .as_ref()
             .map(|metric_map| metric_map.keys().cloned().collect::<Vec<String>>());
         if let Some(evaluations) = &self.evaluations {
-            for combined_value in evaluations.iter() {
-                Connection::<Metric>::validate_connections(&combined_value, &metric_names)?;
+            for named_evaluation in evaluations.iter() {
+                Connection::<Metric>::validate_connections(&named_evaluation, &metric_names)?;
             }
         }
         Ok(())
@@ -310,9 +319,9 @@ impl Scenario {
             .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(training_learning_objectives) = &self.tlos {
-            for combined_value in training_learning_objectives {
-                Connection::<Evaluation>::validate_connections(&combined_value, &evaluation_names)?;
-                Connection::<Capability>::validate_connections(&combined_value, &capability_names)?;
+            for named_tlo in training_learning_objectives {
+                Connection::<Evaluation>::validate_connections(&named_tlo, &evaluation_names)?;
+                Connection::<Capability>::validate_connections(&named_tlo, &capability_names)?;
             }
         }
         Ok(())
@@ -337,15 +346,15 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(features) = &self.features {
-            for combined_value in features.iter() {
-                combined_value.validate_connections(&vulnerability_names)?;
+            for named_feature in features.iter() {
+                named_feature.validate_connections(&vulnerability_names)?;
             }
         }
         Ok(())
     }
 
     fn verify_entities(&self) -> Result<()> {
-        let vulnernability_names = self
+        let vulnerability_names = self
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
@@ -354,11 +363,11 @@ impl Scenario {
             .as_ref()
             .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
         if let Some(entities) = &self.entities {
-            for combined_value in entities.iter() {
-                Connection::<Goal>::validate_connections(&combined_value, &goal_names)?;
+            for named_entity in entities.iter() {
+                Connection::<Goal>::validate_connections(&named_entity, &goal_names)?;
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
-                    &vulnernability_names,
+                    &named_entity,
+                    &vulnerability_names,
                 )?;
             }
         }
@@ -388,12 +397,39 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(capabilities) = &self.capabilities {
-            for combined_value in capabilities.iter() {
+            for named_capability in capabilities.iter() {
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
+                    &named_capability,
                     &vulnerability_names,
                 )?;
-                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
+                Connection::<Condition>::validate_connections(&named_capability, &condition_names)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_injects(&self) -> Result<()> {
+        let entity_names = self
+            .entities
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let tlo_names = self
+            .tlos
+            .as_ref()
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+        let capability_names = self
+            .capabilities
+            .as_ref()
+            .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(injects) = &self.injects {
+            for named_inject in injects.iter() {
+                Connection::<Entity>::validate_connections(&named_inject, &entity_names)?;
+                Connection::<TrainingLearningObjective>::validate_connections(
+                    &named_inject,
+                    &tlo_names,
+                )?;
+                Connection::<Capability>::validate_connections(&named_inject, &capability_names)?;
             }
         }
         Ok(())
@@ -420,6 +456,39 @@ impl Scenario {
                         return Err(anyhow::anyhow!("No roles found for condition(s)"));
                     }
                 }
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_events(&self) -> Result<()> {
+        let condition_names = self
+            .conditions
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let inject_names = self
+            .injects
+            .as_ref()
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(events) = &self.events {
+            for named_event in events.iter() {
+                Connection::<Condition>::validate_connections(&named_event, &condition_names)?;
+                Connection::<Inject>::validate_connections(&named_event, &inject_names)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_scripts(&self) -> Result<()> {
+        let event_names = self
+            .events
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(scripts) = &self.scripts {
+            for named_script in scripts.iter() {
+                Connection::<Event>::validate_connections(&named_script, &event_names)?;
             }
         }
         Ok(())
@@ -497,6 +566,30 @@ impl Formalize for Scenario {
             self.goals = Some(goals);
         }
 
+        if let Some(mut injects) = self.injects.clone() {
+            injects.iter_mut().try_for_each(move |(_, inject)| {
+                inject.formalize()?;
+                Ok(())
+            })?;
+            self.injects = Some(injects);
+        }
+
+        if let Some(mut events) = self.events.clone() {
+            events.iter_mut().try_for_each(move |(_, event)| {
+                event.formalize()?;
+                Ok(())
+            })?;
+            self.events = Some(events);
+        }
+
+        if let Some(mut scripts) = self.scripts.clone() {
+            scripts.iter_mut().try_for_each(move |(_, script)| {
+                script.formalize()?;
+                Ok(())
+            })?;
+            self.scripts = Some(scripts);
+        }
+
         self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
@@ -509,6 +602,9 @@ impl Formalize for Scenario {
         self.verify_metrics()?;
         self.verify_training_learning_objectives()?;
         self.verify_roles()?;
+        self.verify_injects()?;
+        self.verify_events()?;
+        self.verify_scripts()?;
         Ok(())
     }
 }
