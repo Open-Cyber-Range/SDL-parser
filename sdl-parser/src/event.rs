@@ -19,11 +19,11 @@ pub type Events = HashMap<String, Event>;
 impl Formalize for Event {
     fn formalize(&mut self) -> Result<()> {
         if self.injects.is_empty() {
-            return Err(anyhow::anyhow!("Event must have have at least one Inject"));
+            return Err(anyhow!("Event must have have at least one Inject"));
         }
         if let Some(time) = self.time {
             if !(0.0..=1.0).contains(&time) {
-                return Err(anyhow::anyhow!(
+                return Err(anyhow!(
                     "Time must have a float value between 0 and 1"
                 ));
             }

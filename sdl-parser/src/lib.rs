@@ -272,8 +272,8 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(nodes) = &self.nodes {
-            for combined_value in nodes.iter() {
-                let name = combined_value.0;
+            for named_node in nodes.iter() {
+                let name = named_node.0;
                 if name.len() > MAX_LONG_NAME {
                     return Err(anyhow!(
                         "{} is too long, maximum node name length is {:?}",
@@ -281,13 +281,13 @@ impl Scenario {
                         MAX_LONG_NAME
                     ));
                 }
-                Connection::<Feature>::validate_connections(&combined_value, &feature_names)?;
+                Connection::<Feature>::validate_connections(&named_node, &feature_names)?;
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
+                    &named_node,
                     &vulnerability_names,
                 )?;
                 Connection::<Condition>::validate_connections(
-                    &(combined_value.0, combined_value.1, &self.infrastructure),
+                    &(named_node.0, named_node.1, &self.infrastructure),
                     &condition_names,
                 )?;
             }
@@ -301,8 +301,8 @@ impl Scenario {
             .as_ref()
             .map(|metric_map| metric_map.keys().cloned().collect::<Vec<String>>());
         if let Some(evaluations) = &self.evaluations {
-            for combined_value in evaluations.iter() {
-                Connection::<Metric>::validate_connections(&combined_value, &metric_names)?;
+            for named_evaluation in evaluations.iter() {
+                Connection::<Metric>::validate_connections(&named_evaluation, &metric_names)?;
             }
         }
         Ok(())
@@ -319,9 +319,9 @@ impl Scenario {
             .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(training_learning_objectives) = &self.tlos {
-            for combined_value in training_learning_objectives {
-                Connection::<Evaluation>::validate_connections(&combined_value, &evaluation_names)?;
-                Connection::<Capability>::validate_connections(&combined_value, &capability_names)?;
+            for named_tlo in training_learning_objectives {
+                Connection::<Evaluation>::validate_connections(&named_tlo, &evaluation_names)?;
+                Connection::<Capability>::validate_connections(&named_tlo, &capability_names)?;
             }
         }
         Ok(())
@@ -346,8 +346,8 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(features) = &self.features {
-            for combined_value in features.iter() {
-                combined_value.validate_connections(&vulnerability_names)?;
+            for named_feature in features.iter() {
+                named_feature.validate_connections(&vulnerability_names)?;
             }
         }
         Ok(())
@@ -363,10 +363,10 @@ impl Scenario {
             .as_ref()
             .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
         if let Some(entities) = &self.entities {
-            for combined_value in entities.iter() {
-                Connection::<Goal>::validate_connections(&combined_value, &goal_names)?;
+            for named_entity in entities.iter() {
+                Connection::<Goal>::validate_connections(&named_entity, &goal_names)?;
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
+                    &named_entity,
                     &vulnerability_names,
                 )?;
             }
@@ -397,12 +397,12 @@ impl Scenario {
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
         if let Some(capabilities) = &self.capabilities {
-            for combined_value in capabilities.iter() {
+            for named_capability in capabilities.iter() {
                 Connection::<Vulnerability>::validate_connections(
-                    &combined_value,
+                    &named_capability,
                     &vulnerability_names,
                 )?;
-                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
+                Connection::<Condition>::validate_connections(&named_capability, &condition_names)?;
             }
         }
         Ok(())
@@ -423,13 +423,13 @@ impl Scenario {
             .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(injects) = &self.injects {
-            for combined_value in injects.iter() {
-                Connection::<Entity>::validate_connections(&combined_value, &entity_names)?;
+            for named_inject in injects.iter() {
+                Connection::<Entity>::validate_connections(&named_inject, &entity_names)?;
                 Connection::<TrainingLearningObjective>::validate_connections(
-                    &combined_value,
+                    &named_inject,
                     &tlo_names,
                 )?;
-                Connection::<Capability>::validate_connections(&combined_value, &capability_names)?;
+                Connection::<Capability>::validate_connections(&named_inject, &capability_names)?;
             }
         }
         Ok(())
@@ -472,9 +472,9 @@ impl Scenario {
             .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(events) = &self.events {
-            for combined_value in events.iter() {
-                Connection::<Condition>::validate_connections(&combined_value, &condition_names)?;
-                Connection::<Inject>::validate_connections(&combined_value, &inject_names)?;
+            for named_event in events.iter() {
+                Connection::<Condition>::validate_connections(&named_event, &condition_names)?;
+                Connection::<Inject>::validate_connections(&named_event, &inject_names)?;
             }
         }
         Ok(())
@@ -487,8 +487,8 @@ impl Scenario {
             .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(scripts) = &self.scripts {
-            for combined_value in scripts.iter() {
-                Connection::<Event>::validate_connections(&combined_value, &event_names)?;
+            for named_script in scripts.iter() {
+                Connection::<Event>::validate_connections(&named_script, &event_names)?;
             }
         }
         Ok(())

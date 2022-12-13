@@ -23,7 +23,7 @@ pub struct Inject {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
-    #[serde(rename = "from-entity", alias = "From_entity", alias = "FROM_ENTITY")]
+    #[serde(rename = "from-entity", alias = "From-entity", alias = "FROM-ENTITY")]
     pub from_entity: Option<String>,
     #[serde(rename = "to-entities", alias = "To-entities", alias = "TO-ENTITIES")]
     pub to_entities: Option<Vec<String>>,
@@ -38,11 +38,11 @@ pub type Injects = HashMap<String, Inject>;
 impl Formalize for Inject {
     fn formalize(&mut self) -> Result<()> {
         if self.from_entity.is_some() && self.to_entities.is_none() {
-            return Err(anyhow::anyhow!(
+            return Err(anyhow!(
                 "Inject must have `to-entities` declared if `from-entity` is declared"
             ));
         } else if self.from_entity.is_none() && self.to_entities.is_some() {
-            return Err(anyhow::anyhow!(
+            return Err(anyhow!(
                 "Inject must have `from-entity` declared if `to-entities` is declared"
             ));
         } else if let Some(source_helper) = &self.source_helper {
@@ -57,8 +57,9 @@ impl Connection<Entity> for (&String, &Inject) {
         if self.1.to_entities.is_some() && potential_entity_names.is_none()
             || self.1.from_entity.is_some() && potential_entity_names.is_none()
         {
-            return Err(anyhow::anyhow!(
-                "Entities defined in Inject but none defined under Scenario"
+            return Err(anyhow!(
+                "Entities defined in Inject {} but none defined under Scenario",
+                self.0
             ));
         }
 
@@ -73,8 +74,9 @@ impl Connection<Entity> for (&String, &Inject) {
         for inject_entity_name in required_entities.iter() {
             if let Some(scenario_entities) = potential_entity_names {
                 if !scenario_entities.contains(inject_entity_name) {
-                    return Err(anyhow::anyhow!(
-                        "Entity {inject_entity_name} defined in Inject but not defined in Scenario Entities"
+                    return Err(anyhow!(
+                        "Entity {inject_entity_name} defined in Inject {} but not defined in Scenario Entities", 
+                        self.0
                     ));
                 }
             }

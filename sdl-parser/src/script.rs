@@ -32,13 +32,13 @@ pub type Scripts = HashMap<String, Script>;
 impl Formalize for Script {
     fn formalize(&mut self) -> Result<()> {
         if self.events.is_empty() {
-            return Err(anyhow::anyhow!("Script must have have at least one Event"));
+            return Err(anyhow!("Script must have have at least one Event"));
         } else if self.start_time > self.end_time {
-            return Err(anyhow::anyhow!("End-time must be greater than start-time"));
+            return Err(anyhow!("End-time must be greater than start-time"));
         }
 
         if self.speed.is_sign_negative() {
-            return Err(anyhow::anyhow!("Speed must have a positive value"));
+            return Err(anyhow!("Speed must have a positive value"));
         }
 
         Ok(())
