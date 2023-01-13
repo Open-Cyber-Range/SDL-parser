@@ -80,7 +80,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_metrics() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -99,7 +98,7 @@ mod tests {
                     command: executable/path.sh
                     interval: 30
         "#;
-        let metrics = parse_sdl(sdl).unwrap().scenario.metrics;
+        let metrics = parse_sdl(sdl).unwrap().metrics;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(metrics);
         });

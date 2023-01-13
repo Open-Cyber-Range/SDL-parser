@@ -23,9 +23,7 @@ impl Formalize for Event {
         }
         if let Some(time) = self.time {
             if !(0.0..=1.0).contains(&time) {
-                return Err(anyhow!(
-                    "Time must have a float value between 0 and 1"
-                ));
+                return Err(anyhow!("Time must have a float value between 0 and 1"));
             }
         }
         Ok(())
@@ -84,7 +82,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_events() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z
@@ -151,7 +148,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_scenario_condition() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -186,7 +182,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_conditions() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z

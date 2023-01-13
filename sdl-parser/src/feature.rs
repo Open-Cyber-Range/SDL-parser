@@ -89,7 +89,6 @@ mod tests {
     #[test]
     fn feature_source_fields_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -104,7 +103,7 @@ mod tests {
                         name: cool-config
                         version: 1.0.0
         "#;
-        let features = parse_sdl(sdl).unwrap().scenario.features;
+        let features = parse_sdl(sdl).unwrap().features;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(features);
         });
@@ -148,7 +147,6 @@ mod tests {
     #[test]
     fn cyclic_feature_dependency_is_detected() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -178,7 +176,6 @@ mod tests {
     #[test]
     fn feature_cyclic_self_dependency_is_detected() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z

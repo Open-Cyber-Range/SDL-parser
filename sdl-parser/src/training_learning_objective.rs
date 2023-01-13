@@ -71,7 +71,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_tlos() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z
@@ -128,7 +127,7 @@ mod tests {
                         - capability-1
                         - capability-2
         "#;
-        let tlos = parse_sdl(sdl).unwrap().scenario.tlos;
+        let tlos = parse_sdl(sdl).unwrap().tlos;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(tlos);
         });

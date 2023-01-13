@@ -17,7 +17,7 @@ where
     let s = String::deserialize(deserializer)?;
     Ok(s.parse::<ByteSize>()
         .map_err(|_| serde::de::Error::custom("Failed"))?
-        .0 as u64)
+        .0)
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -175,7 +175,6 @@ mod tests {
     #[test]
     fn vm_source_fields_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -191,7 +190,7 @@ mod tests {
                         version: 1.2.3
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
+        let nodes = parse_sdl(sdl).unwrap().nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });
@@ -261,7 +260,6 @@ mod tests {
     #[test]
     fn includes_nodes_with_defined_features() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -290,7 +288,7 @@ mod tests {
                         version: 1.0.0
                     
         "#;
-        let scenario = parse_sdl(sdl).unwrap().scenario;
+        let scenario = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(scenario);
         });
@@ -300,7 +298,6 @@ mod tests {
     #[should_panic]
     fn roles_missing_when_features_exist() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -324,7 +321,6 @@ mod tests {
     #[should_panic]
     fn role_under_feature_missing_from_node() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -349,7 +345,6 @@ mod tests {
     #[test]
     fn same_name_for_role_only_saves_one_role() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -363,7 +358,7 @@ mod tests {
                         admin: "username2"
 
         "#;
-        let scenario = parse_sdl(sdl).unwrap().scenario;
+        let scenario = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(scenario);
         });

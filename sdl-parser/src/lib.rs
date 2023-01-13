@@ -36,7 +36,6 @@ use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
 use script::Scripts;
 use serde::{Deserialize, Serialize};
-use serde_aux::prelude::*;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
 
@@ -45,16 +44,59 @@ pub trait Formalize {
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Schema {
+pub struct Scenario {
+    #[serde(alias = "Name", alias = "NAME")]
+    pub name: String,
+    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
+    #[serde(alias = "Start", alias = "START")]
+    pub start: DateTime<Utc>,
+    #[serde(alias = "End", alias = "END")]
+    pub end: DateTime<Utc>,
+    #[serde(alias = "Nodes", alias = "NODES")]
+    pub nodes: Option<Nodes>,
+    #[serde(alias = "Features", alias = "FEATURES")]
+    pub features: Option<Features>,
     #[serde(
-        alias = "Scenario",
-        alias = "SCENARIO",
-        deserialize_with = "deserialize_struct_case_insensitive"
+        default,
+        rename = "infrastructure",
+        skip_serializing,
+        alias = "Infrastructure",
+        alias = "INFRASTRUCTURE"
     )]
-    pub scenario: Scenario,
+    infrastructure_helper: Option<InfrastructureHelper>,
+    #[serde(
+        default,
+        skip_deserializing,
+        alias = "Infrastructure",
+        alias = "INFRASTRUCTURE"
+    )]
+    pub infrastructure: Option<Infrastructure>,
+    #[serde(alias = "Conditions", alias = "CONDITIONS")]
+    pub conditions: Option<Conditions>,
+    #[serde(alias = "Vulnerabilities", alias = "VULNERABILITIES")]
+    pub vulnerabilities: Option<Vulnerabilities>,
+    #[serde(alias = "Capabilities", alias = "CAPABILITIES")]
+    pub capabilities: Option<Capabilities>,
+    #[serde(alias = "Metrics", alias = "METRICS")]
+    pub metrics: Option<Metrics>,
+    #[serde(alias = "Evaluations", alias = "EVALUATIONS")]
+    pub evaluations: Option<Evaluations>,
+    #[serde(alias = "Tlos", alias = "TLOS")]
+    pub tlos: Option<TrainingLearningObjectives>,
+    #[serde(alias = "Entities", alias = "ENTITIES")]
+    pub entities: Option<Entities>,
+    #[serde(alias = "Goals", alias = "GOALS")]
+    pub goals: Option<Goals>,
+    #[serde(alias = "Injects", alias = "INJECTS")]
+    pub injects: Option<Injects>,
+    #[serde(alias = "Events", alias = "EVENTS")]
+    pub events: Option<Events>,
+    #[serde(alias = "Scripts", alias = "SCRIPTS")]
+    pub scripts: Option<Scripts>,
 }
 
-impl Schema {
+impl Scenario {
     pub fn to_yaml(&self) -> Result<String> {
         serde_yaml::to_string(&self).map_err(|e| anyhow!("Failed to serialize to yaml: {}", e))
     }
@@ -65,42 +107,7 @@ impl Schema {
         schema.formalize()?;
         Ok(schema)
     }
-}
 
-impl Formalize for Schema {
-    fn formalize(&mut self) -> Result<()> {
-        self.scenario.formalize()?;
-        Ok(())
-    }
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Scenario {
-    pub name: String,
-    #[serde(default)]
-    pub description: Option<String>,
-    pub start: DateTime<Utc>,
-    pub end: DateTime<Utc>,
-    pub nodes: Option<Nodes>,
-    pub features: Option<Features>,
-    #[serde(default, rename = "infrastructure", skip_serializing)]
-    infrastructure_helper: Option<InfrastructureHelper>,
-    #[serde(default, skip_deserializing)]
-    pub infrastructure: Option<Infrastructure>,
-    pub conditions: Option<Conditions>,
-    pub vulnerabilities: Option<Vulnerabilities>,
-    pub capabilities: Option<Capabilities>,
-    pub metrics: Option<Metrics>,
-    pub evaluations: Option<Evaluations>,
-    pub tlos: Option<TrainingLearningObjectives>,
-    pub entities: Option<Entities>,
-    pub goals: Option<Goals>,
-    pub injects: Option<Injects>,
-    pub events: Option<Events>,
-    pub scripts: Option<Scripts>,
-}
-
-impl Scenario {
     fn map_infrastructure(&mut self) -> Result<()> {
         if let Some(infrastructure_helper) = &self.infrastructure_helper {
             let mut infrastructure = Infrastructure::new();
@@ -609,8 +616,8 @@ impl Formalize for Scenario {
     }
 }
 
-pub fn parse_sdl(sdl_string: &str) -> Result<Schema> {
-    Schema::from_yaml(sdl_string)
+pub fn parse_sdl(sdl_string: &str) -> Result<Scenario> {
+    Scenario::from_yaml(sdl_string)
 }
 
 #[cfg(test)]
@@ -620,7 +627,6 @@ mod tests {
     #[test]
     fn can_parse_minimal_sdl() {
         let minimal_sdl = r#"
-            scenario:
                 name: test-scenario
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
@@ -633,7 +639,6 @@ mod tests {
     #[test]
     fn includes_nodes() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -657,7 +662,7 @@ mod tests {
                         cpu: 1
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
+        let nodes = parse_sdl(sdl).unwrap().nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });
@@ -666,7 +671,6 @@ mod tests {
     #[test]
     fn sdl_keys_are_valid_in_lowercase_uppercase_capitalized() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             Description: some-description
             start: 2022-01-20T13:00:00Z
@@ -689,7 +693,6 @@ mod tests {
     #[test]
     fn includes_infrastructure() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -719,7 +722,7 @@ mod tests {
                 deb10: 3
 
         "#;
-        let infrastructure = parse_sdl(sdl).unwrap().scenario.infrastructure;
+        let infrastructure = parse_sdl(sdl).unwrap().infrastructure;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -728,7 +731,6 @@ mod tests {
     #[test]
     fn includes_features() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -750,7 +752,7 @@ mod tests {
                     dependencies: 
                         - my-cool-service
         "#;
-        let features = parse_sdl(sdl).unwrap().scenario.features;
+        let features = parse_sdl(sdl).unwrap().features;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(features);
         });
@@ -760,7 +762,6 @@ mod tests {
     #[should_panic]
     fn feature_missing_from_scenario() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -782,7 +783,6 @@ mod tests {
     #[should_panic]
     fn feature_role_missing_from_node() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -807,7 +807,6 @@ mod tests {
     #[test]
     fn includes_conditions_nodes_and_infrastructure() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -866,7 +865,6 @@ mod tests {
     #[should_panic]
     fn condition_vm_count_in_infrastructure_over_1() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -910,7 +908,6 @@ mod tests {
     #[should_panic]
     fn condition_doesnt_exist() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -938,7 +935,6 @@ mod tests {
     #[should_panic]
     fn condition_missing_from_scenario() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -960,7 +956,6 @@ mod tests {
     #[should_panic]
     fn condition_role_missing_from_node() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -986,7 +981,6 @@ mod tests {
     #[should_panic]
     fn too_long_node_name_is_disallowed() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -1006,7 +1000,6 @@ mod tests {
     #[test]
     fn parent_features_dependencies_are_built_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -1055,7 +1048,7 @@ mod tests {
                     type: Artifact
                     source: some-artifact
         "#;
-        let scenario = parse_sdl(sdl).unwrap().scenario;
+        let scenario = parse_sdl(sdl).unwrap();
         let dependencies = scenario
             .get_a_node_features_dependencies("parent-service")
             .unwrap();

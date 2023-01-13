@@ -2,23 +2,22 @@
 source: sdl-parser/src/lib.rs
 expression: parsed_schema
 ---
-scenario:
-  name: test-scenario
-  description: ~
-  start: "2022-01-20T13:00:00Z"
-  end: "2022-01-20T23:00:00Z"
-  nodes: ~
-  features: ~
-  infrastructure: ~
-  conditions: ~
-  vulnerabilities: ~
-  capabilities: ~
-  metrics: ~
-  evaluations: ~
-  tlos: ~
-  entities: ~
-  goals: ~
-  injects: ~
-  events: ~
-  scripts: ~
+name: test-scenario
+description: ~
+start: "2022-01-20T13:00:00Z"
+end: "2022-01-20T23:00:00Z"
+nodes: ~
+features: ~
+infrastructure: ~
+conditions: ~
+vulnerabilities: ~
+capabilities: ~
+metrics: ~
+evaluations: ~
+tlos: ~
+entities: ~
+goals: ~
+injects: ~
+events: ~
+scripts: ~
 

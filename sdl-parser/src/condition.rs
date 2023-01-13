@@ -56,7 +56,6 @@ mod tests {
     #[test]
     fn conditions_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -68,7 +67,7 @@ mod tests {
                 condition-2:
                     source: digital-library-package
         "#;
-        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });
@@ -77,7 +76,6 @@ mod tests {
     #[test]
     fn handles_metrics_with_conditions_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -98,7 +96,7 @@ mod tests {
                     max-score: 10
                     condition:  condition-2
         "#;
-        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });
@@ -108,7 +106,6 @@ mod tests {
     #[should_panic]
     fn identifies_missing_condition() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -156,7 +153,7 @@ mod tests {
     #[test]
     fn command_condition_is_parsed_correctly_with_both_command_and_source() {
         let sdl = r#"
-        scenario:
+        
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -168,7 +165,7 @@ mod tests {
                     source: digital-library-package
 
         "#;
-        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });

@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn parses_sdl_with_entities() {
         let sdl = r#"
-      scenario:
+      
           name: test-scenario
           description: some-description
           start: 2022-01-20T13:00:00Z
@@ -186,7 +186,7 @@ mod tests {
                         facts:
                             anatomy: sharks do not have bones 
       "#;
-        let entities = parse_sdl(sdl).unwrap().scenario.entities;
+        let entities = parse_sdl(sdl).unwrap().entities;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(entities);
         });
