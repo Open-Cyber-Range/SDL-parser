@@ -55,7 +55,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_goals() {
         let sdl = r#"
-      scenario:
           name: test-scenario
           description: some-description
           start: 2022-01-20T13:00:00Z
@@ -117,7 +116,7 @@ mod tests {
                 tlos: 
                   - tlo-1                   
       "#;
-        let goals = parse_sdl(sdl).unwrap().scenario.goals;
+        let goals = parse_sdl(sdl).unwrap().goals;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(goals);
         });
@@ -127,7 +126,6 @@ mod tests {
     #[should_panic]
     fn fails_without_tlos() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z

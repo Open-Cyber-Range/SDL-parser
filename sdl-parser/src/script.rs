@@ -92,7 +92,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_scripts() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z
@@ -206,7 +205,6 @@ mod tests {
     #[should_panic]
     fn fails_on_event_not_defined_for_script() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -231,7 +229,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_event_for_script() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z

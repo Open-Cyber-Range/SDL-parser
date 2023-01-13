@@ -142,7 +142,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_injects() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z
@@ -279,7 +278,6 @@ mod tests {
     #[should_panic]
     fn fails_on_capabilities_not_defined_for_inject() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -297,7 +295,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_capability() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -324,7 +321,6 @@ mod tests {
     #[should_panic]
     fn fails_on_capabilities_not_defined_for_tlo() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -364,7 +360,6 @@ mod tests {
     #[should_panic]
     fn fails_on_tlo_not_defined() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -393,7 +388,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_tlo_for_inject() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -427,7 +421,6 @@ mod tests {
     #[should_panic]
     fn fails_on_entity_not_defined_for_inject() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z
@@ -447,7 +440,6 @@ mod tests {
     #[should_panic]
     fn fails_on_missing_entity_for_inject() {
         let sdl = r#"
-            scenario:
                 name: test-scenario
                 description: some description
                 start: 2022-01-20T13:00:00Z

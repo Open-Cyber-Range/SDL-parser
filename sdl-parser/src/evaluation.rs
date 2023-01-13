@@ -99,7 +99,6 @@ mod tests {
     #[test]
     fn parses_sdl_with_evaluation() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z
@@ -125,7 +124,7 @@ mod tests {
                         - metric-2
                     min-score: 50
         "#;
-        let evaluations = parse_sdl(sdl).unwrap().scenario.evaluations;
+        let evaluations = parse_sdl(sdl).unwrap().evaluations;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(evaluations);
         });
@@ -135,7 +134,7 @@ mod tests {
     #[should_panic]
     fn fails_with_missing_metric() {
         let sdl = r#"
-        scenario:
+        
             name: test-scenario
             description: some description
             start: 2022-01-20T13:00:00Z

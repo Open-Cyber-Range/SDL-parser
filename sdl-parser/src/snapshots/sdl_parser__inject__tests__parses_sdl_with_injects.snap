@@ -2,104 +2,103 @@
 source: sdl-parser/src/inject.rs
 expression: injects
 ---
-scenario:
-  name: test-scenario
-  description: some description
-  start: "2022-01-20T13:00:00Z"
-  end: "2022-01-20T23:00:00Z"
-  nodes: ~
-  features: ~
-  infrastructure: ~
-  conditions:
-    condition-1:
-      command: executable/path.sh
-      interval: 30
-      source: ~
-  vulnerabilities: ~
-  capabilities:
-    capability-1:
-      description: Can defend against Dirty Cow
-      condition: condition-1
-      vulnerabilities: ~
-    capability-2:
-      description: Can defend against Dirty Cow
-      condition: condition-1
-      vulnerabilities: ~
-  metrics:
-    metric-1:
-      type: Manual
-      artifact: true
-      max_score: 10
-      condition: ~
-    metric-2:
-      type: Conditional
-      artifact: ~
-      max_score: 10
-      condition: condition-1
-  evaluations:
-    evaluation-1:
-      description: some description
-      metrics:
-        - metric-1
-        - metric-2
-      min-score:
-        absolute: ~
-        percentage: 50
-  tlos:
-    tlo-1:
-      name: fungibly leverage client-focused e-tailers
-      description: we learn to make charts of web page stats
-      evaluation: evaluation-1
-      capabilities:
-        - capability-1
-        - capability-2
-  entities:
-    blue-team:
-      name: The Blue Team
-      description: They defend from attacks and respond to incidents
-      role: Red
-      mission: Attack
-      categories: ~
-      vulnerabilities: ~
-      goals: ~
-      facts: ~
-      entities: ~
-    my-organization:
-      name: My Organization
-      description: This is my organization
-      role: White
-      mission: defend
-      categories:
-        - Foundation
-        - Organization
-      vulnerabilities: ~
-      goals: ~
-      facts: ~
-      entities: ~
-    red-team:
-      name: The Red Team
-      description: The Red Team attempts to penetrate the target organization
-      role: Red
-      mission: Attack
-      categories: ~
-      vulnerabilities: ~
-      goals: ~
-      facts: ~
-      entities: ~
-  goals: ~
-  injects:
-    my-cool-inject:
-      source:
-        name: inject-package
-        version: "*"
-      from-entity: my-organization
-      to-entities:
-        - red-team
-        - blue-team
-      tlos:
-        - tlo-1
-      capabilities:
-        - capability-2
-  events: ~
-  scripts: ~
+name: test-scenario
+description: some description
+start: "2022-01-20T13:00:00Z"
+end: "2022-01-20T23:00:00Z"
+nodes: ~
+features: ~
+infrastructure: ~
+conditions:
+  condition-1:
+    command: executable/path.sh
+    interval: 30
+    source: ~
+vulnerabilities: ~
+capabilities:
+  capability-1:
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
+  capability-2:
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
+metrics:
+  metric-1:
+    type: Manual
+    artifact: true
+    max_score: 10
+    condition: ~
+  metric-2:
+    type: Conditional
+    artifact: ~
+    max_score: 10
+    condition: condition-1
+evaluations:
+  evaluation-1:
+    description: some description
+    metrics:
+      - metric-1
+      - metric-2
+    min-score:
+      absolute: ~
+      percentage: 50
+tlos:
+  tlo-1:
+    name: fungibly leverage client-focused e-tailers
+    description: we learn to make charts of web page stats
+    evaluation: evaluation-1
+    capabilities:
+      - capability-1
+      - capability-2
+entities:
+  blue-team:
+    name: The Blue Team
+    description: They defend from attacks and respond to incidents
+    role: Red
+    mission: Attack
+    categories: ~
+    vulnerabilities: ~
+    goals: ~
+    facts: ~
+    entities: ~
+  my-organization:
+    name: My Organization
+    description: This is my organization
+    role: White
+    mission: defend
+    categories:
+      - Foundation
+      - Organization
+    vulnerabilities: ~
+    goals: ~
+    facts: ~
+    entities: ~
+  red-team:
+    name: The Red Team
+    description: The Red Team attempts to penetrate the target organization
+    role: Red
+    mission: Attack
+    categories: ~
+    vulnerabilities: ~
+    goals: ~
+    facts: ~
+    entities: ~
+goals: ~
+injects:
+  my-cool-inject:
+    source:
+      name: inject-package
+      version: "*"
+    from-entity: my-organization
+    to-entities:
+      - red-team
+      - blue-team
+    tlos:
+      - tlo-1
+    capabilities:
+      - capability-2
+events: ~
+scripts: ~
 
