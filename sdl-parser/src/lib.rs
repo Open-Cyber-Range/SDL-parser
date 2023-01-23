@@ -14,6 +14,7 @@ mod library_item;
 pub mod metric;
 pub mod node;
 pub mod script;
+pub mod story;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
@@ -36,6 +37,7 @@ use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
 use script::Scripts;
 use serde::{Deserialize, Serialize};
+use story::Stories;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
 
@@ -94,6 +96,8 @@ pub struct Scenario {
     pub events: Option<Events>,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]
     pub scripts: Option<Scripts>,
+    #[serde(alias = "Stories", alias = "STORIES")]
+    pub stories: Option<Stories>,
 }
 
 impl Scenario {
