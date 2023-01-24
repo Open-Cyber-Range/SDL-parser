@@ -46,4 +46,5 @@ events:
     injects:
       - my-cool-inject
 scripts: ~
+stories: ~
 

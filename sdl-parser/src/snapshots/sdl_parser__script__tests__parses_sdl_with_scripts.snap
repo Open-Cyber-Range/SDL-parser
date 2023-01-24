@@ -44,4 +44,5 @@ scripts:
     speed: 1.5
     events:
       - my-cool-event
+stories: ~
 
