@@ -62,3 +62,172 @@ impl Connection<Script> for (&String, &Story) {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parse_sdl;
+
+    #[test]
+    fn parses_sdl_with_stories() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                stories: 
+                    story-1: 
+                        clock: 1
+                        scripts: 
+                            - my-cool-script
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                scripts:
+                    my-cool-script:
+                        start-time: 10min 2 sec
+                        end-time: 1 week 1day 1h 10 ms
+                        speed: 1.5
+                        events:
+                            - my-cool-event
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                events:
+                    my-cool-event:
+                        time: 0.2345678
+                        conditions:
+                            - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        let schema = parse_sdl(sdl).unwrap();
+
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(schema);
+        });
+    }
+
+    #[test]
+    fn parses_single_story() {
+        let story = r#" 
+            clock: 1
+            scripts: 
+                - script-1
+                - script-2
+     
+      "#;
+        serde_yaml::from_str::<Story>(story).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_clock_is_zero() {
+        let story = r#"
+            clock: 0
+            scripts: 
+                - script-1
+                - script-2
+      "#;
+        serde_yaml::from_str::<Story>(story)
+            .unwrap()
+            .formalize()
+            .unwrap();
+    }
+
+    #[test]
+    fn adds_default_clock() {
+        let story = r#"
+            scripts: 
+                - script-1
+                - script-2
+      "#;
+
+        let story = serde_yaml::from_str::<Story>(story).unwrap();
+
+        assert_eq!(story.clock, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_when_scripts_is_empty() {
+        let story = r#"
+            clock: 1
+            scripts:
+      "#;
+        serde_yaml::from_str::<Story>(story)
+            .unwrap()
+            .formalize()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_when_no_scripts_field() {
+        let story = r#"
+            clock: 15
+      "#;
+        serde_yaml::from_str::<Story>(story)
+            .unwrap()
+            .formalize()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_script_not_defined_for_story() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                stories: 
+                    story-1: 
+                        clock: 1
+                        scripts: 
+                            - script-1
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn fails_on_missing_script_for_story() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                stories: 
+                    story-1: 
+                        clock: 1
+                        scripts: 
+                            - script-1
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                        source: digital-library-package
+                scripts:
+                    my-cool-script:
+                        start-time: 10min 2 sec
+                        end-time: 1 week 1day 1h 10 ms
+                        speed: 1.5
+                        events:
+                            - my-cool-event
+                injects:
+                    my-cool-inject:
+                        source: inject-package
+                events:
+                    my-cool-event:
+                        time: 0.2345678
+                        conditions:
+                            - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+}
