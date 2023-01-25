@@ -11,3 +11,8 @@ pub const MAX_LONG_NAME: usize = 35;
 lazy_static! {
     pub static ref CWE_REGEX: Regex = Regex::new(r"CWE-\d+").unwrap();
 }
+
+pub const DEFAULT_CLOCK_VALUE: u64 = 1;
+pub const fn default_clock_value() -> u64 {
+    DEFAULT_CLOCK_VALUE
+}

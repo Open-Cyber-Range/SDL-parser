@@ -1,5 +1,5 @@
 ---
-source: sdl-parser/src/script.rs
+source: sdl-parser/src/story.rs
 expression: schema
 ---
 name: test-scenario
@@ -44,5 +44,9 @@ scripts:
     speed: 1.5
     events:
       - my-cool-event
-stories: ~
+stories:
+  story-1:
+    clock: 1
+    scripts:
+      - my-cool-script
 

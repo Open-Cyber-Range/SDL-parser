@@ -14,6 +14,7 @@ mod library_item;
 pub mod metric;
 pub mod node;
 pub mod script;
+pub mod story;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
@@ -34,8 +35,9 @@ use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
 use node::{NodeType, Nodes};
-use script::Scripts;
+use script::{Script, Scripts};
 use serde::{Deserialize, Serialize};
+use story::Stories;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
 
@@ -94,6 +96,8 @@ pub struct Scenario {
     pub events: Option<Events>,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]
     pub scripts: Option<Scripts>,
+    #[serde(alias = "Stories", alias = "STORIES")]
+    pub stories: Option<Stories>,
 }
 
 impl Scenario {
@@ -500,6 +504,20 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_stories(&self) -> Result<()> {
+        let script_names = self
+            .scripts
+            .as_ref()
+            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(stories) = &self.stories {
+            for named_story in stories.iter() {
+                Connection::<Script>::validate_connections(&named_story, &script_names)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -597,6 +615,14 @@ impl Formalize for Scenario {
             self.scripts = Some(scripts);
         }
 
+        if let Some(mut stories) = self.stories.clone() {
+            stories.iter_mut().try_for_each(move |(_, story)| {
+                story.formalize()?;
+                Ok(())
+            })?;
+            self.stories = Some(stories);
+        }
+
         self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
@@ -612,6 +638,7 @@ impl Formalize for Scenario {
         self.verify_injects()?;
         self.verify_events()?;
         self.verify_scripts()?;
+        self.verify_stories()?;
         Ok(())
     }
 }

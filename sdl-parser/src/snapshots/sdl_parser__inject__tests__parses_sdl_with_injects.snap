@@ -101,4 +101,5 @@ injects:
       - capability-2
 events: ~
 scripts: ~
+stories: ~
 
