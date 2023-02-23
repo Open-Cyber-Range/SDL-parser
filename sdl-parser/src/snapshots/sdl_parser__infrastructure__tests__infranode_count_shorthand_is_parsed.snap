@@ -6,4 +6,5 @@ InfraNode {
     count: 23,
     links: None,
     dependencies: None,
+    description: None,
 }

@@ -15,4 +15,5 @@ InfraNode {
             "windows-10-vuln-1",
         ],
     ),
+    description: None,
 }

@@ -12,6 +12,7 @@ my-cool-artifact:
   vulnerabilities: ~
   variables: ~
   destination: ~
+  description: ~
 my-cool-config:
   type: Configuration
   source:
@@ -22,6 +23,7 @@ my-cool-config:
   vulnerabilities: ~
   variables: ~
   destination: ~
+  description: ~
 my-cool-service:
   type: Service
   source:
@@ -31,4 +33,5 @@ my-cool-service:
   vulnerabilities: ~
   variables: ~
   destination: ~
+  description: ~
 

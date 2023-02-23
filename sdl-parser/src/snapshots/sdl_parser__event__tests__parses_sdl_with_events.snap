@@ -39,6 +39,7 @@ injects:
     to-entities: ~
     tlos: ~
     capabilities: ~
+    description: ~
 events:
   my-cool-event:
     time: 0.2345678
