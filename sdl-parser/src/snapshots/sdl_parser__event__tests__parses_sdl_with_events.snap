@@ -14,6 +14,7 @@ conditions:
     command: executable/path.sh
     interval: 30
     source: ~
+    description: ~
 vulnerabilities: ~
 capabilities:
   capability-1:
@@ -45,6 +46,7 @@ events:
       - condition-1
     injects:
       - my-cool-inject
+    description: ~
 scripts: ~
 stories: ~
 

@@ -12,6 +12,8 @@ pub struct Event {
     pub conditions: Option<Vec<String>>,
     #[serde(alias = "Injects", alias = "INJECTS")]
     pub injects: Vec<String>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 pub type Events = HashMap<String, Event>;

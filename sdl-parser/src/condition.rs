@@ -23,6 +23,8 @@ pub struct Condition {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl Formalize for Condition {
@@ -84,8 +86,10 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
+                    description: This is a description for condition 1
                 condition-2:
                     source: digital-library-package
+                    description: This is a description for condition 2
             metrics:
                 metric-1:
                     type: MANUAL
@@ -114,8 +118,10 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
+                    description: This is a description for condition 1
                 condition-2:
                     source: digital-library-package
+                    description: This is a description for condition 2
             metrics:
                 metric-1:
                     type: MANUAL
@@ -163,7 +169,7 @@ mod tests {
                     command: executable/path.sh
                     interval: 30
                     source: digital-library-package
-
+                    description: This is a description for condition 1
         "#;
         let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {

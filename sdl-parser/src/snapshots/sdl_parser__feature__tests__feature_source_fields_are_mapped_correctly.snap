@@ -11,6 +11,7 @@ my-cool-feature:
   vulnerabilities: ~
   variables: ~
   destination: ~
+  description: ~
 my-cool-feature-config:
   type: Configuration
   source:
@@ -20,4 +21,5 @@ my-cool-feature-config:
   vulnerabilities: ~
   variables: ~
   destination: ~
+  description: ~
 

@@ -25,6 +25,8 @@ pub struct Script {
     pub speed: f32,
     #[serde(alias = "Events", alias = "EVENTS")]
     pub events: Vec<String>,
+    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 pub type Scripts = HashMap<String, Script>;

@@ -44,6 +44,7 @@ scripts:
     speed: 1.5
     events:
       - my-cool-event
+    description: ~
 stories:
   story-1:
     clock: 1
