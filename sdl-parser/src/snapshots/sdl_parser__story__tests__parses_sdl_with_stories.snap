@@ -53,4 +53,5 @@ stories:
     clock: 1
     scripts:
       - my-cool-script
+    description: ~
 
