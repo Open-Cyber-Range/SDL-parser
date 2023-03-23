@@ -10,7 +10,7 @@ pub struct InfraNode {
     pub links: Option<Vec<String>>,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
-    #[serde(alias = "description", alias = "DESCRIPTION")]
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
 

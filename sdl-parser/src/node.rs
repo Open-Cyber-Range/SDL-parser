@@ -37,7 +37,7 @@ pub struct Resources {
 pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,
-    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
     #[serde(
         default,

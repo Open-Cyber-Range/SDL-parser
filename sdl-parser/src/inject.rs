@@ -31,7 +31,7 @@ pub struct Inject {
     pub tlos: Option<Vec<String>>,
     #[serde(alias = "Capabilities", alias = "CAPABILITIES")]
     pub capabilities: Option<Vec<String>>,
-    #[serde(alias = "description", alias = "DESCRIPTION")]
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
 

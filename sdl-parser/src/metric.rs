@@ -23,7 +23,7 @@ pub struct Metric {
     pub max_score: u32,
     #[serde(alias = "condition", alias = "CONDITION")]
     pub condition: Option<String>,
-    #[serde(alias = "description", alias = "DESCRIPTION")]
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
 
