@@ -14,6 +14,7 @@ conditions:
     command: executable/path.sh
     interval: 30
     source: ~
+    description: ~
 vulnerabilities: ~
 capabilities:
   capability-1:
@@ -30,11 +31,13 @@ metrics:
     artifact: true
     max_score: 10
     condition: ~
+    description: ~
   metric-2:
     type: Conditional
     artifact: ~
     max_score: 10
     condition: condition-1
+    description: ~
 evaluations:
   evaluation-1:
     description: some description
@@ -99,6 +102,7 @@ injects:
       - tlo-1
     capabilities:
       - capability-2
+    description: ~
 events: ~
 scripts: ~
 stories: ~

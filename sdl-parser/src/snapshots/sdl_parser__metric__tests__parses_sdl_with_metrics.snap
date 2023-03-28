@@ -7,9 +7,11 @@ metric-1:
   artifact: true
   max_score: 10
   condition: ~
+  description: ~
 metric-2:
   type: Conditional
   artifact: ~
   max_score: 10
   condition: condition-1
+  description: ~
 

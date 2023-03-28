@@ -34,6 +34,7 @@ features:
     vulnerabilities: ~
     variables: ~
     destination: ~
+    description: ~
   feature-2:
     type: Artifact
     source:
@@ -43,6 +44,7 @@ features:
     vulnerabilities: ~
     variables: ~
     destination: ~
+    description: ~
 infrastructure: ~
 conditions: ~
 vulnerabilities: ~

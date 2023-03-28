@@ -11,6 +11,8 @@ pub struct Story {
     pub clock: u64,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]
     pub scripts: Vec<String>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl Story {

@@ -23,6 +23,8 @@ pub struct Metric {
     pub max_score: u32,
     #[serde(alias = "condition", alias = "CONDITION")]
     pub condition: Option<String>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 pub type Metrics = HashMap<String, Metric>;

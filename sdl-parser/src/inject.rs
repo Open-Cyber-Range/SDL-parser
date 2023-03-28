@@ -31,6 +31,8 @@ pub struct Inject {
     pub tlos: Option<Vec<String>>,
     #[serde(alias = "Capabilities", alias = "CAPABILITIES")]
     pub capabilities: Option<Vec<String>>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 pub type Injects = HashMap<String, Inject>;

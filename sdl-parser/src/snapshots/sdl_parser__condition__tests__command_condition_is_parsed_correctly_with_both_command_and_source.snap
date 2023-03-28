@@ -6,4 +6,5 @@ condition-1:
   command: executable/path.sh
   interval: 30
   source: ~
+  description: This is a description for condition 1
 

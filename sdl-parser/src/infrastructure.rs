@@ -10,6 +10,8 @@ pub struct InfraNode {
     pub links: Option<Vec<String>>,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
     pub dependencies: Option<Vec<String>>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl InfraNode {
@@ -108,8 +110,10 @@ mod tests {
         let sdl = r#"
             windows-10-vuln-1:
                 count: 10
+                description: "A vulnerable Windows 10 machine"
             debian-2:
-                count: 4      
+                count: 4
+                description: "A Debian server"     
         "#;
         let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
         let infrastructure = from_helper(infrastructure_helper);

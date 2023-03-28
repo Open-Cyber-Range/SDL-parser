@@ -40,6 +40,8 @@ pub struct Feature {
     pub variables: Option<HashMap<String, String>>,
     #[serde(default, alias = "Destination", alias = "DESTINATION")]
     pub destination: Option<String>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl Connection<Vulnerability> for (&String, &Feature) {
