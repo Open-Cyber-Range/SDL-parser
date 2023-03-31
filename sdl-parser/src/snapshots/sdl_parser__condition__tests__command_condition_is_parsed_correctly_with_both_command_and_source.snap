@@ -6,10 +6,5 @@ condition-1:
   command: executable/path.sh
   interval: 30
   source: ~
-condition-2:
-  command: ~
-  interval: ~
-  source:
-    name: digital-library-package
-    version: "*"
+  description: This is a description for condition 1
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use libc::c_char;
-use sdl_parser::{parse_sdl as parse_native_sdl, Schema};
+use sdl_parser::{parse_sdl as parse_native_sdl, Scenario};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_string};
 use std::ffi::{CStr, CString};
@@ -17,7 +17,7 @@ enum Status {
 #[serde(rename_all = "camelCase")]
 struct Response {
     status: Status,
-    result: Option<Schema>,
+    result: Option<Scenario>,
     error_message: Option<String>,
 }
 

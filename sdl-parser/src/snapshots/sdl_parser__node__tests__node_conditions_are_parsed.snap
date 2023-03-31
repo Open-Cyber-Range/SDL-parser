@@ -10,10 +10,14 @@ Node {
     source: None,
     features: None,
     conditions: Some(
-        [
-            "condition-1",
-            "condition-2",
-        ],
+        {
+            "condition-1": "admin",
+        },
     ),
     vulnerabilities: None,
+    roles: Some(
+        {
+            "admin": "username",
+        },
+    ),
 }

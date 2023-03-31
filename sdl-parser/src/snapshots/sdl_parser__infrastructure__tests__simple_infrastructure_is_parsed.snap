@@ -6,8 +6,10 @@ debian-2:
   count: 4
   links: ~
   dependencies: ~
+  description: A Debian server
 windows-10-vuln-1:
   count: 10
   links: ~
   dependencies: ~
+  description: A vulnerable Windows 10 machine
 

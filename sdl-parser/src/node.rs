@@ -1,4 +1,7 @@
-use crate::{helpers::Connection, vulnerability::Vulnerability, Formalize};
+use crate::{
+    condition::Condition, feature::Feature, helpers::Connection, infrastructure::Infrastructure,
+    vulnerability::Vulnerability, Formalize,
+};
 use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -14,7 +17,7 @@ where
     let s = String::deserialize(deserializer)?;
     Ok(s.parse::<ByteSize>()
         .map_err(|_| serde::de::Error::custom("Failed"))?
-        .0 as u64)
+        .0)
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -34,7 +37,7 @@ pub struct Resources {
 pub struct Node {
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub type_field: NodeType,
-    #[serde(default, alias = "Description", alias = "DESCRIPTION")]
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
     #[serde(
         default,
@@ -54,11 +57,12 @@ pub struct Node {
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
     #[serde(default, alias = "Features", alias = "FEATURES")]
-    pub features: Option<Vec<String>>,
+    pub features: Option<HashMap<String, String>>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
-    pub conditions: Option<Vec<String>>,
+    pub conditions: Option<HashMap<String, String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
+    pub roles: Option<HashMap<String, String>>,
 }
 
 impl Connection<Vulnerability> for (&String, &Node) {
@@ -87,6 +91,67 @@ impl Connection<Vulnerability> for (&String, &Node) {
     }
 }
 
+impl Connection<Feature> for (&String, &Node) {
+    fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(node_features) = &self.1.features {
+            if let Some(features) = potential_feature_names {
+                for node_feature in node_features.keys() {
+                    if !features.contains(node_feature) {
+                        return Err(anyhow!(
+                            "Node {} has feature {} that is not defined under scenario",
+                            &self.0,
+                            node_feature
+                        ));
+                    }
+                }
+            } else if !node_features.is_empty() {
+                return Err(anyhow!(
+                    "Feature list is empty under scenario, but node {} has features",
+                    self.0
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
+    fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
+        let (node_name, node, infrastructure) = self;
+        if let Some(node_conditions) = &node.conditions {
+            if let Some(conditions) = potential_condition_names {
+                for condition_name in node_conditions.keys() {
+                    if !conditions.contains(condition_name) {
+                        return Err(anyhow!(
+                            "Node {} has condition {} that is not defined under scenario",
+                            node_name,
+                            condition_name
+                        ));
+                    }
+                }
+                if node_conditions.keys().len() > 0 {
+                    if let Some(infrastructure) = infrastructure {
+                        if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
+                            if infra_node.count > 1 {
+                                return Err(anyhow!(
+                                    "Node {} has count bigger than 1, but conditions are defined",
+                                    node_name
+                                ));
+                            }
+                        }
+                    }
+                }
+            } else if !node_conditions.is_empty() {
+                return Err(anyhow!(
+                    "Condition list is empty under scenario, but node {} has features",
+                    node_name
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
 impl Formalize for Node {
     fn formalize(&mut self) -> Result<()> {
         if let Some(source_helper) = &self.source_helper {
@@ -108,9 +173,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn source_fields_are_mapped_correctly() {
+    fn vm_source_fields_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -123,17 +187,17 @@ mod tests {
                     type: VM
                     source:
                         name: debian10
-                        version: '*'
+                        version: 1.2.3
 
         "#;
-        let nodes = parse_sdl(sdl).unwrap().scenario.nodes;
+        let nodes = parse_sdl(sdl).unwrap().nodes;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(nodes);
         });
     }
 
     #[test]
-    fn node_source_longhand_is_parsed() {
+    fn vm_source_longhand_is_parsed() {
         let longhand_source = r#"
             type: VM
             source: 
@@ -146,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn node_source_shorthand_is_parsed() {
+    fn vm_source_shorthand_is_parsed() {
         let shorthand_source = r#"
             type: VM
             source: package-name
@@ -158,14 +222,15 @@ mod tests {
 
     #[test]
     fn node_conditions_are_parsed() {
-        let shorthand_source = r#"
+        let node_sdl = r#"
             type: VM
+            roles:
+                admin: "username"   
             conditions:
-                - condition-1
-                - condition-2
+                condition-1: "admin"
 
         "#;
-        let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
     }
 
@@ -175,7 +240,10 @@ mod tests {
             type: Switch
 
         "#;
-        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
+        serde_yaml::from_str::<Node>(shorthand_source)
+            .unwrap()
+            .formalize()
+            .unwrap();
     }
 
     #[test]
@@ -190,22 +258,8 @@ mod tests {
     }
 
     #[test]
-    fn includes_node_with_features() {
-        let node_sdl = r#"
-            type: VM
-            features:
-                - feature-1
-                - feature-2
-
-        "#;
-        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
-        insta::assert_debug_snapshot!(node);
-    }
-
-    #[test]
     fn includes_nodes_with_defined_features() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -217,9 +271,12 @@ mod tests {
                         ram: 2 gib
                         cpu: 2
                     source: windows10
+                    roles:
+                        admin: "username"
+                        moderator: "name"
                     features:
-                        - feature-1
-                        - feature-2
+                        feature-1: "admin" 
+                        feature-2: "moderator" 
             features:
                 feature-1:
                     type: service
@@ -231,16 +288,16 @@ mod tests {
                         version: 1.0.0
                     
         "#;
-        let scenario = parse_sdl(sdl).unwrap().scenario;
+        let scenario = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(scenario);
         });
     }
 
     #[test]
-    fn includes_node_requirements_with_source_template_and_conditions() {
+    #[should_panic]
+    fn roles_missing_when_features_exist() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -248,22 +305,62 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
-                    resources:
-                        ram: 2 gib
-                        cpu: 2
                     source: windows10
-                    conditions:
-                        - condition-1
-                        - condition-2
-            conditions:
-                condition-1:
-                    command: executable/path.sh
-                    interval: 30
-                condition-2:
-                    source: digital-library-package
-                    
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
         "#;
-        let nodes = parse_sdl(sdl).unwrap().scenario.nodes.unwrap();
-        insta::assert_debug_snapshot!(nodes);
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn role_under_feature_missing_from_node() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        moderator: "name"
+                    features:
+                        feature-1: "admin"
+            features:
+                feature-1:
+                    type: service
+                    source: dl-library
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn same_name_for_role_only_saves_one_role() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+                    roles:
+                        admin: "username"
+                        admin: "username2"
+
+        "#;
+        let scenario = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
     }
 }

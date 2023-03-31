@@ -23,6 +23,8 @@ pub struct Condition {
     source_helper: Option<HelperSource>,
     #[serde(default, skip_deserializing)]
     pub source: Option<Source>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl Formalize for Condition {
@@ -54,9 +56,8 @@ mod tests {
     use crate::parse_sdl;
 
     #[test]
-    fn source_fields_are_mapped_correctly() {
+    fn conditions_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -67,12 +68,71 @@ mod tests {
                     interval: 30
                 condition-2:
                     source: digital-library-package
-
         "#;
-        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });
+    }
+
+    #[test]
+    fn handles_metrics_with_conditions_correctly() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                    description: This is a description for condition 1
+                condition-2:
+                    source: digital-library-package
+                    description: This is a description for condition 2
+            metrics:
+                metric-1:
+                    type: MANUAL
+                    artifact: true
+                    max-score: 10
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition:  condition-2
+        "#;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(conditions);
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn identifies_missing_condition() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+                    description: This is a description for condition 1
+                condition-2:
+                    source: digital-library-package
+                    description: This is a description for condition 2
+            metrics:
+                metric-1:
+                    type: MANUAL
+                    artifact: true
+                    max-score: 10
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition:  condition-3
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 
     #[test]
@@ -97,36 +157,21 @@ mod tests {
     }
 
     #[test]
-    fn command_condition_is_parsed_correctly_even_with_source() {
+    fn command_condition_is_parsed_correctly_with_both_command_and_source() {
         let sdl = r#"
-        scenario:
+        
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
-            nodes:
-                win-10:
-                    type: VM
-                    source: windows10
-                    conditions:
-                        - condition-1
-                deb-10:
-                    type: VM
-                    source:
-                        name: debian10
-                        version: '*'
-                    conditions:
-                        - condition-2
             conditions:
                 condition-1:
                     command: executable/path.sh
                     interval: 30
                     source: digital-library-package
-                condition-2:
-                    source: digital-library-package
-
+                    description: This is a description for condition 1
         "#;
-        let conditions = parse_sdl(sdl).unwrap().scenario.conditions;
+        let conditions = parse_sdl(sdl).unwrap().conditions;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(conditions);
         });

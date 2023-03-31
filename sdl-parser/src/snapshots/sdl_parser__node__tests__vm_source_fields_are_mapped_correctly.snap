@@ -8,10 +8,11 @@ deb-10:
   resources: ~
   source:
     name: debian10
-    version: "*"
+    version: 1.2.3
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 win-10:
   type: VM
   description: ~
@@ -22,4 +23,5 @@ win-10:
   features: ~
   conditions: ~
   vulnerabilities: ~
+  roles: ~
 

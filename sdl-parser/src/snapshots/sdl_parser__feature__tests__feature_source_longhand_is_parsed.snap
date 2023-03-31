@@ -15,4 +15,7 @@ Feature {
     source: None,
     dependencies: None,
     vulnerabilities: None,
+    variables: None,
+    destination: None,
+    description: None,
 }

@@ -1,0 +1,53 @@
+---
+source: sdl-parser/src/event.rs
+expression: schema
+---
+name: test-scenario
+description: some description
+start: "2022-01-20T13:00:00Z"
+end: "2022-01-20T23:00:00Z"
+nodes: ~
+features: ~
+infrastructure: ~
+conditions:
+  condition-1:
+    command: executable/path.sh
+    interval: 30
+    source: ~
+    description: ~
+vulnerabilities: ~
+capabilities:
+  capability-1:
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
+  capability-2:
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
+metrics: ~
+evaluations: ~
+tlos: ~
+entities: ~
+goals: ~
+injects:
+  my-cool-inject:
+    source:
+      name: inject-package
+      version: "*"
+    from-entity: ~
+    to-entities: ~
+    tlos: ~
+    capabilities: ~
+    description: ~
+events:
+  my-cool-event:
+    time: 0.2345678
+    conditions:
+      - condition-1
+    injects:
+      - my-cool-inject
+    description: ~
+scripts: ~
+stories: ~
+

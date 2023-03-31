@@ -102,16 +102,21 @@ mod tests {
     #[test]
     fn can_parse_capabilities_in_sdl() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
+                name: Some other vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
               vulnerability-2:
+                name: Some vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1341
             conditions:
               condition-1:
                 command: executable/path.sh
@@ -133,7 +138,7 @@ mod tests {
                   - vulnerability-1
                   - vulnerability-2
         "#;
-        let capabilities = parse_sdl(sdl).unwrap().scenario.capabilities;
+        let capabilities = parse_sdl(sdl).unwrap().capabilities;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(capabilities);
         });
@@ -143,7 +148,6 @@ mod tests {
     #[should_panic]
     fn fails_parsing_when_missing_condition() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -181,7 +185,6 @@ mod tests {
     #[should_panic]
     fn fails_parsing_when_missing_vulnerability() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z

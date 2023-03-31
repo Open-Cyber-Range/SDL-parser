@@ -18,7 +18,7 @@ impl LibraryItem {
 
 #[allow(dead_code)]
 pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
-    let nodes = parse_sdl(sdl_string)?.scenario.nodes;
+    let nodes = parse_sdl(sdl_string)?.nodes;
     let mut result = Vec::new();
 
     if let Some(nodes) = nodes {
@@ -41,7 +41,6 @@ mod tests {
     #[test]
     fn generate_package_list_based_on_sdl() {
         let node_sdl = r#"
-        scenario:
             name: test-scenario
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z

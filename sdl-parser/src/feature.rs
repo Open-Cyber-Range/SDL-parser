@@ -1,7 +1,6 @@
 use crate::{
     common::{HelperSource, Source},
     helpers::Connection,
-    node::Node,
     vulnerability::Vulnerability,
     Formalize,
 };
@@ -37,30 +36,12 @@ pub struct Feature {
     pub dependencies: Option<Vec<String>>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
-}
-
-impl Connection<Feature> for (&String, &Node) {
-    fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
-        if let Some(node_features) = &self.1.features {
-            if let Some(features) = potential_feature_names {
-                for node_feature in node_features.iter() {
-                    if !features.contains(node_feature) {
-                        return Err(anyhow!(
-                            "Node {} has feature {} that is not defined under scenario",
-                            &self.0,
-                            node_feature
-                        ));
-                    }
-                }
-            } else if !node_features.is_empty() {
-                return Err(anyhow!(
-                    "Feature list is empty under scenario, but node {} has features",
-                    self.0
-                ));
-            }
-        }
-        Ok(())
-    }
+    #[serde(default, alias = "Variables", alias = "VARIABLES")]
+    pub variables: Option<HashMap<String, String>>,
+    #[serde(default, alias = "Destination", alias = "DESTINATION")]
+    pub destination: Option<String>,
+    #[serde(alias = "Description", alias = "DESCRIPTION")]
+    pub description: Option<String>,
 }
 
 impl Connection<Vulnerability> for (&String, &Feature) {
@@ -93,20 +74,12 @@ pub type Features = HashMap<String, Feature>;
 
 impl Formalize for Feature {
     fn formalize(&mut self) -> Result<()> {
-        match &mut self._source_helper.take() {
-            Some(HelperSource::Source(source)) => {
-                self.source = Some(source.to_owned());
-                Ok(())
-            }
-            Some(HelperSource::ShortSource(source)) => {
-                self.source = Some(Source {
-                    name: source.to_owned(),
-                    version: "*".to_string(),
-                });
-                Ok(())
-            }
-            None => Err(anyhow!("No source found for Feature")),
+        if let Some(helper_source) = &self._source_helper {
+            self.source = Some(helper_source.to_owned().into());
+        } else {
+            return Err(anyhow!("No source found for feature"));
         }
+        Ok(())
     }
 }
 
@@ -118,7 +91,6 @@ mod tests {
     #[test]
     fn feature_source_fields_are_mapped_correctly() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -133,7 +105,7 @@ mod tests {
                         name: cool-config
                         version: 1.0.0
         "#;
-        let features = parse_sdl(sdl).unwrap().scenario.features;
+        let features = parse_sdl(sdl).unwrap().features;
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(features);
         });
@@ -177,7 +149,6 @@ mod tests {
     #[test]
     fn cyclic_feature_dependency_is_detected() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -207,7 +178,6 @@ mod tests {
     #[test]
     fn feature_cyclic_self_dependency_is_detected() {
         let sdl = r#"
-        scenario:
             name: test-scenario
             description: some-description
             start: 2022-01-20T13:00:00Z
@@ -225,5 +195,21 @@ mod tests {
             features.err().unwrap().to_string(),
             "Cyclic dependency detected"
         );
+    }
+
+    #[test]
+    fn can_parse_destination_variables() {
+        let feature = r#"
+                    type: Service
+                    source: some-service
+                    dependencies: 
+                        - my-cool-feature
+                    variables: 
+                        name: HAHAHA
+                        literally: OHHHOHO
+                    destination: some-destination
+        "#;
+
+        serde_yaml::from_str::<Feature>(feature).unwrap();
     }
 }

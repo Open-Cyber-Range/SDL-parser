@@ -1,0 +1,13 @@
+---
+source: sdl-parser/src/evaluation.rs
+expression: evaluations
+---
+evaluation-1:
+  description: some description
+  metrics:
+    - metric-1
+    - metric-2
+  min-score:
+    absolute: ~
+    percentage: 50
+

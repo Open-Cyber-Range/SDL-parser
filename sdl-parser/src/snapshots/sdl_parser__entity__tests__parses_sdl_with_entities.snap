@@ -1,0 +1,31 @@
+---
+source: sdl-parser/src/entity.rs
+expression: entities
+---
+my-organization:
+  name: My Organization
+  description: This is my organization
+  role: White
+  mission: defend
+  categories:
+    - Foundation
+    - Organization
+  vulnerabilities:
+    - vulnerability-2
+  goals:
+    - goal-1
+  facts: ~
+  entities:
+    fish:
+      name: Shark
+      description: This is my organization
+      role: ~
+      mission: swim around
+      categories:
+        - Animal
+      vulnerabilities: ~
+      goals: ~
+      facts:
+        anatomy: sharks do not have bones
+      entities: ~
+

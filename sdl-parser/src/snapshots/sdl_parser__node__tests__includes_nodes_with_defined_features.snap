@@ -17,10 +17,13 @@ nodes:
       name: windows10
       version: "*"
     features:
-      - feature-1
-      - feature-2
+      feature-1: admin
+      feature-2: moderator
     conditions: ~
     vulnerabilities: ~
+    roles:
+      admin: username
+      moderator: name
 features:
   feature-1:
     type: Service
@@ -29,6 +32,9 @@ features:
       version: "*"
     dependencies: ~
     vulnerabilities: ~
+    variables: ~
+    destination: ~
+    description: ~
   feature-2:
     type: Artifact
     source:
@@ -36,8 +42,20 @@ features:
       version: 1.0.0
     dependencies: ~
     vulnerabilities: ~
+    variables: ~
+    destination: ~
+    description: ~
 infrastructure: ~
 conditions: ~
 vulnerabilities: ~
 capabilities: ~
+metrics: ~
+evaluations: ~
+tlos: ~
+entities: ~
+goals: ~
+injects: ~
+events: ~
+scripts: ~
+stories: ~
 
