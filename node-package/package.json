@@ -1,6 +1,6 @@
 {
   "name": "sdl-parser",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Parser library for Scenario Defined Language (SDL)",
   "main": "dist/index.js",
   "author": "kaarel.allemann@cr14.ee",
