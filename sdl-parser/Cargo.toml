@@ -1,6 +1,6 @@
 [package]
 name = "sdl-parser"
-version = "0.10.1"
+version = "0.10.2"
 edition = "2021"
 license = "MIT"
 description = "The SDL parser is a Rust tool designed for parsing Scenario Defined Language files."
