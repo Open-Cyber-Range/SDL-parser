@@ -1,34 +1,31 @@
-## SDL parser
+## SDL parser library
 
-The SDL parser is a Rust tool designed for parsing Scenario Defined Language files and is a part of Open Cyber Range suite. The SDL parser tool can be used to extract this information from SDL files and convert it into a format that can be used by other tools. With its advanced memory management and error handling features, the SDL parser offers fast parsing times and low memory usage, making it ideal for modern applications that require speed and efficiency in security analysis. If you're looking to integrate SDL files into your Rust project for security analysis, the SDL parser is an essential tool that simplifies the process and ensures accurate and reliable security assessments.
+This library handles parsing SDL input for different programming libraries and environments
 
-## Getting Started
 
-To use the SDL parser, you'll need to add it as a dependency to your project. You can do this by adding the following line to your Cargo.toml file:
+- Main parser is written in Rust and offers Rust native library
+- `sdl-parser-export` is dynamic library written in Rust, which offers access to parsing logic over Foreign-Function-Interface
+- Wrapper libraries offer easy access in mainstream programming libraries, which abstract the logic of calling functions over FFI
+  - PyPi library
+  - npm library (node)
 
-```
-[dependencies]
-sdl-parser = "0.9.3"
-```
+## Setup
 
-After adding the dependency, you can use the SDL parser in your Rust code:
+In order to use wrapper libraries, dynamic libraries must be installed on the system.
 
-```
-use sdl_parser;
-```
+Once OCR apt repostiory is installed, this can be done
+by executing
 
-## Performance
+`sudo apt install libsdl-parser`
 
-The SDL parser tool is designed for optimal performance. It uses Rust's advanced memory management and error handling features to provide fast parsing times and low memory usage.
+## Adding tests
 
-## Contributions
+In order to add test snapshots, it is first needed to run the test(s), which creates the new snapshots. Then the snapshots need to be reviewed with
 
-Contributions to the SDL parser project are welcome and encouraged. If you have any bug reports or feature requests, please file them in the GitHub issues tracker. If you'd like to contribute code, please submit a pull request.
+`cargo insta review`
 
-## License
+and new ones have to be approved, so the snapshot doesn't have ".new" in the end anymore.
 
-The SDL parser tool is released under the MIT License.
+If the insta crate isn't installed, then just execute
 
-## Contact Information
-
-If you have any questions or concerns about the SDL Parser tool, please contact us at developers@cr14.ee
+`cargo install cargo-insta`
