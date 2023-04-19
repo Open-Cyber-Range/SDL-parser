@@ -1,7 +1,7 @@
 use sdl_parser::parse_sdl;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(js_name = parse_and_verify_sdl)]
+#[wasm_bindgen]
 pub fn parse_and_verify_sdl(sdl_string: &str) -> Result<String, JsValue> {
     let result = parse_sdl(sdl_string);
     match result {
