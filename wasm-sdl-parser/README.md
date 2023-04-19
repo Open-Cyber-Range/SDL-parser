@@ -46,8 +46,12 @@ This Rust-based WebAssembly library provides a simple function to verify SDL (Sc
             end: 2022-01-20T23:00:00Z
         `;
 
-        const is_valid = parse_and_verify_sdl(sdl_text);
-        console.log(`SDL text is ${is_valid ? 'valid' : 'invalid'}`);
+        try {
+            const scenario_json = parse_and_verify_sdl(sdl_text);
+            console.log(scenario_json);
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     main();
