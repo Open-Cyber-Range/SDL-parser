@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{goal::Goal, helpers::Connection, vulnerability::Vulnerability};
+use crate::{training_learning_objective::TrainingLearningObjective, helpers::Connection, vulnerability::Vulnerability};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum ExerciseRole {
@@ -27,32 +27,32 @@ pub struct Entity {
     pub categories: Option<Vec<String>>,
     #[serde(alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
-    #[serde(alias = "Goals", alias = "GOALS")]
-    pub goals: Option<Vec<String>>,
+    #[serde(alias = "TLOs", alias = "TLOS")]
+    pub tlos: Option<Vec<String>>,
     #[serde(alias = "Facts", alias = "FACTS")]
     pub facts: Option<HashMap<String, String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
 }
 
-impl Connection<Goal> for (&String, &Entity) {
-    fn validate_connections(&self, potential_goal_names: &Option<Vec<String>>) -> Result<()> {
-        let goals = &self.1.goals;
+impl Connection<TrainingLearningObjective> for (&String, &Entity) {
+    fn validate_connections(&self, potential_tlo_names: &Option<Vec<String>>) -> Result<()> {
+        let tlos = &self.1.tlos;
 
-        if let Some(goals) = goals {
-            if let Some(goal_names) = potential_goal_names {
-                for goal_name in goals {
-                    if !goal_names.contains(goal_name) {
+        if let Some(tlos) = tlos {
+            if let Some(tlo_names) = potential_tlo_names {
+                for tlo_name in tlos {
+                    if !tlo_names.contains(tlo_name) {
                         return Err(anyhow!(
-                            "Goal {} not found under scenario, but is required by entity {}",
-                            goal_name,
+                            "TLO {} not found under scenario, but is required by entity {}",
+                            tlo_name,
                             self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Goal list is empty under scenario, but entity {} requires goals",
+                    "TLO list is empty under scenario, but entity {} requires TLOs",
                     self.0
                 ));
             }
@@ -174,8 +174,8 @@ mod tests {
                     - Organization
                   vulnerabilities:
                     - vulnerability-2
-                  goals:
-                    - goal-1
+                  tlos:
+                    - tlo-1
                   entities:
                     fish:
                         name: "Shark"
@@ -203,10 +203,10 @@ mod tests {
             - Foundation
             - Organization
           vulnerabilities:
-            - vulnerability-2tlo-2
-          goals:
-            - goal-1
-            - goal-2
+            - vulnerability-2
+          tlos:
+            - tlo-1
+            - tlo-2
         "#;
         serde_yaml::from_str::<Entity>(entity_yml).unwrap();
     }
@@ -223,9 +223,9 @@ mod tests {
             - Organization
           vulnerabilities:
             - vulnerability-2
-          goals:
-            - goal-1
-            - goal-2
+          tlos:
+            - tlo-1
+            - tlo-2
           entities:
             fish:
               name: "Shark"
