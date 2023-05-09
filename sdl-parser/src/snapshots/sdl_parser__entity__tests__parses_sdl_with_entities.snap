@@ -12,8 +12,8 @@ my-organization:
     - Organization
   vulnerabilities:
     - vulnerability-2
-  goals:
-    - goal-1
+  tlos:
+    - tlo-1
   facts: ~
   entities:
     fish:
@@ -24,7 +24,7 @@ my-organization:
       categories:
         - Animal
       vulnerabilities: ~
-      goals: ~
+      tlos: ~
       facts:
         anatomy: sharks do not have bones
       entities: ~
