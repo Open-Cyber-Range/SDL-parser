@@ -29,7 +29,7 @@ use entity::{Entities, Entity};
 use evaluation::{Evaluation, Evaluations};
 use event::{Event, Events};
 use feature::{Feature, Features};
-use goal::{Goal, Goals};
+use goal::{Goals};
 use infrastructure::{Infrastructure, InfrastructureHelper};
 use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
@@ -369,13 +369,13 @@ impl Scenario {
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
-        let goal_names = self
-            .goals
+        let tlo_names = self
+            .tlos
             .as_ref()
-            .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
         if let Some(entities) = &self.entities {
             for named_entity in entities.iter() {
-                Connection::<Goal>::validate_connections(&named_entity, &goal_names)?;
+                Connection::<TrainingLearningObjective>::validate_connections(&named_entity, &tlo_names)?;
                 Connection::<Vulnerability>::validate_connections(
                     &named_entity,
                     &vulnerability_names,

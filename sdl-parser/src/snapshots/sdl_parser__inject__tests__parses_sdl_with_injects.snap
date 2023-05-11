@@ -63,7 +63,7 @@ entities:
     mission: Attack
     categories: ~
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
   my-organization:
@@ -75,7 +75,7 @@ entities:
       - Foundation
       - Organization
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
   red-team:
@@ -85,7 +85,7 @@ entities:
     mission: Attack
     categories: ~
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
 goals: ~
