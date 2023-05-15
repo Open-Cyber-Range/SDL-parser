@@ -112,17 +112,6 @@ impl Scenario {
         Ok(schema)
     }
 
-    fn map_infrastructure(&mut self) -> Result<()> {
-        if let Some(infrastructure_helper) = &self.infrastructure_helper {
-            let mut infrastructure = Infrastructure::new();
-            for (name, helpernode) in infrastructure_helper.iter() {
-                infrastructure.insert(name.to_string(), helpernode.clone().into());
-            }
-            self.infrastructure = Some(infrastructure);
-        }
-        Ok(())
-    }
-
     pub fn get_node_dependencies(&self) -> Result<Dependencies> {
         let mut dependency_builder = Dependencies::builder();
         if let Some(nodes_value) = &self.nodes {
@@ -541,6 +530,20 @@ impl Formalize for Scenario {
             self.nodes = Some(nodes);
         }
 
+        if let Some(infrastructure_helper) = &self.infrastructure_helper {
+            self.infrastructure = Some(Infrastructure::from(infrastructure_helper.clone()));
+        }
+
+        if let Some(mut infrastructure) = self.infrastructure.clone() {
+            infrastructure
+                .iter_mut()
+                .try_for_each(move |(_, infra_node)| {
+                    infra_node.formalize()?;
+                    Ok(())
+                })?;
+            self.infrastructure = Some(infrastructure);
+        }
+
         if let Some(features) = &mut self.features {
             features.iter_mut().try_for_each(move |(_, feature)| {
                 feature.formalize()?;
@@ -634,7 +637,6 @@ impl Formalize for Scenario {
             self.stories = Some(stories);
         }
 
-        self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
         self.verify_nodes()?;

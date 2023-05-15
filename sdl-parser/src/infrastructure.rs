@@ -1,11 +1,15 @@
-use crate::constants::default_node_count;
+use crate::{
+    constants::{default_node_count, MINIMUM_NODE_COUNT},
+    Formalize,
+};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct InfraNode {
     #[serde(default = "default_node_count", alias = "Count", alias = "COUNT")]
-    pub count: u32,
+    pub count: i32,
     #[serde(default, alias = "Links", alias = "LINKS")]
     pub links: Option<Vec<String>>,
     #[serde(default, alias = "Dependencies", alias = "DEPENDENCIES")]
@@ -15,7 +19,7 @@ pub struct InfraNode {
 }
 
 impl InfraNode {
-    pub fn new(potential_count: Option<u32>) -> Self {
+    pub fn new(potential_count: Option<i32>) -> Self {
         Self {
             count: match potential_count {
                 Some(count) => count,
@@ -30,13 +34,28 @@ impl InfraNode {
 #[serde(untagged)]
 pub enum HelperNode {
     Empty,
-    Short(u32),
+    Short(i32),
     Long(InfraNode),
 }
 
-pub type InfrastructureHelper = HashMap<String, HelperNode>;
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum InfrastructureHelper {
+    InfrastructureHelper(HashMap<String, HelperNode>),
+}
 
 pub type Infrastructure = HashMap<String, InfraNode>;
+
+impl Formalize for InfraNode {
+    fn formalize(&mut self) -> Result<()> {
+        if self.count < MINIMUM_NODE_COUNT {
+            return Err(anyhow!(
+                "Infrastructure Count field can not be less than {MINIMUM_NODE_COUNT}"
+            ));
+        }
+        Ok(())
+    }
+}
 
 impl From<HelperNode> for InfraNode {
     fn from(helper_node: HelperNode) -> Self {
@@ -48,17 +67,26 @@ impl From<HelperNode> for InfraNode {
     }
 }
 
+impl From<InfrastructureHelper> for Infrastructure {
+    fn from(helper_infrastructure: InfrastructureHelper) -> Self {
+        match helper_infrastructure {
+            InfrastructureHelper::InfrastructureHelper(helper_infrastructure) => {
+                helper_infrastructure
+                    .iter()
+                    .map(|(node_name, helper_node)| {
+                        let infra_node: InfraNode = helper_node.clone().into();
+                        (node_name.to_owned(), infra_node)
+                    })
+                    .collect::<Infrastructure>()
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn from_helper(infrastructure_helper: InfrastructureHelper) -> Infrastructure {
-        let mut infrastructure: Infrastructure = HashMap::new();
-        for (name, helpernode) in infrastructure_helper.iter() {
-            infrastructure.insert(name.to_string(), helpernode.clone().into());
-        }
-        infrastructure
-    }
+    use crate::parse_sdl;
 
     #[test]
     fn infranode_count_longhand_is_parsed() {
@@ -115,9 +143,7 @@ mod tests {
                 count: 4
                 description: "A Debian server"     
         "#;
-        let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let infrastructure = from_helper(infrastructure_helper);
-
+        let infrastructure = serde_yaml::from_str::<Infrastructure>(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
         });
@@ -132,7 +158,7 @@ mod tests {
             ubuntu-10: 5
         "#;
         let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let infrastructure = from_helper(infrastructure_helper);
+        let infrastructure: Infrastructure = infrastructure_helper.into();
 
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(infrastructure);
@@ -158,7 +184,7 @@ mod tests {
                     - windows-10-vuln-1
         "#;
         let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let infrastructure = from_helper(infrastructure_helper);
+        let infrastructure: Infrastructure = infrastructure_helper.into();
 
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
@@ -186,7 +212,7 @@ mod tests {
                     - windows-10-vuln-1
         "#;
         let infrastructure_helper = serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
-        let infrastructure = from_helper(infrastructure_helper);
+        let infrastructure: Infrastructure = infrastructure_helper.into();
 
         insta::with_settings!({sort_maps => true}, {
             insta::assert_yaml_snapshot!(infrastructure);
@@ -199,5 +225,26 @@ mod tests {
             switch-1:
         "#;
         serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
+    }
+
+    #[should_panic]
+    #[test]
+    fn infranode_with_negative_count_is_rejected() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+            infrastructure:
+                win-10: -1
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 }
