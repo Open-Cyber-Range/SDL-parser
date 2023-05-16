@@ -295,6 +295,25 @@ impl Scenario {
         Ok(())
     }
 
+    pub fn verify_infrastructure(&self) -> Result<()> {
+        let node_names = self
+            .nodes
+            .as_ref()
+            .map(|node_map| node_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(infrastructure) = &self.infrastructure {
+            infrastructure.keys().try_for_each(|infrastructure_name| {
+                Connection::<Infrastructure>::validate_connections(
+                    &infrastructure_name,
+                    &node_names,
+                )?;
+                Ok(())
+            })?;
+        }
+
+        Ok(())
+    }
+
     pub fn verify_evaluations(&self) -> Result<()> {
         let metric_names = self
             .metrics
@@ -522,16 +541,16 @@ impl Scenario {
 
 impl Formalize for Scenario {
     fn formalize(&mut self) -> Result<()> {
+        if let Some(infrastructure_helper) = &self.infrastructure_helper {
+            self.infrastructure = Some(Infrastructure::from(infrastructure_helper.clone()));
+        }
+
         if let Some(mut nodes) = self.nodes.clone() {
             nodes.iter_mut().try_for_each(move |(_, node)| {
                 node.formalize()?;
                 Ok(())
             })?;
             self.nodes = Some(nodes);
-        }
-
-        if let Some(infrastructure_helper) = &self.infrastructure_helper {
-            self.infrastructure = Some(Infrastructure::from(infrastructure_helper.clone()));
         }
 
         if let Some(mut infrastructure) = self.infrastructure.clone() {
@@ -640,6 +659,7 @@ impl Formalize for Scenario {
         self.verify_entities()?;
         self.verify_goals()?;
         self.verify_nodes()?;
+        self.verify_infrastructure()?;
         self.verify_evaluations()?;
         self.verify_switch_counts()?;
         self.verify_features()?;

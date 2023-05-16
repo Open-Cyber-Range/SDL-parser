@@ -1,5 +1,6 @@
 use crate::{
     constants::{default_node_count, MINIMUM_NODE_COUNT},
+    helpers::Connection,
     Formalize,
 };
 use anyhow::{anyhow, Result};
@@ -80,6 +81,19 @@ impl From<InfrastructureHelper> for Infrastructure {
                     .collect::<Infrastructure>()
             }
         }
+    }
+}
+
+impl Connection<Infrastructure> for &String {
+    fn validate_connections(&self, potential_node_names: &Option<Vec<String>>) -> Result<()> {
+        if let Some(node_names) = potential_node_names {
+            if !node_names.contains(self) {
+                return Err(anyhow!(
+                    "Infrastructure entry {self} does not exist under Nodes"
+                ));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -244,6 +258,27 @@ mod tests {
                     source: windows10
             infrastructure:
                 win-10: -1
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[should_panic]
+    #[test]
+    fn infranode_with_unknown_name_is_rejected() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+            infrastructure:
+                debian: 1
         "#;
         parse_sdl(sdl).unwrap();
     }
