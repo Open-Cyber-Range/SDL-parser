@@ -156,9 +156,15 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
               vulnerability-2:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
             conditions:
               condition-1:
                 command: executable/path.sh
@@ -193,9 +199,15 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
               vulnerability-2:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
             conditions:
               condition-1:
                 command: executable/path.sh
