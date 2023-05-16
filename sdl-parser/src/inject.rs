@@ -161,7 +161,6 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-                    source: digital-library-package
             metrics:
                 metric-1:
                     type: MANUAL
@@ -305,8 +304,6 @@ mod tests {
                 end: 2022-01-20T23:00:00Z
                 conditions:
                     condition-1:
-                        command: executable/path.sh
-                        interval: 30
                         source: digital-library-package
                 capabilities:
                     capability-9999:
@@ -333,7 +330,6 @@ mod tests {
                     condition-1:
                         command: executable/path.sh
                         interval: 30
-                        source: digital-library-package
                 capabilities:
                     capability-9999:
                         description: "Can defend against Dirty Cow"

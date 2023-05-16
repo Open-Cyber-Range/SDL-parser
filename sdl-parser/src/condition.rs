@@ -31,19 +31,25 @@ pub struct Condition {
 
 impl Formalize for Condition {
     fn formalize(&mut self) -> Result<()> {
-        if self.command.is_some() && self.interval.is_some() {
-            self.source_helper = None;
-        } else if let Some(source_helper) = &self.source_helper {
+        if let Some(source_helper) = &self.source_helper {
             self.source = Some(source_helper.to_owned().into());
-        } else if self.command.is_some() && self.interval.is_none() {
-            return Err(anyhow::anyhow!("No interval found for command"));
-        } else if self.command.is_none() && self.interval.is_some() {
+        }
+
+        let has_command = self.command.is_some();
+        let has_interval = self.interval.is_some();
+        let has_source = self.source.is_some();
+
+        if has_source && (has_command || has_interval) {
             return Err(anyhow::anyhow!(
-                "No command found for use with the interval"
+                "Condition must have Command and Interval OR Source defined, not both"
             ));
-        } else {
+        } else if has_command && !has_interval {
             return Err(anyhow::anyhow!(
-                "Command or source missing for the condition"
+                "Condition has Command defined but is missing Interval"
+            ));
+        } else if !has_command && has_interval {
+            return Err(anyhow::anyhow!(
+                "Condition has Interval defined but is missing Command"
             ));
         }
         Ok(())
@@ -156,26 +162,5 @@ mod tests {
         "#;
         let condition = serde_yaml::from_str::<Condition>(sdl).unwrap();
         insta::assert_debug_snapshot!(condition);
-    }
-
-    #[test]
-    fn command_condition_is_parsed_correctly_with_both_command_and_source() {
-        let sdl = r#"
-        
-            name: test-scenario
-            description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
-            conditions:
-                condition-1:
-                    command: executable/path.sh
-                    interval: 30
-                    source: digital-library-package
-                    description: This is a description for condition 1
-        "#;
-        let conditions = parse_sdl(sdl).unwrap().conditions;
-        insta::with_settings!({sort_maps => true}, {
-                insta::assert_yaml_snapshot!(conditions);
-        });
     }
 }

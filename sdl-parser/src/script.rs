@@ -104,7 +104,6 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-                    source: digital-library-package
             scripts:
                 my-cool-script:
                     start-time: 10min 2 sec
@@ -241,7 +240,6 @@ mod tests {
                     condition-1:
                         command: executable/path.sh
                         interval: 30
-                        source: digital-library-package
                 scripts:
                     my-cool-script:
                         start-time: 10min 2 sec

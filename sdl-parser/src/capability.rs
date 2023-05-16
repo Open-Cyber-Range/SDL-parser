@@ -121,8 +121,6 @@ mod tests {
                 class: CWE-1341
             conditions:
               condition-1:
-                command: executable/path.sh
-                interval: 30
                 source: digital-library-package
               condition-2:
                 source: digital-library-package
@@ -169,7 +167,6 @@ mod tests {
               condition-1:
                 command: executable/path.sh
                 interval: 30
-                source: digital-library-package
               condition-2:
                 source: digital-library-package
             capabilities:
@@ -212,7 +209,6 @@ mod tests {
               condition-1:
                 command: executable/path.sh
                 interval: 30
-                source: digital-library-package
               condition-2:
                 source: digital-library-package
             capabilities:
