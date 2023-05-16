@@ -13,6 +13,8 @@ use crate::{
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Inject {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(
         default,
         rename = "source",

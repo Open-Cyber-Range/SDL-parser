@@ -3,11 +3,13 @@ source: sdl-parser/src/condition.rs
 expression: conditions
 ---
 condition-1:
+  name: ~
   command: executable/path.sh
   interval: 30
   source: ~
   description: This is a description for condition 1
 condition-2:
+  name: ~
   command: ~
   interval: ~
   source:

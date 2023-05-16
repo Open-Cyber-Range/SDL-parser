@@ -3,6 +3,7 @@ source: sdl-parser/src/condition.rs
 expression: condition
 ---
 Condition {
+    name: None,
     command: None,
     interval: None,
     source_helper: Some(

@@ -3,6 +3,7 @@ source: sdl-parser/src/lib.rs
 expression: features
 ---
 my-cool-artifact:
+  name: ~
   type: Artifact
   source:
     name: dl_library
@@ -14,6 +15,7 @@ my-cool-artifact:
   destination: ~
   description: ~
 my-cool-config:
+  name: ~
   type: Configuration
   source:
     name: some-configuration
@@ -25,6 +27,7 @@ my-cool-config:
   destination: ~
   description: ~
 my-cool-service:
+  name: ~
   type: Service
   source:
     name: some-service

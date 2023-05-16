@@ -3,6 +3,7 @@ source: sdl-parser/src/evaluation.rs
 expression: evaluations
 ---
 evaluation-1:
+  name: ~
   description: some description
   metrics:
     - metric-1

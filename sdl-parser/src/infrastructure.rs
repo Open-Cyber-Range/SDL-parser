@@ -9,6 +9,8 @@ use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct InfraNode {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(default = "default_node_count", alias = "Count", alias = "COUNT")]
     pub count: i32,
     #[serde(default, alias = "Links", alias = "LINKS")]

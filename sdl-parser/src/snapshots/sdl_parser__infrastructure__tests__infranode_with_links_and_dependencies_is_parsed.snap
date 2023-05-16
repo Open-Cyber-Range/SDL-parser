@@ -3,6 +3,7 @@ source: sdl-parser/src/infrastructure.rs
 expression: infra_node
 ---
 InfraNode {
+    name: None,
     count: 25,
     links: Some(
         [

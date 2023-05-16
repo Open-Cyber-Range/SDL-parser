@@ -7,6 +7,8 @@ use crate::{event::Event, helpers::Connection, Formalize};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Script {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(
         deserialize_with = "parse_time_string_to_u64_sec",
         rename = "start-time",

@@ -3,6 +3,7 @@ source: sdl-parser/src/condition.rs
 expression: condition
 ---
 Condition {
+    name: None,
     command: Some(
         "executable/path.sh",
     ),
