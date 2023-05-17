@@ -18,23 +18,23 @@ pub mod story;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
-use crate::helpers::{verify_roles_in_node, Connection};
+use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
 use capability::{Capabilities, Capability};
 use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
-use entity::{Entities, Entity};
+use entity::{Entities, Entity, Flatten};
 use evaluation::{Evaluation, Evaluations};
 use event::{Event, Events};
 use feature::{Feature, Features};
-use goal::{Goals};
+use goal::Goals;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
-use node::{NodeType, Nodes};
+use node::{Node, NodeType, Nodes};
 use script::{Script, Scripts};
 use serde::{Deserialize, Serialize};
 use story::Stories;
@@ -375,7 +375,10 @@ impl Scenario {
             .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
         if let Some(entities) = &self.entities {
             for named_entity in entities.iter() {
-                Connection::<TrainingLearningObjective>::validate_connections(&named_entity, &tlo_names)?;
+                Connection::<TrainingLearningObjective>::validate_connections(
+                    &named_entity,
+                    &tlo_names,
+                )?;
                 Connection::<Vulnerability>::validate_connections(
                     &named_entity,
                     &vulnerability_names,
@@ -448,24 +451,32 @@ impl Scenario {
 
     fn verify_roles(&self) -> Result<()> {
         if let Some(nodes) = &self.nodes {
-            for (node_name, node) in nodes.iter() {
-                if let Some(features) = &node.features {
-                    if let Some(roles) = &node.roles {
-                        for feature_role in features.values() {
-                            verify_roles_in_node(roles, feature_role, node_name).unwrap();
-                        }
-                    } else {
-                        return Err(anyhow::anyhow!("No roles found for feature(s)"));
-                    }
+            let all_entity_names = self
+                .entities
+                .clone()
+                .map(|entities| entities.flatten().keys().cloned().collect::<Vec<String>>());
+
+            for (node_name, node) in nodes {
+                Connection::<Entity>::validate_connections(
+                    &(node_name, &node.roles),
+                    &all_entity_names,
+                )?;
+
+                if let Some(node_features) = &node.features {
+                    let feature_roles = node_features.values().cloned().collect::<Vec<String>>();
+                    Connection::<Node>::validate_connections(
+                        &(node_name, &node.roles),
+                        &Some(feature_roles),
+                    )?;
                 }
-                if let Some(conditions) = &node.conditions {
-                    if let Some(roles) = &node.roles {
-                        for condition_role in conditions.values() {
-                            verify_roles_in_node(roles, condition_role, node_name).unwrap();
-                        }
-                    } else {
-                        return Err(anyhow::anyhow!("No roles found for condition(s)"));
-                    }
+
+                if let Some(node_conditions) = &node.conditions {
+                    let condition_roles =
+                        node_conditions.values().cloned().collect::<Vec<String>>();
+                    Connection::<Node>::validate_connections(
+                        &(node_name, &node.roles),
+                        &Some(condition_roles),
+                    )?;
                 }
             }
         }
