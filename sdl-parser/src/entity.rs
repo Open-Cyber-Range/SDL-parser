@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{training_learning_objective::TrainingLearningObjective, helpers::Connection, vulnerability::Vulnerability};
+use crate::{
+    helpers::Connection, training_learning_objective::TrainingLearningObjective,
+    vulnerability::Vulnerability,
+};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum ExerciseRole {
@@ -93,6 +96,27 @@ impl Connection<Vulnerability> for (&String, &Entity) {
 }
 
 pub type Entities = HashMap<String, Entity>;
+pub trait Flatten {
+    fn flatten(&self) -> Self;
+}
+
+impl Flatten for Entities {
+    fn flatten(&self) -> Self {
+        let mut result = self.clone();
+
+        self.iter().for_each(|(key, entity)| {
+            if let Some(child_entities) = &entity.entities {
+                Self::flatten(child_entities)
+                    .into_iter()
+                    .for_each(|(child_key, child_entity)| {
+                        result.insert(format!("{key}.{child_key}"), child_entity);
+                    })
+            }
+        });
+
+        result
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -19,7 +19,7 @@ nodes:
     vulnerabilities: ~
     roles:
       admin:
-        username: username2
+        username: admin
         entities: ~
 features: ~
 infrastructure: ~

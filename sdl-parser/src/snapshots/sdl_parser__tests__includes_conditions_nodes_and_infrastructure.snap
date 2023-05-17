@@ -22,8 +22,12 @@ nodes:
       condition-3: admin
     vulnerabilities: ~
     roles:
-      admin: username
-      moderator: name
+      admin:
+        username: username
+        entities: ~
+      moderator:
+        username: name
+        entities: ~
   win10:
     type: VM
     description: win-10-description
@@ -38,7 +42,9 @@ nodes:
       condition-1: admin
     vulnerabilities: ~
     roles:
-      admin: username
+      admin:
+        username: username
+        entities: ~
 features: ~
 infrastructure:
   deb10:

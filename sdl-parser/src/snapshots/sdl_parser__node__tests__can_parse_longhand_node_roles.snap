@@ -18,8 +18,8 @@ nodes:
     conditions: ~
     vulnerabilities: ~
     roles:
-      admin:
-        username: username2
+      user:
+        username: user
         entities: ~
 features: ~
 infrastructure: ~

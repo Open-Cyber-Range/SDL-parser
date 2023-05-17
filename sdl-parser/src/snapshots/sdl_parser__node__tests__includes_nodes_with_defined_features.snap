@@ -22,8 +22,12 @@ nodes:
     conditions: ~
     vulnerabilities: ~
     roles:
-      admin: username
-      moderator: name
+      admin:
+        username: username
+        entities: ~
+      moderator:
+        username: name
+        entities: ~
 features:
   feature-1:
     type: Service
