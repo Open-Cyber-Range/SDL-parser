@@ -21,7 +21,7 @@ pub type Goals = HashMap<String, Goal>;
 impl Formalize for Goal {
     fn formalize(&mut self) -> Result<()> {
         if self.tlos.is_empty() {
-            return Err(anyhow::anyhow!("Goal must have have atleast one TLO"));
+            return Err(anyhow::anyhow!("Goal requires at least one TLO"));
         }
         Ok(())
     }
@@ -34,12 +34,12 @@ impl Connection<TrainingLearningObjective> for (&String, &Goal) {
         if let Some(tlo_names) = potential_tlo_names {
             for tlo_name in tlos {
                 if !tlo_names.contains(tlo_name) {
-                    return Err(anyhow!("TLO {} not found under scenario", tlo_name));
+                    return Err(anyhow!("TLO \"{tlo_name}\" not found under Scenario TLOs"));
                 }
             }
         } else {
             return Err(anyhow!(
-                "TLO list is empty under scenario, but having a goal requires a TLO"
+                "Goal requires at least one TLO but none found under Scenario"
             ));
         }
 

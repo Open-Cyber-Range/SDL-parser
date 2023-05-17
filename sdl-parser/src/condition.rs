@@ -41,7 +41,7 @@ impl Formalize for Condition {
 
         if has_source && (has_command || has_interval) {
             return Err(anyhow::anyhow!(
-                "Condition must have Command and Interval OR Source defined, not both"
+                "Condition must have Command and Interval or Source defined, not both"
             ));
         } else if has_command && !has_interval {
             return Err(anyhow::anyhow!(

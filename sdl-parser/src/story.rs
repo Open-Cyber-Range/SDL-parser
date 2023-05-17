@@ -38,7 +38,7 @@ impl Formalize for Story {
         }
 
         if self.clock < 1 {
-            return Err(anyhow!("Clock value must be at least 1"));
+            return Err(anyhow!("Stories clock value must be at least 1"));
         }
 
         Ok(())
@@ -49,16 +49,15 @@ impl Connection<Script> for (&String, &Story) {
     fn validate_connections(&self, potential_script_names: &Option<Vec<String>>) -> Result<()> {
         if potential_script_names.is_none() {
             return Err(anyhow!(
-                "Story is defined but no Scripts declared under Scenario"
+                "Story \"{story_name}\" requires at least one Script but none found under Scenario",
+                story_name = self.0
             ));
         };
 
         if let Some(script_names) = potential_script_names {
-            for story_script_name in &self.1.scripts {
-                if !script_names.contains(story_script_name) {
-                    return Err(anyhow!(
-                        "Script {story_script_name} not found under Scenario"
-                    ));
+            for script_name in &self.1.scripts {
+                if !script_names.contains(script_name) {
+                    return Err(anyhow!("Script \"{script_name}\" not found under Scenario"));
                 }
             }
         }

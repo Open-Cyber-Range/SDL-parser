@@ -47,16 +47,15 @@ impl Connection<TrainingLearningObjective> for (&String, &Entity) {
                 for tlo_name in tlos {
                     if !tlo_names.contains(tlo_name) {
                         return Err(anyhow!(
-                            "TLO {} not found under scenario, but is required by entity {}",
-                            tlo_name,
-                            self.0
+                            "Entity \"{entity_name}\" TLO \"{tlo_name}\" not found under Scenario TLOs",
+                            entity_name = self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "TLO list is empty under scenario, but entity {} requires TLOs",
-                    self.0
+                    "Entity \"{entity_name}\" has TLOs but none found under Scenario",
+                    entity_name = self.0
                 ));
             }
         }
@@ -77,16 +76,15 @@ impl Connection<Vulnerability> for (&String, &Entity) {
                 for vulnerability_name in vulnerabilities {
                     if !vulnerability_names.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability {} not found under scenario, but is required by entity {}",
-                            vulnerability_name,
-                            self.0
+                            "Entity \"{entity_name}\" Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
+                            entity_name = self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Vulnerability list is empty under scenario, but entity {} requires vulnerabilities",
-                    self.0
+                    "Entity \"{entity_name}\" has Vulnerabilities but none found under Scenario",
+                    entity_name = self.0
                 ));
             }
         }

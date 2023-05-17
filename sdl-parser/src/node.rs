@@ -123,18 +123,17 @@ impl Connection<Vulnerability> for (&String, &Node) {
     ) -> Result<()> {
         if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
             if let Some(vulnerabilities) = potential_vulnerability_names {
-                for node_vulnerability in node_vulnerabilities.iter() {
-                    if !vulnerabilities.contains(node_vulnerability) {
+                for vulnerability_name in node_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability {} not found under scenario",
-                            node_vulnerability
+                            "Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Vulnerability list is empty under scenario, but node {} has vulnerabilities",
-                    self.0
+                    "Node \"{node_name}\" has Vulnerabilities but none found under Scenario",
+                    node_name = self.0
                 ));
             }
         }
@@ -149,16 +148,15 @@ impl Connection<Feature> for (&String, &Node) {
                 for node_feature in node_features.keys() {
                     if !features.contains(node_feature) {
                         return Err(anyhow!(
-                            "Node {} has feature {} that is not defined under scenario",
-                            &self.0,
-                            node_feature
+                            "Node \"{node_name}\" Feature \"{node_feature}\" not found under Scenario Features",
+                            node_name = &self.0,
                         ));
                     }
                 }
             } else if !node_features.is_empty() {
                 return Err(anyhow!(
-                    "Feature list is empty under scenario, but node {} has features",
-                    self.0
+                    "Node \"{node_name}\" has Features but none found under Scenario",
+                    node_name = &self.0,
                 ));
             }
         }
@@ -174,9 +172,7 @@ impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
                 for condition_name in node_conditions.keys() {
                     if !conditions.contains(condition_name) {
                         return Err(anyhow!(
-                            "Node {} has condition {} that is not defined under scenario",
-                            node_name,
-                            condition_name
+                            "Node \"{node_name}\" Condition \"{condition_name}\" not found under Scenario Conditions"
                         ));
                     }
                 }
@@ -185,8 +181,7 @@ impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
                         if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
                             if infra_node.count > 1 {
                                 return Err(anyhow!(
-                                    "Node {} has count bigger than 1, but conditions are defined",
-                                    node_name
+                                    "Node \"{node_name}\" can not have count bigger than 1, if it has conditions defined"
                                 ));
                             }
                         }
@@ -194,8 +189,7 @@ impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
                 }
             } else if !node_conditions.is_empty() {
                 return Err(anyhow!(
-                    "Condition list is empty under Scenario, but node {} has Conditions",
-                    node_name
+                    "Node \"{node_name}\" has Conditions but none found under Scenario"
                 ));
             }
         }
@@ -261,7 +255,7 @@ impl Formalize for Node {
             if let Some(source_helper) = &self._source_helper {
                 self.source = Some(source_helper.to_owned().into());
             } else {
-                return Err(anyhow::anyhow!("No source found"));
+                return Err(anyhow::anyhow!("A Node is missing a source field"));
             }
             if self.resources.is_none() {
                 return Err(anyhow::anyhow!(
