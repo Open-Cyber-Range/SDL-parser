@@ -257,15 +257,32 @@ impl Connection<Entity> for (&String, &Option<HashMap<String, Role>>) {
 
 impl Formalize for Node {
     fn formalize(&mut self) -> Result<()> {
-        if let Some(source_helper) = &self._source_helper {
-            self.source = Some(source_helper.to_owned().into());
-        } else if self.type_field == NodeType::VM {
-            return Err(anyhow::anyhow!("No source found"));
-        }
+        if self.type_field == NodeType::VM {
+            if let Some(source_helper) = &self._source_helper {
+                self.source = Some(source_helper.to_owned().into());
+            } else {
+                return Err(anyhow::anyhow!("No source found"));
+            }
+            if self.resources.is_none() {
+                return Err(anyhow::anyhow!(
+                    "Nodes of type VM must have Resources defined"
+                ));
+            }
+        } else if self.type_field == NodeType::Switch {
+            if self._source_helper.is_some() {
+                return Err(anyhow::anyhow!("Nodes of type Switch can not have Sources"));
+            }
 
+            if self.resources.is_some() {
+                return Err(anyhow::anyhow!(
+                    "Nodes of type Switch can not have Resources"
+                ));
+            }
+        }
         if let Some(helper_roles) = &self._roles_helper {
             self.roles = Some(helper_roles.to_owned().into());
         }
+
         Ok(())
     }
 }
@@ -288,9 +305,15 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
                     source: windows10
                 deb-10:
                     type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
                     source:
                         name: debian10
                         version: 1.2.3
@@ -434,6 +457,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
                     source: windows10
                     roles:
                         moderator: "name"
@@ -458,6 +484,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
                     source: windows10
                     roles:
                         admin: "username"
@@ -480,6 +509,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        cpu: 2
+                        ram: 32 gib
                     source: windows10
                     roles:
                         admin: 
@@ -507,6 +539,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        cpu: 2
+                        ram: 32 gib
                     source: windows10
                     roles:
                         admin: 
@@ -531,6 +566,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        cpu: 2
+                        ram: 32 gib
                     source: windows10
                     roles:
                         admin: 
@@ -551,6 +589,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources:
+                        cpu: 2
+                        ram: 32 gib
                     source: windows10
                     roles:
                         admin: admin
@@ -570,6 +611,9 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
+                    resources: 
+                        cpu: 2
+                        ram: 2 gib
                     source: windows10
                     roles:
                         user: 
@@ -590,6 +634,9 @@ end: 2022-01-20T23:00:00Z
 nodes:
     win-10:
         type: VM
+        resources: 
+            cpu: 2
+            ram: 2 gib
         source: windows10
         roles:
             admin: admin
@@ -610,5 +657,57 @@ entities:
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(parsed_sdl);
         });
+    }
+
+    #[test]
+    #[should_panic]
+    fn resources_missing_for_vm_node() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                win-10:
+                    type: VM
+                    source: windows10
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn source_defined_for_switch_node() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                switch-1:
+                    type: Switch
+                    source: windows10
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn resources_defined_for_switch_node() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                switch-1:
+                    type: Switch
+                    resources: 
+                        cpu: 2
+                        ram: 2 gib
+
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 }

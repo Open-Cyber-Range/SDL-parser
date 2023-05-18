@@ -10,7 +10,9 @@ nodes:
   win-10:
     type: VM
     description: ~
-    resources: ~
+    resources:
+      ram: 2147483648
+      cpu: 2
     source:
       name: windows10
       version: "*"

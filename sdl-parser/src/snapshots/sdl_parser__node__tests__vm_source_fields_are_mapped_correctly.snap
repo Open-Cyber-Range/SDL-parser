@@ -5,7 +5,9 @@ expression: nodes
 deb-10:
   type: VM
   description: ~
-  resources: ~
+  resources:
+    ram: 2147483648
+    cpu: 2
   source:
     name: debian10
     version: 1.2.3
@@ -16,7 +18,9 @@ deb-10:
 win-10:
   type: VM
   description: ~
-  resources: ~
+  resources:
+    ram: 2147483648
+    cpu: 2
   source:
     name: windows10
     version: "*"
