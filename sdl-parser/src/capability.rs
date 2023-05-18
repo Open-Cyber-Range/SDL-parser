@@ -21,7 +21,9 @@ impl Formalize for Capability {
     fn formalize(&mut self) -> Result<()> {
         if let Some(vulnerabilities) = &self.vulnerabilities {
             if vulnerabilities.is_empty() {
-                return Err(anyhow!("When vulnerabilities is declared, capability must have at least one vulnerability"));
+                return Err(anyhow!(
+                    "Capability requires at least one Vulnerability but none found under Scenario"
+                ));
             }
         }
         Ok(())
@@ -37,18 +39,17 @@ impl Connection<Vulnerability> for (&String, &Capability) {
     ) -> Result<()> {
         if let Some(capability_vulnerabilities) = &self.1.vulnerabilities {
             if let Some(vulnerabilities) = potential_vulnerability_names {
-                for capability_vulnerability in capability_vulnerabilities.iter() {
-                    if !vulnerabilities.contains(capability_vulnerability) {
+                for vulnerability_name in capability_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability {} not found under scenario",
-                            capability_vulnerability
+                            "Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
                         ));
                     }
                 }
             } else if !capability_vulnerabilities.is_empty() {
                 return Err(anyhow!(
-                "Vulnerability list is empty under scenario, but capability {} has vulnerabilities",
-                self.0
+                "Capability \"{capability_name}\" has Vulnerabilities but none found under Scenario",
+                capability_name = self.0
             ));
             }
         }
@@ -58,14 +59,18 @@ impl Connection<Vulnerability> for (&String, &Capability) {
 
 impl Connection<Condition> for (&String, &Capability) {
     fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
-        let condition = &self.1.condition;
+        let condition_name = &self.1.condition;
 
         if let Some(condition_names) = potential_condition_names {
-            if !condition_names.contains(condition) {
-                return Err(anyhow!("Condition {} not found under scenario", condition));
+            if !condition_names.contains(condition_name) {
+                return Err(anyhow!(
+                    "Condition \"{condition_name}\" not found under Scenario Conditions"
+                ));
             }
         } else {
-            return Err(anyhow!("Condition list is empty under scenario, but having a capability requires a condition"));
+            return Err(anyhow!(
+                "Capability requires at least one Condition but none found under Scenario"
+            ));
         }
 
         Ok(())
@@ -121,8 +126,6 @@ mod tests {
                 class: CWE-1341
             conditions:
               condition-1:
-                command: executable/path.sh
-                interval: 30
                 source: digital-library-package
               condition-2:
                 source: digital-library-package
@@ -156,14 +159,19 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
               vulnerability-2:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
             conditions:
               condition-1:
                 command: executable/path.sh
                 interval: 30
-                source: digital-library-package
               condition-2:
                 source: digital-library-package
             capabilities:
@@ -193,14 +201,19 @@ mod tests {
             end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
               vulnerability-2:
+                name: some-vulnerability
                 description: some-description
+                technical: false
+                class: CWE-1343
             conditions:
               condition-1:
                 command: executable/path.sh
                 interval: 30
-                source: digital-library-package
               condition-2:
                 source: digital-library-package
             capabilities:
