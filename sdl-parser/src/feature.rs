@@ -20,6 +20,8 @@ pub enum FeatureType {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Feature {
+    #[serde(alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub feature_type: FeatureType,
     #[serde(

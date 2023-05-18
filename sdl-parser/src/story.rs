@@ -7,6 +7,8 @@ use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Story {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(default = "default_clock_value", alias = "Clock", alias = "CLOCK")]
     pub clock: u64,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]

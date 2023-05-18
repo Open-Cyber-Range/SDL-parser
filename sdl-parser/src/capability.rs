@@ -7,6 +7,8 @@ use crate::{condition::Condition, helpers::Connection, vulnerability::Vulnerabil
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Capability {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
     #[serde(default, alias = "Condition", alias = "CONDITION")]

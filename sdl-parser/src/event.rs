@@ -6,6 +6,8 @@ use crate::{condition::Condition, helpers::Connection, inject::Inject, Formalize
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Event {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(alias = "Time", alias = "TIME")]
     pub time: Option<f32>,
     #[serde(alias = "Conditions", alias = "CONDITIONS")]

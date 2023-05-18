@@ -32,6 +32,8 @@ impl From<HelperScore> for MinScore {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Evaluation {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
     #[serde(alias = "Metrics", alias = "METRICS")]

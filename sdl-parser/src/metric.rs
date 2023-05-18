@@ -15,6 +15,8 @@ pub enum MetricType {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Metric {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub metric_type: MetricType,
     #[serde(alias = "Artifact", alias = "ARTIFACT")]

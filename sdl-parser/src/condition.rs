@@ -9,6 +9,8 @@ use crate::{
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Condition {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(default, alias = "Command", alias = "COMMAND")]
     pub command: Option<String>,
     #[serde(default, alias = "Interval", alias = "INTERVAL")]
