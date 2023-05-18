@@ -1,8 +1,9 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-pub const DEFAULT_NODE_COUNT: u32 = 1;
-pub const fn default_node_count() -> u32 {
+pub const MINIMUM_NODE_COUNT: i32 = 1;
+pub const DEFAULT_NODE_COUNT: i32 = 1;
+pub const fn default_node_count() -> i32 {
     DEFAULT_NODE_COUNT
 }
 
