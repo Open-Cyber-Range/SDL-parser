@@ -13,6 +13,8 @@ use crate::{
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Inject {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(
         default,
         rename = "source",
@@ -60,8 +62,8 @@ impl Connection<Entity> for (&String, &Inject) {
             || self.1.from_entity.is_some() && potential_entity_names.is_none()
         {
             return Err(anyhow!(
-                "Entities defined in Inject {} but none defined under Scenario",
-                self.0
+                "Inject \"{inject_name}\" has Entities but none found under Scenario",
+                inject_name = self.0
             ));
         }
 
@@ -77,8 +79,8 @@ impl Connection<Entity> for (&String, &Inject) {
             if let Some(scenario_entities) = potential_entity_names {
                 if !scenario_entities.contains(inject_entity_name) {
                     return Err(anyhow!(
-                        "Entity {inject_entity_name} defined in Inject {} but not defined in Scenario Entities", 
-                        self.0
+                        "Inject \"{inject_name}\" Entity \"{inject_entity_name}\" not found under Scenario Injects", 
+                        inject_name = self.0
                     ));
                 }
             }
@@ -92,16 +94,18 @@ impl Connection<TrainingLearningObjective> for (&String, &Inject) {
     fn validate_connections(&self, potential_tlo_names: &Option<Vec<String>>) -> Result<()> {
         if self.1.tlos.is_some() && potential_tlo_names.is_none() {
             return Err(anyhow!(
-                "TLOs defined for Inject {} but none found under Scenario",
-                self.0
+                "Inject \"{inject_name}\" has TLOs but none found under Scenario",
+                inject_name = self.0
             ));
         }
 
         if let Some(required_tlos) = &self.1.tlos {
             if let Some(tlo_names) = potential_tlo_names {
-                for inject_tlo_name in required_tlos {
-                    if !tlo_names.contains(inject_tlo_name) {
-                        return Err(anyhow!("TLO {inject_tlo_name} not found under Scenario"));
+                for tlo_name in required_tlos {
+                    if !tlo_names.contains(tlo_name) {
+                        return Err(anyhow!("Inject \"{inject_name}\" TLO \"{tlo_name}\" not found under Scenario TLOs",
+                        inject_name = self.0
+                    ));
                     }
                 }
             }
@@ -115,8 +119,8 @@ impl Connection<Capability> for (&String, &Inject) {
     fn validate_connections(&self, potential_capability_names: &Option<Vec<String>>) -> Result<()> {
         if self.1.capabilities.is_some() && potential_capability_names.is_none() {
             return Err(anyhow!(
-                "Capability list is empty under Scenario, but Inject {} has Capabilities",
-                self.0
+                "Inject \"{inject_name}\" has Capabilities but none found under Scenario",
+                inject_name = self.0
             ));
         }
 
@@ -125,7 +129,8 @@ impl Connection<Capability> for (&String, &Inject) {
                 for inject_capability_name in required_capabilities.iter() {
                     if !scenario_capability_names.contains(inject_capability_name) {
                         return Err(anyhow!(
-                            "Capability {inject_capability_name} not found under Scenario"
+                            "Inject \"{inject_name}\" Capability \"{inject_capability_name}\" not found under Scenario Capabilities",
+                            inject_name = self.0
                         ));
                     }
                 }
@@ -159,7 +164,6 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-                    source: digital-library-package
             metrics:
                 metric-1:
                     type: MANUAL
@@ -303,8 +307,6 @@ mod tests {
                 end: 2022-01-20T23:00:00Z
                 conditions:
                     condition-1:
-                        command: executable/path.sh
-                        interval: 30
                         source: digital-library-package
                 capabilities:
                     capability-9999:
@@ -331,7 +333,6 @@ mod tests {
                     condition-1:
                         command: executable/path.sh
                         interval: 30
-                        source: digital-library-package
                 capabilities:
                     capability-9999:
                         description: "Can defend against Dirty Cow"

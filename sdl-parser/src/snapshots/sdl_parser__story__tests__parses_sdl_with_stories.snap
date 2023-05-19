@@ -11,6 +11,7 @@ features: ~
 infrastructure: ~
 conditions:
   condition-1:
+    name: ~
     command: executable/path.sh
     interval: 30
     source: ~
@@ -24,6 +25,7 @@ entities: ~
 goals: ~
 injects:
   my-cool-inject:
+    name: ~
     source:
       name: inject-package
       version: "*"
@@ -34,6 +36,7 @@ injects:
     description: ~
 events:
   my-cool-event:
+    name: ~
     time: 0.2345678
     conditions:
       - condition-1
@@ -42,6 +45,7 @@ events:
     description: ~
 scripts:
   my-cool-script:
+    name: ~
     start-time: 602
     end-time: 694800
     speed: 1.5
@@ -50,6 +54,7 @@ scripts:
     description: ~
 stories:
   story-1:
+    name: ~
     clock: 1
     scripts:
       - my-cool-script

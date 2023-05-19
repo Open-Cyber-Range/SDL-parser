@@ -7,6 +7,8 @@ use crate::{event::Event, helpers::Connection, Formalize};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Script {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(
         deserialize_with = "parse_time_string_to_u64_sec",
         rename = "start-time",
@@ -36,11 +38,11 @@ impl Formalize for Script {
         if self.events.is_empty() {
             return Err(anyhow!("Script must have have at least one Event"));
         } else if self.start_time > self.end_time {
-            return Err(anyhow!("End-time must be greater than start-time"));
+            return Err(anyhow!("Scripts end-time must be greater than start-time"));
         }
 
         if self.speed.is_sign_negative() {
-            return Err(anyhow!("Speed must have a positive value"));
+            return Err(anyhow!("Scripts speed must have a positive value"));
         }
 
         Ok(())
@@ -51,15 +53,16 @@ impl Connection<Event> for (&String, &Script) {
     fn validate_connections(&self, potential_event_names: &Option<Vec<String>>) -> Result<()> {
         if potential_event_names.is_none() {
             return Err(anyhow!(
-                "Script is defined but no Events declared under Scenario"
+                "Script \"{script_name}\" requires at least one Event but none found under Scenario",
+                script_name = self.0
             ));
         };
 
         if let Some(event_names) = potential_event_names {
-            for script_event_name in &self.1.events {
-                if !event_names.contains(script_event_name) {
+            for event_name in &self.1.events {
+                if !event_names.contains(event_name) {
                     return Err(anyhow!(
-                        "Event {script_event_name} not found under Scenario"
+                        "Event \"{event_name}\" not found under Scenario Events"
                     ));
                 }
             }
@@ -102,7 +105,6 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-                    source: digital-library-package
             scripts:
                 my-cool-script:
                     start-time: 10min 2 sec
@@ -239,7 +241,6 @@ mod tests {
                     condition-1:
                         command: executable/path.sh
                         interval: 30
-                        source: digital-library-package
                 scripts:
                     my-cool-script:
                         start-time: 10min 2 sec

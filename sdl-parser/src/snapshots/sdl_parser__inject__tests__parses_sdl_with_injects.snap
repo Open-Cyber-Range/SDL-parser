@@ -11,6 +11,7 @@ features: ~
 infrastructure: ~
 conditions:
   condition-1:
+    name: ~
     command: executable/path.sh
     interval: 30
     source: ~
@@ -18,21 +19,25 @@ conditions:
 vulnerabilities: ~
 capabilities:
   capability-1:
+    name: ~
     description: Can defend against Dirty Cow
     condition: condition-1
     vulnerabilities: ~
   capability-2:
+    name: ~
     description: Can defend against Dirty Cow
     condition: condition-1
     vulnerabilities: ~
 metrics:
   metric-1:
+    name: ~
     type: Manual
     artifact: true
     max_score: 10
     condition: ~
     description: ~
   metric-2:
+    name: ~
     type: Conditional
     artifact: ~
     max_score: 10
@@ -40,6 +45,7 @@ metrics:
     description: ~
 evaluations:
   evaluation-1:
+    name: ~
     description: some description
     metrics:
       - metric-1
@@ -63,7 +69,7 @@ entities:
     mission: Attack
     categories: ~
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
   my-organization:
@@ -75,7 +81,7 @@ entities:
       - Foundation
       - Organization
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
   red-team:
@@ -85,12 +91,13 @@ entities:
     mission: Attack
     categories: ~
     vulnerabilities: ~
-    goals: ~
+    tlos: ~
     facts: ~
     entities: ~
 goals: ~
 injects:
   my-cool-inject:
+    name: ~
     source:
       name: inject-package
       version: "*"

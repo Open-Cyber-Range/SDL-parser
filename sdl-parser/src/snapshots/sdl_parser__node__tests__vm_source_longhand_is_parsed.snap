@@ -6,7 +6,7 @@ Node {
     type_field: VM,
     description: None,
     resources: None,
-    source_helper: Some(
+    _source_helper: Some(
         Source(
             Source {
                 name: "package-name",
@@ -18,5 +18,6 @@ Node {
     features: None,
     conditions: None,
     vulnerabilities: None,
+    _roles_helper: None,
     roles: None,
 }

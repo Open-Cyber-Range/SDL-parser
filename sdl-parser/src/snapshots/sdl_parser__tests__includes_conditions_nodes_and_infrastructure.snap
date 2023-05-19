@@ -22,8 +22,12 @@ nodes:
       condition-3: admin
     vulnerabilities: ~
     roles:
-      admin: username
-      moderator: name
+      admin:
+        username: username
+        entities: ~
+      moderator:
+        username: name
+        entities: ~
   win10:
     type: VM
     description: win-10-description
@@ -38,15 +42,19 @@ nodes:
       condition-1: admin
     vulnerabilities: ~
     roles:
-      admin: username
+      admin:
+        username: username
+        entities: ~
 features: ~
 infrastructure:
   deb10:
+    name: ~
     count: 1
     links: ~
     dependencies: ~
     description: ~
   win10:
+    name: ~
     count: 1
     links: ~
     dependencies:
@@ -54,11 +62,13 @@ infrastructure:
     description: ~
 conditions:
   condition-1:
+    name: ~
     command: executable/path.sh
     interval: 30
     source: ~
     description: ~
   condition-2:
+    name: ~
     command: ~
     interval: ~
     source:
@@ -66,6 +76,7 @@ conditions:
       version: "*"
     description: ~
   condition-3:
+    name: ~
     command: executable/path.sh
     interval: 30
     source: ~

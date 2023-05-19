@@ -22,10 +22,15 @@ nodes:
     conditions: ~
     vulnerabilities: ~
     roles:
-      admin: username
-      moderator: name
+      admin:
+        username: username
+        entities: ~
+      moderator:
+        username: name
+        entities: ~
 features:
   feature-1:
+    name: ~
     type: Service
     source:
       name: dl-library
@@ -36,6 +41,7 @@ features:
     destination: ~
     description: ~
   feature-2:
+    name: ~
     type: Artifact
     source:
       name: my-cool-artifact

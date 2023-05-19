@@ -20,6 +20,8 @@ pub enum FeatureType {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Feature {
+    #[serde(alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub feature_type: FeatureType,
     #[serde(
@@ -51,18 +53,18 @@ impl Connection<Vulnerability> for (&String, &Feature) {
     ) -> Result<()> {
         if let Some(feature_vulnerabilities) = &self.1.vulnerabilities {
             if let Some(vulnerabilities) = potential_vulnerability_names {
-                for feature_vulnerability in feature_vulnerabilities.iter() {
-                    if !vulnerabilities.contains(feature_vulnerability) {
+                for vulnerability_name in feature_vulnerabilities.iter() {
+                    if !vulnerabilities.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability {} not found under scenario",
-                            feature_vulnerability
+                            "Feature \"{feature_name}\" Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
+                            feature_name = self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Vulnerability list is empty under scenario, but feature {} has vulnerabilities",
-                    self.0
+                    "Feature \"{feature_name}\" has Vulnerabilities but none found under Scenario",
+                    feature_name = self.0
                 ));
             }
         }
@@ -77,7 +79,7 @@ impl Formalize for Feature {
         if let Some(helper_source) = &self._source_helper {
             self.source = Some(helper_source.to_owned().into());
         } else {
-            return Err(anyhow!("No source found for feature"));
+            return Err(anyhow!("Feature missing Source field"));
         }
         Ok(())
     }

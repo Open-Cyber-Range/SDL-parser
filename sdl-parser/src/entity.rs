@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{goal::Goal, helpers::Connection, vulnerability::Vulnerability};
+use crate::{
+    helpers::Connection, training_learning_objective::TrainingLearningObjective,
+    vulnerability::Vulnerability,
+};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum ExerciseRole {
@@ -27,33 +30,32 @@ pub struct Entity {
     pub categories: Option<Vec<String>>,
     #[serde(alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vec<String>>,
-    #[serde(alias = "Goals", alias = "GOALS")]
-    pub goals: Option<Vec<String>>,
+    #[serde(alias = "TLOs", alias = "TLOS")]
+    pub tlos: Option<Vec<String>>,
     #[serde(alias = "Facts", alias = "FACTS")]
     pub facts: Option<HashMap<String, String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
 }
 
-impl Connection<Goal> for (&String, &Entity) {
-    fn validate_connections(&self, potential_goal_names: &Option<Vec<String>>) -> Result<()> {
-        let goals = &self.1.goals;
+impl Connection<TrainingLearningObjective> for (&String, &Entity) {
+    fn validate_connections(&self, potential_tlo_names: &Option<Vec<String>>) -> Result<()> {
+        let tlos = &self.1.tlos;
 
-        if let Some(goals) = goals {
-            if let Some(goal_names) = potential_goal_names {
-                for goal_name in goals {
-                    if !goal_names.contains(goal_name) {
+        if let Some(tlos) = tlos {
+            if let Some(tlo_names) = potential_tlo_names {
+                for tlo_name in tlos {
+                    if !tlo_names.contains(tlo_name) {
                         return Err(anyhow!(
-                            "Goal {} not found under scenario, but is required by entity {}",
-                            goal_name,
-                            self.0
+                            "Entity \"{entity_name}\" TLO \"{tlo_name}\" not found under Scenario TLOs",
+                            entity_name = self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Goal list is empty under scenario, but entity {} requires goals",
-                    self.0
+                    "Entity \"{entity_name}\" has TLOs but none found under Scenario",
+                    entity_name = self.0
                 ));
             }
         }
@@ -74,16 +76,15 @@ impl Connection<Vulnerability> for (&String, &Entity) {
                 for vulnerability_name in vulnerabilities {
                     if !vulnerability_names.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability {} not found under scenario, but is required by entity {}",
-                            vulnerability_name,
-                            self.0
+                            "Entity \"{entity_name}\" Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
+                            entity_name = self.0
                         ));
                     }
                 }
             } else {
                 return Err(anyhow!(
-                    "Vulnerability list is empty under scenario, but entity {} requires vulnerabilities",
-                    self.0
+                    "Entity \"{entity_name}\" has Vulnerabilities but none found under Scenario",
+                    entity_name = self.0
                 ));
             }
         }
@@ -93,6 +94,27 @@ impl Connection<Vulnerability> for (&String, &Entity) {
 }
 
 pub type Entities = HashMap<String, Entity>;
+pub trait Flatten {
+    fn flatten(&self) -> Self;
+}
+
+impl Flatten for Entities {
+    fn flatten(&self) -> Self {
+        let mut result = self.clone();
+
+        self.iter().for_each(|(key, entity)| {
+            if let Some(child_entities) = &entity.entities {
+                Self::flatten(child_entities)
+                    .into_iter()
+                    .for_each(|(child_key, child_entity)| {
+                        result.insert(format!("{key}.{child_key}"), child_entity);
+                    })
+            }
+        });
+
+        result
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -174,8 +196,8 @@ mod tests {
                     - Organization
                   vulnerabilities:
                     - vulnerability-2
-                  goals:
-                    - goal-1
+                  tlos:
+                    - tlo-1
                   entities:
                     fish:
                         name: "Shark"
@@ -203,10 +225,10 @@ mod tests {
             - Foundation
             - Organization
           vulnerabilities:
-            - vulnerability-2tlo-2
-          goals:
-            - goal-1
-            - goal-2
+            - vulnerability-2
+          tlos:
+            - tlo-1
+            - tlo-2
         "#;
         serde_yaml::from_str::<Entity>(entity_yml).unwrap();
     }
@@ -223,9 +245,9 @@ mod tests {
             - Organization
           vulnerabilities:
             - vulnerability-2
-          goals:
-            - goal-1
-            - goal-2
+          tlos:
+            - tlo-1
+            - tlo-2
           entities:
             fish:
               name: "Shark"

@@ -3,6 +3,7 @@ source: sdl-parser/src/feature.rs
 expression: features
 ---
 my-cool-feature:
+  name: ~
   type: Service
   source:
     name: some-service
@@ -13,6 +14,7 @@ my-cool-feature:
   destination: ~
   description: ~
 my-cool-feature-config:
+  name: ~
   type: Configuration
   source:
     name: cool-config

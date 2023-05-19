@@ -11,6 +11,7 @@ features: ~
 infrastructure: ~
 conditions:
   condition-1:
+    name: ~
     command: executable/path.sh
     interval: 30
     source: ~
@@ -18,10 +19,12 @@ conditions:
 vulnerabilities: ~
 capabilities:
   capability-1:
+    name: ~
     description: Can defend against Dirty Cow
     condition: condition-1
     vulnerabilities: ~
   capability-2:
+    name: ~
     description: Can defend against Dirty Cow
     condition: condition-1
     vulnerabilities: ~
@@ -32,6 +35,7 @@ entities: ~
 goals: ~
 injects:
   my-cool-inject:
+    name: ~
     source:
       name: inject-package
       version: "*"
@@ -42,6 +46,7 @@ injects:
     description: ~
 events:
   my-cool-event:
+    name: ~
     time: 0.2345678
     conditions:
       - condition-1

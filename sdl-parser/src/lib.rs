@@ -18,23 +18,23 @@ pub mod story;
 pub mod training_learning_objective;
 pub mod vulnerability;
 
-use crate::helpers::{verify_roles_in_node, Connection};
+use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
 use capability::{Capabilities, Capability};
 use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
-use entity::{Entities, Entity};
+use entity::{Entities, Entity, Flatten};
 use evaluation::{Evaluation, Evaluations};
 use event::{Event, Events};
 use feature::{Feature, Features};
-use goal::{Goal, Goals};
+use goal::Goals;
 use infrastructure::{Infrastructure, InfrastructureHelper};
 use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
-use node::{NodeType, Nodes};
+use node::{Node, NodeType, Nodes};
 use script::{Script, Scripts};
 use serde::{Deserialize, Serialize};
 use story::Stories;
@@ -110,17 +110,6 @@ impl Scenario {
             .map_err(|e| anyhow!("Failed to deserialize from yaml: {}", e))?;
         schema.formalize()?;
         Ok(schema)
-    }
-
-    fn map_infrastructure(&mut self) -> Result<()> {
-        if let Some(infrastructure_helper) = &self.infrastructure_helper {
-            let mut infrastructure = Infrastructure::new();
-            for (name, helpernode) in infrastructure_helper.iter() {
-                infrastructure.insert(name.to_string(), helpernode.clone().into());
-            }
-            self.infrastructure = Some(infrastructure);
-        }
-        Ok(())
     }
 
     pub fn get_node_dependencies(&self) -> Result<Dependencies> {
@@ -306,6 +295,25 @@ impl Scenario {
         Ok(())
     }
 
+    pub fn verify_infrastructure(&self) -> Result<()> {
+        let node_names = self
+            .nodes
+            .as_ref()
+            .map(|node_map| node_map.keys().cloned().collect::<Vec<String>>());
+
+        if let Some(infrastructure) = &self.infrastructure {
+            infrastructure.keys().try_for_each(|infrastructure_name| {
+                Connection::<Infrastructure>::validate_connections(
+                    &infrastructure_name,
+                    &node_names,
+                )?;
+                Ok(())
+            })?;
+        }
+
+        Ok(())
+    }
+
     pub fn verify_evaluations(&self) -> Result<()> {
         let metric_names = self
             .metrics
@@ -369,13 +377,16 @@ impl Scenario {
             .vulnerabilities
             .as_ref()
             .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
-        let goal_names = self
-            .goals
+        let tlo_names = self
+            .tlos
             .as_ref()
-            .map(|goal_map| goal_map.keys().cloned().collect::<Vec<String>>());
+            .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
         if let Some(entities) = &self.entities {
             for named_entity in entities.iter() {
-                Connection::<Goal>::validate_connections(&named_entity, &goal_names)?;
+                Connection::<TrainingLearningObjective>::validate_connections(
+                    &named_entity,
+                    &tlo_names,
+                )?;
                 Connection::<Vulnerability>::validate_connections(
                     &named_entity,
                     &vulnerability_names,
@@ -448,24 +459,32 @@ impl Scenario {
 
     fn verify_roles(&self) -> Result<()> {
         if let Some(nodes) = &self.nodes {
-            for (node_name, node) in nodes.iter() {
-                if let Some(features) = &node.features {
-                    if let Some(roles) = &node.roles {
-                        for feature_role in features.values() {
-                            verify_roles_in_node(roles, feature_role, node_name).unwrap();
-                        }
-                    } else {
-                        return Err(anyhow::anyhow!("No roles found for feature(s)"));
-                    }
+            let all_entity_names = self
+                .entities
+                .clone()
+                .map(|entities| entities.flatten().keys().cloned().collect::<Vec<String>>());
+
+            for (node_name, node) in nodes {
+                Connection::<Entity>::validate_connections(
+                    &(node_name, &node.roles),
+                    &all_entity_names,
+                )?;
+
+                if let Some(node_features) = &node.features {
+                    let feature_roles = node_features.values().cloned().collect::<Vec<String>>();
+                    Connection::<Node>::validate_connections(
+                        &(node_name, &node.roles),
+                        &Some(feature_roles),
+                    )?;
                 }
-                if let Some(conditions) = &node.conditions {
-                    if let Some(roles) = &node.roles {
-                        for condition_role in conditions.values() {
-                            verify_roles_in_node(roles, condition_role, node_name).unwrap();
-                        }
-                    } else {
-                        return Err(anyhow::anyhow!("No roles found for condition(s)"));
-                    }
+
+                if let Some(node_conditions) = &node.conditions {
+                    let condition_roles =
+                        node_conditions.values().cloned().collect::<Vec<String>>();
+                    Connection::<Node>::validate_connections(
+                        &(node_name, &node.roles),
+                        &Some(condition_roles),
+                    )?;
                 }
             }
         }
@@ -522,12 +541,26 @@ impl Scenario {
 
 impl Formalize for Scenario {
     fn formalize(&mut self) -> Result<()> {
+        if let Some(infrastructure_helper) = &self.infrastructure_helper {
+            self.infrastructure = Some(Infrastructure::from(infrastructure_helper.clone()));
+        }
+
         if let Some(mut nodes) = self.nodes.clone() {
             nodes.iter_mut().try_for_each(move |(_, node)| {
                 node.formalize()?;
                 Ok(())
             })?;
             self.nodes = Some(nodes);
+        }
+
+        if let Some(mut infrastructure) = self.infrastructure.clone() {
+            infrastructure
+                .iter_mut()
+                .try_for_each(move |(_, infra_node)| {
+                    infra_node.formalize()?;
+                    Ok(())
+                })?;
+            self.infrastructure = Some(infrastructure);
         }
 
         if let Some(features) = &mut self.features {
@@ -623,10 +656,10 @@ impl Formalize for Scenario {
             self.stories = Some(stories);
         }
 
-        self.map_infrastructure()?;
         self.verify_entities()?;
         self.verify_goals()?;
         self.verify_nodes()?;
+        self.verify_infrastructure()?;
         self.verify_evaluations()?;
         self.verify_switch_counts()?;
         self.verify_features()?;

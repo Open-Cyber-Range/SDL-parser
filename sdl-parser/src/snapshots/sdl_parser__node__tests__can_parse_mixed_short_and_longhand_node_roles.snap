@@ -1,6 +1,6 @@
 ---
 source: sdl-parser/src/node.rs
-expression: scenario
+expression: parsed_sdl
 ---
 name: test-scenario
 description: some-description
@@ -21,8 +21,12 @@ nodes:
     vulnerabilities: ~
     roles:
       admin:
-        username: username2
+        username: admin
         entities: ~
+      user:
+        username: user
+        entities:
+          - blue-team.bob
 features: ~
 infrastructure: ~
 conditions: ~
@@ -31,7 +35,27 @@ capabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~
-entities: ~
+entities:
+  blue-team:
+    name: The Blue Team
+    description: ~
+    role: ~
+    mission: ~
+    categories: ~
+    vulnerabilities: ~
+    tlos: ~
+    facts: ~
+    entities:
+      bob:
+        name: Blue Bob
+        description: ~
+        role: ~
+        mission: ~
+        categories: ~
+        vulnerabilities: ~
+        tlos: ~
+        facts: ~
+        entities: ~
 goals: ~
 injects: ~
 events: ~

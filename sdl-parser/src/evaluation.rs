@@ -32,6 +32,8 @@ impl From<HelperScore> for MinScore {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Evaluation {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
     #[serde(alias = "Metrics", alias = "METRICS")]
@@ -51,19 +53,18 @@ pub struct Evaluation {
 impl Connection<Metric> for (&String, &Evaluation) {
     fn validate_connections(&self, potential_metric_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(metric_names) = potential_metric_names {
-            for required_name in &self.1.metrics {
-                if !metric_names.contains(required_name) {
+            for metric_name in &self.1.metrics {
+                if !metric_names.contains(metric_name) {
                     return Err(anyhow::anyhow!(
-                        "Metric {} not found for elevation: {}",
-                        required_name,
-                        self.0
+                        "Evaluation \"{evaluation_name}\" Metric \"{metric_name}\" not found under Scenario Metrics",
+                        evaluation_name = self.0
                     ));
                 }
             }
         } else {
             return Err(anyhow::anyhow!(
-                "No metrics found under scenario, but elevation {} exists",
-                self.0
+                "Evaluation \"{evaluation_name}\" requires Metrics but none found under Scenario",
+                evaluation_name = self.0
             ));
         }
         Ok(())
@@ -77,15 +78,17 @@ impl Formalize for Evaluation {
         if let Some(helper_min_score) = &self._helper_min_score {
             self.min_score = Some(helper_min_score.to_owned().into());
         } else {
-            return Err(anyhow!("No min-score found for evaluation"));
+            return Err(anyhow!("An Evaluation is missing min-score"));
         }
         if let Some(score) = &self.min_score {
             if score.absolute.is_some() && score.percentage.is_some() {
-                return Err(anyhow!("Min-score can only have one value"));
+                return Err(anyhow!(
+                    "An Evaluations min-score can only have either Absolute or Percentage defined, not both"
+                ));
             }
         }
         if self.metrics.is_empty() {
-            return Err(anyhow!("Evaluation must have at least one metric"));
+            return Err(anyhow!("An Evaluation must have at least one Metric"));
         }
         Ok(())
     }

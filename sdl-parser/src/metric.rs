@@ -15,6 +15,8 @@ pub enum MetricType {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Metric {
+    #[serde(default, alias = "Name", alias = "NAME")]
+    pub name: Option<String>,
     #[serde(rename = "type", alias = "Type", alias = "TYPE")]
     pub metric_type: MetricType,
     #[serde(alias = "Artifact", alias = "ARTIFACT")]
@@ -32,20 +34,20 @@ pub type Metrics = HashMap<String, Metric>;
 impl Formalize for Metric {
     fn formalize(&mut self) -> Result<()> {
         if self.max_score == 0 {
-            return Err(anyhow!("Metric max-score cannot be 0"));
+            return Err(anyhow!("Metric `max-score` can not be 0"));
         }
         match self.metric_type {
             MetricType::Manual => {
                 if self.condition.is_some() {
-                    return Err(anyhow!("Manual metric cannot have a condition"));
+                    return Err(anyhow!("Manual Metric can not have a Condition"));
                 }
             }
             MetricType::Conditional => {
                 if self.condition.is_none() {
-                    return Err(anyhow!("Conditional metric must have a condition"));
+                    return Err(anyhow!("Conditional Metric must have a Condition"));
                 }
                 if self.artifact.is_some() {
-                    return Err(anyhow!("Conditional metric cannot have an artifact"));
+                    return Err(anyhow!("Conditional Metric can not have an Artifact"));
                 }
             }
         }
@@ -56,18 +58,16 @@ impl Formalize for Metric {
 impl Connection<Condition> for (&String, &Metric) {
     fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(condition_names) = potential_condition_names {
-            if let Some(condition) = &self.1.condition {
-                if !condition_names.contains(condition) {
+            if let Some(condition_name) = &self.1.condition {
+                if !condition_names.contains(condition_name) {
                     return Err(anyhow::anyhow!(
-                        "Condition {} not found under scenario",
-                        condition
+                        "Condition \"{condition_name}\" not found under Scenario Conditions"
                     ));
                 }
             }
-        } else if self.1.condition.is_some() {
+        } else if let Some(condition_name) = &self.1.condition {
             return Err(anyhow::anyhow!(
-                "Condition {} not found under scenario",
-                self.1.condition.as_ref().unwrap()
+                "Condition \"{condition_name}\" not found under Scenario",
             ));
         }
         Ok(())

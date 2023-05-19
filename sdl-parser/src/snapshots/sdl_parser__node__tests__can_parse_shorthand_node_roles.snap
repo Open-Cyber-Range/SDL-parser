@@ -11,7 +11,7 @@ nodes:
     type: VM
     description: ~
     resources:
-      ram: 2147483648
+      ram: 34359738368
       cpu: 2
     source:
       name: windows10
@@ -21,7 +21,7 @@ nodes:
     vulnerabilities: ~
     roles:
       admin:
-        username: username2
+        username: admin
         entities: ~
 features: ~
 infrastructure: ~

@@ -3,17 +3,20 @@ source: sdl-parser/src/infrastructure.rs
 expression: infrastructure
 ---
 switch-1:
+  name: ~
   count: 1
   links: ~
   dependencies: ~
   description: ~
 switch-2:
+  name: ~
   count: 2
   links:
     - switch-1
   dependencies: ~
   description: ~
 ubuntu-10:
+  name: ~
   count: 1
   links:
     - switch-1
@@ -22,11 +25,13 @@ ubuntu-10:
     - windows-10-vuln-1
   description: ~
 windows-10:
+  name: ~
   count: 3
   links: ~
   dependencies: ~
   description: ~
 windows-10-vuln-1:
+  name: ~
   count: 1
   links: ~
   dependencies: ~

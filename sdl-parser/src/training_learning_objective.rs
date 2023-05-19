@@ -24,15 +24,15 @@ impl Connection<Evaluation> for (&String, &TrainingLearningObjective) {
         if let Some(existing_evaluation_names) = potential_evaluation_names {
             if !existing_evaluation_names.contains(&self.1.evaluation) {
                 return Err(anyhow!(
-                    "Evaluation {} not found under scenario, but used by {} TLO",
-                    self.1.evaluation,
-                    self.0
+                    "TLO \"{tlo_name}\" Evaluation \"{evaluation_name}\" not found under Scenario Evaluations",
+                    tlo_name = self.0,
+                    evaluation_name =self.1.evaluation
                 ));
             }
         } else {
             return Err(anyhow!(
-                "Evaluation list is empty under scenario, but TLO: {} is declared",
-                self.0
+                "TLO \"{tlo_name}\" requires an Evaluation but none found under Scenario",
+                tlo_name = self.0
             ));
         }
 
@@ -44,18 +44,17 @@ impl Connection<Capability> for (&String, &TrainingLearningObjective) {
     fn validate_connections(&self, potential_capability_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(required_capabilities) = &self.1.capabilities {
             if let Some(existing_capability_names) = potential_capability_names {
-                for required_capability in required_capabilities.iter() {
-                    if !existing_capability_names.contains(required_capability) {
+                for capability_name in required_capabilities.iter() {
+                    if !existing_capability_names.contains(capability_name) {
                         return Err(anyhow!(
-                            "Capability {} not found under scenario",
-                            required_capability
+                            "Capability \"{capability_name}\" not found under Scenario Capabilities",
                         ));
                     }
                 }
             } else if !required_capabilities.is_empty() {
                 return Err(anyhow!(
-                    "Capability list is empty under scenario, but training learning objective {} has capabilities",
-                    self.0
+                    "TLO \"{tlo_name}\" has Capabilities but none found under Scenario",
+                    tlo_name = self.0
                 ));
             }
         }
