@@ -60,7 +60,6 @@ build-and-publish-npm-wrapper:
   script:
     - cd node-package
     - yarn
-    - npm update
     - '{ echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; sleep 1;  echo "$OCR_NPM_PUBLISH_EMAIL"; } | npm login --registry=$OCR_NPM_REPOSITORY'
     - npm publish --registry=$OCR_NPM_REPOSITORY
   only:
