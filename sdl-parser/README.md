@@ -2,6 +2,10 @@
 
 The SDL parser is a Rust tool designed for parsing Scenario Defined Language files and is a part of Open Cyber Range suite. The SDL parser tool can be used to extract this information from SDL files and convert it into a format that can be used by other tools. With its advanced memory management and error handling features, the SDL parser offers fast parsing times and low memory usage, making it ideal for modern applications that require speed and efficiency in security analysis. If you're looking to integrate SDL files into your Rust project for security analysis, the SDL parser is an essential tool that simplifies the process and ensures accurate and reliable security assessments.
 
+## Documentation
+
+- [**The SDL Reference Guide**](https://documentation.opencyberrange.ee/docs/sdl-reference-guide/sdl)
+
 ## Getting Started
 
 To use the SDL parser, you'll need to add it as a dependency to your project. You can do this by adding the following line to your Cargo.toml file:
