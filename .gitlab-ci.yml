@@ -61,7 +61,6 @@ build-and-publish-npm-wrapper:
     - cd node-package
     - yarn
     - '{ echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; sleep 1;  echo "$OCR_NPM_PUBLISH_EMAIL"; } | npm login --registry=$OCR_NPM_REPOSITORY'
-    - npm build
     - npm publish --registry=$OCR_NPM_REPOSITORY
   only:
     - master
