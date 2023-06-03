@@ -15,14 +15,14 @@ pub struct Script {
         alias = "Start-time",
         alias = "START-TIME"
     )]
-    start_time: u64,
+    pub start_time: u64,
     #[serde(
         deserialize_with = "parse_time_string_to_u64_sec",
         rename = "end-time",
         alias = "End-time",
         alias = "END-TIME"
     )]
-    end_time: u64,
+    pub end_time: u64,
     #[serde(alias = "Speed", alias = "SPEED")]
     pub speed: f32,
     #[serde(alias = "Events", alias = "EVENTS")]
