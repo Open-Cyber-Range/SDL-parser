@@ -12,6 +12,12 @@ use crate::{
 };
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+pub struct InjectCapabilities {
+    pub executive: String,
+    pub secondary: Option<Vec<String>>,
+}
+
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Inject {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
@@ -32,7 +38,7 @@ pub struct Inject {
     #[serde(alias = "Tlos", alias = "TLOS")]
     pub tlos: Option<Vec<String>>,
     #[serde(alias = "Capabilities", alias = "CAPABILITIES")]
-    pub capabilities: Option<Vec<String>>,
+    pub capabilities: InjectCapabilities,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
@@ -79,7 +85,7 @@ impl Connection<Entity> for (&String, &Inject) {
             if let Some(scenario_entities) = potential_entity_names {
                 if !scenario_entities.contains(inject_entity_name) {
                     return Err(anyhow!(
-                        "Inject \"{inject_name}\" Entity \"{inject_entity_name}\" not found under Scenario Injects", 
+                        "Inject \"{inject_name}\" Entity \"{inject_entity_name}\" not found under Scenario Entities", 
                         inject_name = self.0
                     ));
                 }
@@ -117,22 +123,30 @@ impl Connection<TrainingLearningObjective> for (&String, &Inject) {
 
 impl Connection<Capability> for (&String, &Inject) {
     fn validate_connections(&self, potential_capability_names: &Option<Vec<String>>) -> Result<()> {
-        if self.1.capabilities.is_some() && potential_capability_names.is_none() {
+        if potential_capability_names.is_none() {
             return Err(anyhow!(
-                "Inject \"{inject_name}\" has Capabilities but none found under Scenario",
+                "Inject \"{inject_name}\" must have at least one Capability but none found under Scenario",
                 inject_name = self.0
             ));
         }
 
-        if let Some(required_capabilities) = &self.1.capabilities {
-            if let Some(scenario_capability_names) = potential_capability_names {
-                for inject_capability_name in required_capabilities.iter() {
-                    if !scenario_capability_names.contains(inject_capability_name) {
-                        return Err(anyhow!(
+        let required_capabilities = {
+            let mut required_capabilities: Vec<String> = vec![];
+            required_capabilities.push(self.1.capabilities.executive.to_owned());
+
+            if let Some(secondary) = &self.1.capabilities.secondary {
+                required_capabilities.extend_from_slice(secondary.as_slice());
+            }
+            required_capabilities
+        };
+
+        if let Some(scenario_capability_names) = potential_capability_names {
+            for inject_capability_name in required_capabilities.iter() {
+                if !scenario_capability_names.contains(inject_capability_name) {
+                    return Err(anyhow!(
                             "Inject \"{inject_name}\" Capability \"{inject_capability_name}\" not found under Scenario Capabilities",
                             inject_name = self.0
                         ));
-                    }
                 }
             }
         }
@@ -158,6 +172,9 @@ mod tests {
                     description: "Can defend against Dirty Cow"
                     condition: condition-1
                 capability-2:
+                    description: "Can defend against Dirty Cow"
+                    condition: condition-1
+                capability-3:
                     description: "Can defend against Dirty Cow"
                     condition: condition-1
             conditions:
@@ -217,7 +234,9 @@ mod tests {
                     tlos:
                         - tlo-1
                     capabilities:
-                        - capability-2
+                        executive: capability-2
+                        secondary:
+                            - capability-3
         "#;
         let injects = parse_sdl(sdl).unwrap();
 
@@ -237,7 +256,7 @@ mod tests {
             tlos:
                 - tlo-1
             capabilities:
-                - capability-2
+                executive: capability-2
       "#;
         serde_yaml::from_str::<Inject>(inject).unwrap();
     }
@@ -253,7 +272,7 @@ mod tests {
                 tlos:
                     - tlo-1
                 capabilities:
-                    - capability-2
+                    executive: capability-2
       "#;
 
         serde_yaml::from_str::<Inject>(inject)
@@ -271,7 +290,7 @@ mod tests {
                 tlos:
                     - tlo-1
                 capabilities:
-                    - capability-2
+                    executive: capability-2
       "#;
 
         serde_yaml::from_str::<Inject>(inject)
@@ -292,7 +311,7 @@ mod tests {
                     my-cool-inject:
                         source: inject-package
                         capabilities:
-                            - capability-2
+                            executive: capability-2
             "#;
         parse_sdl(sdl).unwrap();
     }
@@ -316,7 +335,7 @@ mod tests {
                     my-cool-inject:
                         source: inject-package
                         capabilities:
-                            - capability-1
+                            executive: capability-1
             "#;
         parse_sdl(sdl).unwrap();
     }
@@ -378,9 +397,19 @@ mod tests {
                             type: MANUAL
                             artifact: true
                             max-score: 10
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                conditions:
+                        condition-1:
+                            command: executable/path.sh
+                            interval: 30
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                         tlos:
                             - tlo-1
             "#;
@@ -406,9 +435,19 @@ mod tests {
                             type: MANUAL
                             artifact: true
                             max-score: 10
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                conditions:
+                        condition-1:
+                            command: executable/path.sh
+                            interval: 30
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                         tlos:
                             - tlo-1
                 tlos:
@@ -428,13 +467,23 @@ mod tests {
                 description: some description
                 start: 2022-01-20T13:00:00Z
                 end: 2022-01-20T23:00:00Z
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                conditions:
+                        condition-1:
+                            command: executable/path.sh
+                            interval: 30
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                         from-entity: my-organization
                         to-entities:
-                            - red-team
-                            - blue-team
+                                - red-team
+                                - blue-team
             "#;
         parse_sdl(sdl).unwrap();
     }
@@ -452,13 +501,23 @@ mod tests {
                         name: "The Red Team"
                     blue-team:
                         name: "The Blue Team"
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                conditions:
+                        condition-1:
+                            command: executable/path.sh
+                            interval: 30
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                         from-entity: my-organization
                         to-entities:
-                            - red-team
-                            - blue-team
+                                - red-team
+                                - blue-team
             "#;
         parse_sdl(sdl).unwrap();
     }

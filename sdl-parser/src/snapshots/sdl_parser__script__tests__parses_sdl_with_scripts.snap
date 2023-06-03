@@ -17,7 +17,12 @@ conditions:
     source: ~
     description: ~
 vulnerabilities: ~
-capabilities: ~
+capabilities:
+  capability-1:
+    name: ~
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~
@@ -32,7 +37,9 @@ injects:
     from-entity: ~
     to-entities: ~
     tlos: ~
-    capabilities: ~
+    capabilities:
+      executive: capability-1
+      secondary: ~
     description: ~
 events:
   my-cool-event:

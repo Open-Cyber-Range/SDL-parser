@@ -28,6 +28,11 @@ capabilities:
     description: Can defend against Dirty Cow
     condition: condition-1
     vulnerabilities: ~
+  capability-3:
+    name: ~
+    description: Can defend against Dirty Cow
+    condition: condition-1
+    vulnerabilities: ~
 metrics:
   metric-1:
     name: ~
@@ -108,7 +113,9 @@ injects:
     tlos:
       - tlo-1
     capabilities:
-      - capability-2
+      executive: capability-2
+      secondary:
+        - capability-3
     description: ~
 events: ~
 scripts: ~

@@ -94,9 +94,15 @@ mod tests {
                         speed: 1.5
                         events:
                             - my-cool-event
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678
