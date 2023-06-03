@@ -144,4 +144,42 @@ mod tests {
         "#;
         serde_yaml::from_str::<TrainingLearningObjective>(tlo_string).unwrap();
     }
+
+    #[test]
+    #[should_panic(expected = "Capability \"capability-1\" not found under Scenario Capabilities")]
+    fn fails_on_capabilities_not_defined_for_tlo() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                start: 2022-01-20T13:00:00Z
+                end: 2022-01-20T23:00:00Z
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                capabilities:
+                    capability-9999:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                tlos:
+                    tlo-1:
+                        name: fungibly leverage client-focused e-tailers
+                        description: we learn to make charts of web page stats
+                        evaluation: evaluation-1
+                        capabilities:
+                            - capability-1
+                evaluations:
+                    evaluation-1:
+                        description: some description
+                        metrics:
+                            - metric-1
+                        min-score: 50
+                metrics:
+                        metric-1:
+                            type: MANUAL
+                            artifact: true
+                            max-score: 10
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
 }
