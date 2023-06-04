@@ -13,7 +13,9 @@ use crate::{
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct InjectCapabilities {
+    #[serde(default, alias = "Executive", alias = "EXECUTIVE")]
     pub executive: String,
+    #[serde(default, alias = "Secondary", alias = "SECONDARY")]
     pub secondary: Option<Vec<String>>,
 }
 
