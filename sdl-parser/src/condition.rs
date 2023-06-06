@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Condition \"condition-3\" not found under Scenario Conditions")]
     fn identifies_missing_condition() {
         let sdl = r#"
             name: test-scenario

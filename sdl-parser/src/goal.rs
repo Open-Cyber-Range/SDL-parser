@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Goal requires at least one TLO but none found under Scenario")]
     fn fails_without_tlos() {
         let sdl = r#"
             name: test-scenario
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Goal requires at least one TLO")]
     fn fails_with_empty_tlo_list() {
         let goal_yml = r#"
           description: "new goal"

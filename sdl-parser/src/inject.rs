@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject must have `from-entity` declared if `to-entities` is declared")]
     fn fails_to_entities_declared_but_from_entities_not_declared() {
         let inject = r#"
                 source: inject-package
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject must have `to-entities` declared if `from-entity` is declared")]
     fn fails_from_entities_declared_but_to_entities_not_declared() {
         let inject = r#"
                 source: inject-package
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" has Capabilities but none found under Scenario")]
     fn fails_on_capabilities_not_defined_for_inject() {
         let sdl = r#"
                 name: test-scenario
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" Capability \"capability-1\" not found under Scenario Capabilities")]
     fn fails_on_missing_capability() {
         let sdl = r#"
                 name: test-scenario
@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Capability \"capability-1\" not found under Scenario Capabilities")]
     fn fails_on_capabilities_not_defined_for_tlo() {
         let sdl = r#"
                 name: test-scenario
@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" has TLOs but none found under Scenario")]
     fn fails_on_tlo_not_defined() {
         let sdl = r#"
                 name: test-scenario
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" TLO \"tlo-1\" not found under Scenario TLOs")]
     fn fails_on_missing_tlo_for_inject() {
         let sdl = r#"
                 name: test-scenario
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" has Entities but none found under Scenario")]
     fn fails_on_entity_not_defined_for_inject() {
         let sdl = r#"
                 name: test-scenario
@@ -440,7 +440,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Inject \"my-cool-inject\" Entity \"my-organization\" not found under Scenario Injects")]
     fn fails_on_missing_entity_for_inject() {
         let sdl = r#"
                 name: test-scenario

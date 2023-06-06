@@ -134,7 +134,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(
+        expected = "Evaluation \"evaluation-1\" Metric \"metric-2\" not found under Scenario Metrics"
+    )]
     fn fails_with_missing_metric() {
         let sdl = r#"
         
