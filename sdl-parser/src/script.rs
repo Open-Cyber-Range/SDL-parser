@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Scripts end-time must be greater than start-time")]
     fn fails_end_time_larger_than_start_time() {
         let script = r#"
             start-time: 1 year 5h 10min 2sec
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Scripts speed must have a positive value")]
     fn fails_on_negative_speed_value() {
         let script = r#"
             start-time: 0
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Condition must have Command and Interval or Source defined, not both")]
     fn fails_on_event_not_defined_for_script() {
         let sdl = r#"
                 name: test-scenario
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Event \"my-cool-event\" not found under Scenario Events")]
     fn fails_on_missing_event_for_script() {
         let sdl = r#"
                 name: test-scenario

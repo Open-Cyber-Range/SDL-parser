@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Stories clock value must be at least 1")]
     fn fails_clock_is_zero() {
         let story = r#"
             clock: 0
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Story must have have at least one Script")]
     fn fails_when_scripts_is_empty() {
         let story = r#"
             clock: 1
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Error(\"missing field `scripts`\", line: 2, column: 13)")]
     fn fails_when_no_scripts_field() {
         let story = r#"
             clock: 15
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Story \"story-1\" requires at least one Script but none found under Scenario")]
     fn fails_on_script_not_defined_for_story() {
         let sdl = r#"
                 name: test-scenario
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Script \"script-1\" not found under Scenario")]
     fn fails_on_missing_script_for_story() {
         let sdl = r#"
                 name: test-scenario
