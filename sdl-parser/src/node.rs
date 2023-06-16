@@ -418,7 +418,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Roles list is empty for Node win-10 but it has Role requirements")]
     fn roles_missing_when_features_exist() {
         let sdl = r#"
             name: test-scenario
@@ -429,6 +429,9 @@ mod tests {
                 win-10:
                     type: VM
                     source: windows10
+                    resources:
+                        ram: 4 GiB
+                        cpu: 2
                     features:
                         feature-1: "admin"
             features:
@@ -441,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Role admin not found under for Node win-10's roles")]
     fn role_under_feature_missing_from_node() {
         let sdl = r#"
             name: test-scenario
@@ -523,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Role Entity blue-team.bob for Node win-10 not found under Entities")]
     fn entity_missing_for_node_role_entity() {
         let sdl = r#"
             name: test-scenario
@@ -550,7 +553,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Entities list under Scenario is empty but Node win-10 has Role Entities")]
     fn entities_missing_while_node_has_role_entity() {
         let sdl = r#"
             name: test-scenario
@@ -654,7 +657,7 @@ entities:
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Nodes of type VM must have Resources defined")]
     fn resources_missing_for_vm_node() {
         let sdl = r#"
             name: test-scenario
@@ -670,7 +673,7 @@ entities:
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Nodes of type Switch can not have Sources")]
     fn source_defined_for_switch_node() {
         let sdl = r#"
             name: test-scenario
@@ -687,7 +690,7 @@ entities:
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Nodes of type Switch can not have Resources")]
     fn resources_defined_for_switch_node() {
         let sdl = r#"
             name: test-scenario

@@ -15,14 +15,14 @@ pub struct Script {
         alias = "Start-time",
         alias = "START-TIME"
     )]
-    start_time: u64,
+    pub start_time: u64,
     #[serde(
         deserialize_with = "parse_time_string_to_u64_sec",
         rename = "end-time",
         alias = "End-time",
         alias = "END-TIME"
     )]
-    end_time: u64,
+    pub end_time: u64,
     #[serde(alias = "Speed", alias = "SPEED")]
     pub speed: f32,
     #[serde(alias = "Events", alias = "EVENTS")]
@@ -112,9 +112,15 @@ mod tests {
                     speed: 1.5
                     events:
                         - my-cool-event
+            capabilities:
+                capability-1:
+                    description: "Can defend against Dirty Cow"
+                    condition: condition-1
             injects:
                 my-cool-inject:
                     source: inject-package
+                    capabilities:
+                        executive: capability-1
             events:
                 my-cool-event:
                     time: 0.2345678
@@ -143,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Scripts end-time must be greater than start-time")]
     fn fails_end_time_larger_than_start_time() {
         let script = r#"
             start-time: 1 year 5h 10min 2sec
@@ -190,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Scripts speed must have a positive value")]
     fn fails_on_negative_speed_value() {
         let script = r#"
             start-time: 0
@@ -206,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Condition must have Command and Interval or Source defined, not both")]
     fn fails_on_event_not_defined_for_script() {
         let sdl = r#"
                 name: test-scenario
@@ -230,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Event \"my-cool-event\" not found under Scenario Events")]
     fn fails_on_missing_event_for_script() {
         let sdl = r#"
                 name: test-scenario
@@ -251,6 +257,12 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
                 events:
                     my-embarrassing-event:
                         time: 0.2345678

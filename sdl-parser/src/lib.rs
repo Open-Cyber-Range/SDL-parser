@@ -819,7 +819,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Node \"win-10\" has Features but none found under Scenario")]
     fn feature_missing_from_scenario() {
         let sdl = r#"
             name: test-scenario
@@ -830,6 +830,9 @@ mod tests {
                 win-10:
                     type: VM
                     source: windows10
+                    resources:
+                        ram: 4 GiB
+                        cpu: 2
                     roles:
                         moderator: "name"
                     features:
@@ -840,7 +843,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Role admin not found under for Node win-10's roles")]
     fn feature_role_missing_from_node() {
         let sdl = r#"
             name: test-scenario
@@ -851,6 +854,9 @@ mod tests {
                 win-10:
                     type: VM
                     source: windows10
+                    resources:
+                        ram: 4 GiB
+                        cpu: 2
                     roles:
                         moderator: "name"
                     features:
@@ -922,7 +928,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Node \"win10\" can not have count bigger than 1, if it has conditions defined")]
     fn condition_vm_count_in_infrastructure_over_1() {
         let sdl = r#"
             name: test-scenario
@@ -965,7 +971,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Node \"win10\" has Conditions but none found under Scenario")]
     fn condition_doesnt_exist() {
         let sdl = r#"
             name: test-scenario
@@ -992,28 +998,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn condition_missing_from_scenario() {
-        let sdl = r#"
-            name: test-scenario
-            description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
-            nodes:
-                win-10:
-                    type: VM
-                    source: windows10
-                    roles:
-                        moderator: "name"
-                    conditions:
-                        condition-1: "moderator"
-
-        "#;
-        parse_sdl(sdl).unwrap();
-    }
-
-    #[test]
-    #[should_panic]
+    #[should_panic(expected = "Role admin not found under for Node win-10's roles")]
     fn condition_role_missing_from_node() {
         let sdl = r#"
             name: test-scenario
@@ -1024,6 +1009,9 @@ mod tests {
                 win-10:
                     type: VM
                     source: windows10
+                    resources:
+                        ram: 4 GiB
+                        cpu: 2
                     roles:
                         moderator: "name"
                     conditions:
@@ -1038,7 +1026,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "my-really-really-superlong-non-compliant-name is too long, maximum node name length is 35")]
     fn too_long_node_name_is_disallowed() {
         let sdl = r#"
             name: test-scenario

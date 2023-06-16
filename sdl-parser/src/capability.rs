@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "expected a sequence")]
     fn capability_with_zero_vulnerabilities_fails_formalization() {
         let sdl = r#"
           description: "Can defend against Dirty Cow"
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Condition \"condition-3\" not found under Scenario Conditions")]
     fn fails_parsing_when_missing_condition() {
         let sdl = r#"
             name: test-scenario
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Vulnerability \"vulnerability-4\" not found under Scenario Vulnerabilities")]
     fn fails_parsing_when_missing_vulnerability() {
         let sdl = r#"
             name: test-scenario

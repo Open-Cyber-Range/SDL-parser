@@ -243,7 +243,7 @@ mod tests {
         serde_yaml::from_str::<InfrastructureHelper>(sdl).unwrap();
     }
 
-    #[should_panic]
+    #[should_panic(expected = "Infrastructure Count field can not be less than 1")]
     #[test]
     fn infranode_with_negative_count_is_rejected() {
         let sdl = r#"
@@ -264,7 +264,7 @@ mod tests {
         parse_sdl(sdl).unwrap();
     }
 
-    #[should_panic]
+    #[should_panic(expected = "Infrastructure entry debian does not exist under Nodes")]
     #[test]
     fn infranode_with_unknown_name_is_rejected() {
         let sdl = r#"

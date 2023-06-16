@@ -105,6 +105,8 @@ mod tests {
             injects:
                 my-cool-inject:
                     source: inject-package
+                    capabilities:
+                        executive: capability-1
             events:
                 my-cool-event:
                     time: 0.2345678
@@ -133,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Events Time field must have a float value between 0 and 1")]
     fn fails_on_incorrect_time_value() {
         let event = r#"
             time: 600
@@ -149,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Condition \"condition-1\" not found under Scenario Conditions")]
     fn fails_on_missing_scenario_condition() {
         let sdl = r#"
                 name: test-scenario
@@ -169,6 +171,8 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678
@@ -181,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Capability requires at least one Condition but none found under Scenario")]
     fn fails_on_missing_conditions() {
         let sdl = r#"
                 name: test-scenario
@@ -198,6 +202,8 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678
