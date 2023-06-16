@@ -94,9 +94,15 @@ mod tests {
                         speed: 1.5
                         events:
                             - my-cool-event
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678
@@ -178,7 +184,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Story \"story-1\" requires at least one Script but none found under Scenario")]
+    #[should_panic(
+        expected = "Story \"story-1\" requires at least one Script but none found under Scenario"
+    )]
     fn fails_on_script_not_defined_for_story() {
         let sdl = r#"
                 name: test-scenario
@@ -221,6 +229,12 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
                 events:
                     my-cool-event:
                         time: 0.2345678

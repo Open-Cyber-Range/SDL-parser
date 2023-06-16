@@ -42,7 +42,9 @@ injects:
     from-entity: ~
     to-entities: ~
     tlos: ~
-    capabilities: ~
+    capabilities:
+      executive: capability-1
+      secondary: ~
     description: ~
 events:
   my-cool-event:

@@ -105,6 +105,8 @@ mod tests {
             injects:
                 my-cool-inject:
                     source: inject-package
+                    capabilities:
+                        executive: capability-1
             events:
                 my-cool-event:
                     time: 0.2345678
@@ -169,6 +171,8 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678
@@ -198,6 +202,8 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
                 events:
                     my-cool-event:
                         time: 0.2345678

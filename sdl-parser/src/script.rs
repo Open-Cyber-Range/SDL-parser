@@ -15,14 +15,14 @@ pub struct Script {
         alias = "Start-time",
         alias = "START-TIME"
     )]
-    start_time: u64,
+    pub start_time: u64,
     #[serde(
         deserialize_with = "parse_time_string_to_u64_sec",
         rename = "end-time",
         alias = "End-time",
         alias = "END-TIME"
     )]
-    end_time: u64,
+    pub end_time: u64,
     #[serde(alias = "Speed", alias = "SPEED")]
     pub speed: f32,
     #[serde(alias = "Events", alias = "EVENTS")]
@@ -112,9 +112,15 @@ mod tests {
                     speed: 1.5
                     events:
                         - my-cool-event
+            capabilities:
+                capability-1:
+                    description: "Can defend against Dirty Cow"
+                    condition: condition-1
             injects:
                 my-cool-inject:
                     source: inject-package
+                    capabilities:
+                        executive: capability-1
             events:
                 my-cool-event:
                     time: 0.2345678
@@ -251,6 +257,12 @@ mod tests {
                 injects:
                     my-cool-inject:
                         source: inject-package
+                        capabilities:
+                            executive: capability-1
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
                 events:
                     my-embarrassing-event:
                         time: 0.2345678
