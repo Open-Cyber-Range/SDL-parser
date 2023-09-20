@@ -27,6 +27,8 @@ pub struct Condition {
     pub source: Option<Source>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
+    #[serde(alias = "Environment", alias = "ENVIRONMENT")]
+    pub environment: Option<Vec<String>>,
 }
 
 impl Formalize for Condition {

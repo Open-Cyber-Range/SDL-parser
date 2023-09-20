@@ -43,6 +43,8 @@ pub struct Inject {
     pub capabilities: InjectCapabilities,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
+    #[serde(alias = "Environment", alias = "ENVIRONMENT")]
+    pub environment: Option<Vec<String>>,
 }
 
 pub type Injects = HashMap<String, Inject>;

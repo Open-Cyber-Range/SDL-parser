@@ -67,6 +67,7 @@ conditions:
     interval: 30
     source: ~
     description: ~
+    environment: ~
   condition-2:
     name: ~
     command: ~
@@ -75,12 +76,14 @@ conditions:
       name: digital-library-package
       version: "*"
     description: ~
+    environment: ~
   condition-3:
     name: ~
     command: executable/path.sh
     interval: 30
     source: ~
     description: ~
+    environment: ~
 vulnerabilities: ~
 capabilities: ~
 metrics: ~

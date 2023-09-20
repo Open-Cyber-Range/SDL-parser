@@ -16,6 +16,7 @@ conditions:
     interval: 30
     source: ~
     description: ~
+    environment: ~
 vulnerabilities: ~
 capabilities:
   capability-1:
@@ -41,6 +42,7 @@ injects:
       executive: capability-1
       secondary: ~
     description: ~
+    environment: ~
 events:
   my-cool-event:
     name: ~
