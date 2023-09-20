@@ -10,9 +10,9 @@ my-cool-feature:
     version: "*"
   dependencies: ~
   vulnerabilities: ~
-  variables: ~
   destination: ~
   description: ~
+  environment: ~
 my-cool-feature-config:
   name: ~
   type: Configuration
@@ -21,7 +21,7 @@ my-cool-feature-config:
     version: 1.0.0
   dependencies: ~
   vulnerabilities: ~
-  variables: ~
   destination: ~
   description: ~
+  environment: ~
 
