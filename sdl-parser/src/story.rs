@@ -5,12 +5,12 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Story {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
     #[serde(default = "default_clock_value", alias = "Clock", alias = "CLOCK")]
-    pub clock: u64,
+    pub clock: f64,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]
     pub scripts: Vec<String>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
@@ -18,7 +18,7 @@ pub struct Story {
 }
 
 impl Story {
-    pub fn new(potential_clock: Option<u64>) -> Self {
+    pub fn new(potential_clock: Option<f64>) -> Self {
         Self {
             clock: match potential_clock {
                 Some(clock) => clock,
@@ -37,8 +37,8 @@ impl Formalize for Story {
             return Err(anyhow!("Story must have have at least one Script"));
         }
 
-        if self.clock < 1 {
-            return Err(anyhow!("Stories clock value must be at least 1"));
+        if self.clock < 1.0 {
+            return Err(anyhow!("Story clock value must be at least 1.0"));
         }
 
         Ok(())
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Stories clock value must be at least 1")]
+    #[should_panic(expected = "Story clock value must be at least 1.0")]
     fn fails_clock_is_zero() {
         let story = r#"
             clock: 0
@@ -155,7 +155,7 @@ mod tests {
 
         let story = serde_yaml::from_str::<Story>(story).unwrap();
 
-        assert_eq!(story.clock, 1);
+        assert_eq!(story.clock, 1.0);
     }
 
     #[test]
