@@ -19,7 +19,7 @@ Feature {
         ],
     ),
     vulnerabilities: None,
-    variables: None,
     destination: None,
     description: None,
+    environment: None,
 }

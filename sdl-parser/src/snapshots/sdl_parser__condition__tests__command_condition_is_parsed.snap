@@ -13,4 +13,5 @@ Condition {
     source_helper: None,
     source: None,
     description: None,
+    environment: None,
 }

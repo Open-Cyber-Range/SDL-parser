@@ -13,4 +13,5 @@ Condition {
     ),
     source: None,
     description: None,
+    environment: None,
 }

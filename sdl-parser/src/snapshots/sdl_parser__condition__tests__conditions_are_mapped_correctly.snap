@@ -8,6 +8,7 @@ condition-1:
   interval: 30
   source: ~
   description: ~
+  environment: ~
 condition-2:
   name: ~
   command: ~
@@ -16,4 +17,5 @@ condition-2:
     name: digital-library-package
     version: "*"
   description: ~
+  environment: ~
 

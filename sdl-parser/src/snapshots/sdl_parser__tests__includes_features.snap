@@ -11,9 +11,9 @@ my-cool-artifact:
   dependencies:
     - my-cool-service
   vulnerabilities: ~
-  variables: ~
   destination: ~
   description: ~
+  environment: ~
 my-cool-config:
   name: ~
   type: Configuration
@@ -23,9 +23,9 @@ my-cool-config:
   dependencies:
     - my-cool-service
   vulnerabilities: ~
-  variables: ~
   destination: ~
   description: ~
+  environment: ~
 my-cool-service:
   name: ~
   type: Service
@@ -34,7 +34,7 @@ my-cool-service:
     version: "*"
   dependencies: ~
   vulnerabilities: ~
-  variables: ~
   destination: ~
   description: ~
+  environment: ~
 

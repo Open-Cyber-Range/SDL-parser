@@ -16,6 +16,7 @@ conditions:
     interval: 30
     source: ~
     description: ~
+    environment: ~
 vulnerabilities: ~
 capabilities:
   capability-1:
@@ -117,6 +118,7 @@ injects:
       secondary:
         - capability-3
     description: ~
+    environment: ~
 events: ~
 scripts: ~
 stories: ~

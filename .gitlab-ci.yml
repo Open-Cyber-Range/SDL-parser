@@ -76,3 +76,16 @@ build-and-publish-pip-wrapper:
     - twine upload -u $OCR_DEPLOYMENT_USER -p $OCR_DEPLOYMENT_PASSWORD  --repository-url $OCR_PIP_REPOSITORY  dist/*
   only:
     - master
+
+build-and-publish-wasm-package:
+  stage: build
+  image: $DOCKER_REGISTRY_PULL/rust-builder
+  script:
+    - apt install -y npm && cargo install wasm-pack
+    - echo //registry.npmjs.org/:_authToken=$PUBLISH_TOKEN > ~/.npmrc
+    - cd wasm-sdl-parser/ && wasm-pack build --target web --release
+    - cd pkg/
+    - jq '.name = "@open-cyber-range/wasm-sdl-parser"' package.json > tmp.file && mv tmp.file package.json
+    - wasm-pack publish --access public
+  only:
+    - master
