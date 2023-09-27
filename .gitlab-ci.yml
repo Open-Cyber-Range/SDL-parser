@@ -59,7 +59,7 @@ build-and-publish-npm-wrapper:
   image: $DOCKER_REGISTRY_PULL/node:lts
   script:
     - cd node-package
-    - yarn
+    - yarn global add node-gyp && yarn install --frozen-lockfile
     - '{ echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; } | npm login --registry=$OCR_NPM_REPOSITORY'
     - npm publish --registry=$OCR_NPM_REPOSITORY
   only:
