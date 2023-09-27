@@ -81,7 +81,7 @@ build-and-publish-wasm-package:
   stage: build
   image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
-    - apt update && apt install -y jq && cargo install wasm-pack
+    - apt update && apt install -y jq npm && cargo install wasm-pack
     - echo //registry.npmjs.org/:_authToken=$PUBLISH_TOKEN > ~/.npmrc
     - cd wasm-sdl-parser/ && wasm-pack build --target web --release
     - cd pkg/
