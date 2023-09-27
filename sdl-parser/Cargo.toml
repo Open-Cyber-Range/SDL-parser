@@ -1,6 +1,6 @@
 [package]
 name = "sdl-parser"
-version = "0.13.0"
+version = "0.14.0"
 edition = "2021"
 license = "MIT"
 description = "The SDL parser is a Rust tool designed for parsing Scenario Defined Language files."
@@ -14,10 +14,10 @@ keywords = ["OpenCyberRange", "parser"]
 anyhow = "1"
 bytesize = { version = "1", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
-depper = "0.3"
+depper = "0.4"
 lazy_static = { version = "1.4" }
 insta = { version = "1", features = ["yaml"] }
-duration-str = "0.5"
+duration-str = "0.7"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde-aux = "4"

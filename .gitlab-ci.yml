@@ -59,7 +59,7 @@ build-and-publish-npm-wrapper:
   image: $DOCKER_REGISTRY_PULL/node:lts
   script:
     - cd node-package
-    - yarn
+    - yarn global add node-gyp && yarn install --frozen-lockfile
     - '{ echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; } | npm login --registry=$OCR_NPM_REPOSITORY'
     - npm publish --registry=$OCR_NPM_REPOSITORY
   only:
@@ -81,7 +81,7 @@ build-and-publish-wasm-package:
   stage: build
   image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
-    - apt install -y npm && cargo install wasm-pack
+    - apt install -y npm jq && cargo install wasm-pack
     - echo //registry.npmjs.org/:_authToken=$PUBLISH_TOKEN > ~/.npmrc
     - cd wasm-sdl-parser/ && wasm-pack build --target web --release
     - cd pkg/
