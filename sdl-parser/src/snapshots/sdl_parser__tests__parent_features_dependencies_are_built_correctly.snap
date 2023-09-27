@@ -1,6 +1,6 @@
 ---
 source: sdl-parser/src/lib.rs
-expression: tranches
+expression: dependencies.generate_tranches().unwrap()
 ---
 [
     [
@@ -8,7 +8,9 @@ expression: tranches
         "child-config",
     ],
     [
-        "child-config",
+        "grandgrandchild-artifact",
+    ],
+    [
         "grandchild-artifact",
     ],
     [
