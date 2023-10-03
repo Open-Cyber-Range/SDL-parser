@@ -94,7 +94,7 @@ publish-crate-to-crateio:
   stage: build
   image: $DOCKER_REGISTRY_PULL/rust-builder
   script:
-    - cd /sdl-parser/sdl-parser
+    - cd sdl-parser/
     - cargo publish --token $CARGO_REGISTRY_TOKEN
   only:
     - master
