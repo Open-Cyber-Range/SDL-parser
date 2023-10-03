@@ -56,7 +56,7 @@ evaluations:
     metrics:
       - metric-1
       - metric-2
-    min-score:
+    min_score:
       absolute: ~
       percentage: 50
 tlos:
