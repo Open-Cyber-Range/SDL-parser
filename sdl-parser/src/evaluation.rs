@@ -46,7 +46,7 @@ pub struct Evaluation {
         skip_serializing
     )]
     pub _helper_min_score: Option<HelperScore>,
-    #[serde(rename = "min-score", default, skip_deserializing)]
+    #[serde(default, skip_deserializing)]
     pub min_score: Option<MinScore>,
 }
 
