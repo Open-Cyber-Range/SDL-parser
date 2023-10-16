@@ -105,7 +105,6 @@ mod tests {
                             executive: capability-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:
@@ -237,7 +236,6 @@ mod tests {
                         condition: condition-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:
