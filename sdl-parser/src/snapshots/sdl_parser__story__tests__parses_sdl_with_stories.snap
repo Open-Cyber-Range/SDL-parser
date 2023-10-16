@@ -58,7 +58,7 @@ scripts:
     end-time: 694800
     speed: 1.5
     events:
-      - my-cool-event
+      my-cool-event: 1200
     description: ~
 stories:
   story-1:
