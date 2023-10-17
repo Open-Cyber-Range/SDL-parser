@@ -22,7 +22,9 @@ where
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum NodeType {
+    #[serde(alias = "vm", alias = "Vm")]
     VM,
+    #[serde(alias = "switch", alias = "SWITCH")]
     Switch,
 }
 
@@ -553,7 +555,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Entities list under Scenario is empty but Node win-10 has Role Entities")]
+    #[should_panic(
+        expected = "Entities list under Scenario is empty but Node win-10 has Role Entities"
+    )]
     fn entities_missing_while_node_has_role_entity() {
         let sdl = r#"
             name: test-scenario
@@ -703,6 +707,27 @@ entities:
                     resources: 
                         cpu: 2
                         ram: 2 gib
+
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn node_type_is_case_insensitive() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            start: 2022-01-20T13:00:00Z
+            end: 2022-01-20T23:00:00Z
+            nodes:
+                vm-1:
+                    type: vm
+                    source: debian11
+                    resources: 
+                        cpu: 2
+                        ram: 2 gib
+                switch-1:
+                    type: SWITCH
 
         "#;
         parse_sdl(sdl).unwrap();
