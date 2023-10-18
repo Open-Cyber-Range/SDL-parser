@@ -1,6 +1,6 @@
 use crate::helpers::Connection;
 use crate::Formalize;
-use crate::{constants::default_clock_value, script::Script};
+use crate::{constants::default_speed_value, script::Script};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -9,8 +9,8 @@ use std::collections::HashMap;
 pub struct Story {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
-    #[serde(default = "default_clock_value", alias = "Clock", alias = "CLOCK")]
-    pub clock: f64,
+    #[serde(default = "default_speed_value", alias = "Speed", alias = "SPEED")]
+    pub speed: f64,
     #[serde(alias = "Scripts", alias = "SCRIPTS")]
     pub scripts: Vec<String>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
@@ -18,11 +18,11 @@ pub struct Story {
 }
 
 impl Story {
-    pub fn new(potential_clock: Option<f64>) -> Self {
+    pub fn new(potential_speed: Option<f64>) -> Self {
         Self {
-            clock: match potential_clock {
-                Some(clock) => clock,
-                None => default_clock_value(),
+            speed: match potential_speed {
+                Some(speed) => speed,
+                None => default_speed_value(),
             },
             ..Default::default()
         }
@@ -37,8 +37,8 @@ impl Formalize for Story {
             return Err(anyhow!("Story must have have at least one Script"));
         }
 
-        if self.clock < 1.0 {
-            return Err(anyhow!("Story clock value must be at least 1.0"));
+        if self.speed < 1.0 {
+            return Err(anyhow!("Story speed value must be at least 1.0"));
         }
 
         Ok(())
@@ -80,7 +80,7 @@ mod tests {
                 end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
-                        clock: 1
+                        speed: 1
                         scripts: 
                             - my-cool-script
                 conditions:
@@ -121,7 +121,7 @@ mod tests {
     #[test]
     fn parses_single_story() {
         let story = r#" 
-            clock: 1
+            speed: 1
             scripts: 
                 - script-1
                 - script-2
@@ -131,10 +131,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Story clock value must be at least 1.0")]
-    fn fails_clock_is_zero() {
+    #[should_panic(expected = "Story speed value must be at least 1.0")]
+    fn fails_speed_is_zero() {
         let story = r#"
-            clock: 0
+            speed: 0
             scripts: 
                 - script-1
                 - script-2
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn adds_default_clock() {
+    fn adds_default_speed() {
         let story = r#"
             scripts: 
                 - script-1
@@ -155,14 +155,14 @@ mod tests {
 
         let story = serde_yaml::from_str::<Story>(story).unwrap();
 
-        assert_eq!(story.clock, 1.0);
+        assert_eq!(story.speed, 1.0);
     }
 
     #[test]
     #[should_panic(expected = "Story must have have at least one Script")]
     fn fails_when_scripts_is_empty() {
         let story = r#"
-            clock: 1
+            speed: 1
             scripts:
       "#;
         serde_yaml::from_str::<Story>(story)
@@ -175,7 +175,7 @@ mod tests {
     #[should_panic(expected = "Error(\"missing field `scripts`\", line: 2, column: 13)")]
     fn fails_when_no_scripts_field() {
         let story = r#"
-            clock: 15
+            speed: 15
       "#;
         serde_yaml::from_str::<Story>(story)
             .unwrap()
@@ -195,7 +195,7 @@ mod tests {
                 end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
-                        clock: 1
+                        speed: 1
                         scripts: 
                             - script-1
             "#;
@@ -212,7 +212,7 @@ mod tests {
                 end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
-                        clock: 1
+                        speed: 1
                         scripts: 
                             - script-1
                 conditions:
