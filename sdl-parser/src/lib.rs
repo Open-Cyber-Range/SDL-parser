@@ -323,6 +323,9 @@ impl Scenario {
             for named_evaluation in evaluations.iter() {
                 Connection::<Metric>::validate_connections(&named_evaluation, &metric_names)?;
             }
+            for named_evaluation in evaluations.iter() {
+                Evaluation::validate_evaluation_metric_scores(named_evaluation.1, self.metrics.as_ref())?;
+            }
         }
         Ok(())
     }

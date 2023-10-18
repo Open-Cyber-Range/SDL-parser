@@ -11,4 +11,5 @@ evaluation-1:
   min_score:
     absolute: ~
     percentage: 50
+  max_score: 100
 
