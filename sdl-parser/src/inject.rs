@@ -522,7 +522,7 @@ mod tests {
             end-time: 20 min
             speed: 1
             events:
-              - event-1
+              event-1: 15 min
 
         events:
           event-1:
