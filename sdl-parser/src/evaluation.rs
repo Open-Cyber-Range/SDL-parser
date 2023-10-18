@@ -48,8 +48,6 @@ pub struct Evaluation {
     pub _helper_min_score: Option<HelperScore>,
     #[serde(default, skip_deserializing)]
     pub min_score: Option<MinScore>,
-    #[serde(default, alias = "max-score", alias = "Min-score", alias = "MAX-SCORE")]
-    pub max_score: Option<u32>,
 }
 
 impl Evaluation {
@@ -59,11 +57,13 @@ impl Evaluation {
     ) -> Result<()> {
         if let Some(metrics) = potential_metrics {
             let metric_score_sum = metrics.iter().map(|s| s.1.max_score).sum();
-            if let Some(max_score) = self.max_score {
-                if max_score < metric_score_sum {
-                    return Err(anyhow!(
-                        "Sum of metric scores has to be smaller than the evaluation max-score"
-                    ));
+            if let Some(min_score) = &self.min_score {
+                if let Some(absolute_min_score) = min_score.absolute {
+                    if absolute_min_score > metric_score_sum {
+                        return Err(anyhow!(
+                            "Sum of metric scores has to be smaller than the evaluation min-score"
+                        ));
+                    }
                 }
             }
         } else {
@@ -122,15 +122,6 @@ impl Formalize for Evaluation {
                 }
             }
         }
-        if let Some(max_score) = self.max_score {
-            if let Some(min_score) = &self.min_score {
-                if let Some(min_score_absolute) = min_score.absolute {
-                    if min_score_absolute > max_score {
-                        return Err(anyhow!("Min score can not be bigger than max score"));
-                    }
-                }
-            }
-        }
         Ok(())
     }
 }
@@ -167,7 +158,6 @@ mod tests {
                         - metric-1
                         - metric-2
                     min-score: 50
-                    max-score: 100
         "#;
         let evaluations = parse_sdl(sdl).unwrap().evaluations;
         insta::with_settings!({sort_maps => true}, {
@@ -249,25 +239,10 @@ mod tests {
     }
 
     #[test]
-    fn fails_to_parse_evaluation_with_min_max_score_mismatch() {
-        let evaluation_string = r#"
-            description: some description
-            metrics:
-                - metric-1
-                - metric-2
-            min_score:
-              absolute: 100
-            max_score: 50
-        "#;
-        let mut evaluation: Evaluation = serde_yaml::from_str(evaluation_string).unwrap();
-        assert!(evaluation.formalize().is_err());
-    }
-
-    #[test]
     #[should_panic(
-        expected = "Sum of metric scores has to be smaller than the evaluation max-score"
+        expected = "Sum of metric scores has to be smaller than the evaluation min-score"
     )]
-    fn fails_to_parse_evaluation_too_small_max_score() {
+    fn fails_to_parse_evaluation_too_small_min_score() {
         let sdl = r#"
             name: test-scenario
             description: some description
@@ -292,8 +267,8 @@ mod tests {
                     metrics:
                         - metric-1
                         - metric-2
-                    min-score: 4
-                    max-score: 5
+                    min-score:
+                        absolute: 9999
         "#;
         parse_sdl(sdl).unwrap();
     }

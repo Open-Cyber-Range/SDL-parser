@@ -59,7 +59,6 @@ evaluations:
     min_score:
       absolute: ~
       percentage: 50
-    max_score: ~
 tlos:
   tlo-1:
     name: fungibly leverage client-focused e-tailers
