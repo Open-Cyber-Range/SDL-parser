@@ -454,10 +454,13 @@ impl Scenario {
     }
 
     fn verify_injects(&self) -> Result<()> {
-        let entity_names = self
-            .entities
-            .as_ref()
-            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let entity_names = self.entities.as_ref().map(|entity_map| {
+            entity_map
+                .flatten()
+                .keys()
+                .cloned()
+                .collect::<Vec<String>>()
+        });
         let tlo_names = self
             .tlos
             .as_ref()
