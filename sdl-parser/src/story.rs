@@ -93,7 +93,7 @@ mod tests {
                         end-time: 1 week 1day 1h 10 ms
                         speed: 1.5
                         events:
-                            - my-cool-event
+                            my-cool-event: 20 min
                 capabilities:
                     capability-1:
                         description: "Can defend against Dirty Cow"
@@ -105,7 +105,6 @@ mod tests {
                             executive: capability-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:
@@ -225,7 +224,7 @@ mod tests {
                         end-time: 1 week 1day 1h 10 ms
                         speed: 1.5
                         events:
-                            - my-cool-event
+                            my-cool-event: 20 min
                 injects:
                     my-cool-inject:
                         source: inject-package
@@ -237,7 +236,6 @@ mod tests {
                         condition: condition-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:

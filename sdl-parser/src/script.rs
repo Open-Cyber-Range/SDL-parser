@@ -10,14 +10,14 @@ pub struct Script {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
     #[serde(
-        deserialize_with = "parse_time_string_to_u64_sec",
+        deserialize_with = "deserialize_string_to_u64",
         rename = "start-time",
         alias = "Start-time",
         alias = "START-TIME"
     )]
     pub start_time: u64,
     #[serde(
-        deserialize_with = "parse_time_string_to_u64_sec",
+        deserialize_with = "deserialize_string_to_u64",
         rename = "end-time",
         alias = "End-time",
         alias = "END-TIME"
@@ -25,8 +25,12 @@ pub struct Script {
     pub end_time: u64,
     #[serde(alias = "Speed", alias = "SPEED")]
     pub speed: f32,
-    #[serde(alias = "Events", alias = "EVENTS")]
-    pub events: Vec<String>,
+    #[serde(
+        deserialize_with = "deserialize_events",
+        alias = "Events",
+        alias = "EVENTS"
+    )]
+    pub events: HashMap<String, u64>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
@@ -39,6 +43,18 @@ impl Formalize for Script {
             return Err(anyhow!("Script must have have at least one Event"));
         } else if self.start_time > self.end_time {
             return Err(anyhow!("Scripts end-time must be greater than start-time"));
+        }
+
+        for event in self.events.values() {
+            if *event < self.start_time {
+                return Err(anyhow!(
+                    "Event time must be greater than or equal to script start time"
+                ));
+            } else if *event > self.end_time {
+                return Err(anyhow!(
+                    "Event time must be less than or equal to script end time"
+                ));
+            }
         }
 
         if self.speed.is_sign_negative() {
@@ -59,7 +75,7 @@ impl Connection<Event> for (&String, &Script) {
         };
 
         if let Some(event_names) = potential_event_names {
-            for event_name in &self.1.events {
+            for event_name in self.1.events.keys() {
                 if !event_names.contains(event_name) {
                     return Err(anyhow!(
                         "Event \"{event_name}\" not found under Scenario Events"
@@ -72,21 +88,43 @@ impl Connection<Event> for (&String, &Script) {
     }
 }
 
-fn parse_time_string_to_u64_sec<'de, D>(deserializer: D) -> Result<u64, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let mut string = String::deserialize(deserializer)?;
-
+fn parse_time_string_to_u64_sec(mut string: String) -> Result<u64> {
     if string.eq("0") {
         string = String::from("0sec");
     }
 
     string.retain(|char| !char.is_whitespace() && char != '_');
 
-    let duration =
-        parse(&string).map_err(|_| serde::de::Error::custom("failed to parse str to duration"))?;
+    let duration = parse(&string)?;
     Ok(duration.as_secs())
+}
+
+fn deserialize_string_to_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let string = String::deserialize(deserializer)?;
+    let duration = parse_time_string_to_u64_sec(string)
+        .map_err(|_| serde::de::Error::custom("failed to parse str to duration"))?;
+    Ok(duration)
+}
+
+fn deserialize_events<'de, D>(deserializer: D) -> Result<HashMap<String, u64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let mut event_map: HashMap<String, String> = HashMap::deserialize(deserializer)?;
+
+    let output = event_map
+        .drain()
+        .map(|(key, string)| {
+            let duration = parse_time_string_to_u64_sec(string)
+                .map_err(|_| serde::de::Error::custom("failed to parse str to duration"))?;
+            Ok((key, duration))
+        })
+        .collect::<Result<HashMap<String, u64>, D::Error>>()?;
+
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -111,7 +149,7 @@ mod tests {
                     end-time: 1 week 1day 1h 10 ms
                     speed: 1.5
                     events:
-                        - my-cool-event
+                        my-cool-event: 30 min
             capabilities:
                 capability-1:
                     description: "Can defend against Dirty Cow"
@@ -123,7 +161,6 @@ mod tests {
                         executive: capability-1
             events:
                 my-cool-event:
-                    time: 0.2345678
                     conditions:
                         - condition-1
                     injects:
@@ -143,7 +180,7 @@ mod tests {
             end-time: 1 week 7d 3 hour 10 ms
             speed: 1
             events:
-                - my-cool-event
+                my-cool-event: 6h 30min
       "#;
         serde_yaml::from_str::<Script>(script).unwrap();
     }
@@ -156,7 +193,7 @@ mod tests {
             end-time: 1 week 7d 3 hour 10 ms
             speed: 1
             events:
-                - my-cool-event
+                my-cool-event: 6h 30min
       "#;
         serde_yaml::from_str::<Script>(script)
             .unwrap()
@@ -171,7 +208,7 @@ mod tests {
             end-time: 1 week 7d 3 hour 10 ms
             speed: 1
             events:
-                - my-cool-event
+                my-cool-event: 0
       "#;
         serde_yaml::from_str::<Script>(script)
             .unwrap()
@@ -186,13 +223,14 @@ mod tests {
             end-time: 1_000_000s
             speed: 1
             events:
-                - my-cool-event
+                my-cool-event: 1_2_0 min
       "#;
 
         let script = serde_yaml::from_str::<Script>(script).unwrap();
 
         assert_eq!(script.start_time, 6000);
         assert_eq!(script.end_time, 1000000);
+        assert_eq!(script.events["my-cool-event"], 7200);
     }
 
     #[test]
@@ -203,7 +241,7 @@ mod tests {
             end-time: 3 hour
             speed: -1.234
             events:
-                - my-cool-event
+                my-cool-event: 2 hour
       "#;
         serde_yaml::from_str::<Script>(script)
             .unwrap()
@@ -212,7 +250,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Condition must have Command and Interval or Source defined, not both")]
+    #[should_panic(
+        expected = "Condition must have Command and Interval or Source defined, not both"
+    )]
     fn fails_on_event_not_defined_for_script() {
         let sdl = r#"
                 name: test-scenario
@@ -230,7 +270,7 @@ mod tests {
                         end-time: 1 week 1day 1h 10 ms
                         speed: 1.5
                         events:
-                            - my-cool-event
+                            my-cool-event: 20 min
             "#;
         parse_sdl(sdl).unwrap();
     }
@@ -253,7 +293,7 @@ mod tests {
                         end-time: 1 week 1day 1h 10 ms
                         speed: 1.5
                         events:
-                            - my-cool-event
+                            my-cool-event: 20 min
                 injects:
                     my-cool-inject:
                         source: inject-package

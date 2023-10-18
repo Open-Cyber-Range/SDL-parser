@@ -51,7 +51,6 @@ injects:
 events:
   my-cool-event:
     name: ~
-    time: 0.2345678
     conditions:
       - condition-1
     injects:

@@ -8,8 +8,6 @@ use crate::{condition::Condition, helpers::Connection, inject::Inject, Formalize
 pub struct Event {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
-    #[serde(alias = "Time", alias = "TIME")]
-    pub time: Option<f32>,
     #[serde(alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
     #[serde(alias = "Injects", alias = "INJECTS")]
@@ -24,11 +22,6 @@ impl Formalize for Event {
     fn formalize(&mut self) -> Result<()> {
         if self.injects.is_empty() {
             return Err(anyhow!("An Event must have have at least one Inject"));
-        }
-        if let Some(time) = self.time {
-            if !(0.0..=1.0).contains(&time) {
-                return Err(anyhow!("Events Time field must have a float value between 0 and 1"));
-            }
         }
         Ok(())
     }
@@ -109,7 +102,6 @@ mod tests {
                         executive: capability-1
             events:
                 my-cool-event:
-                    time: 0.2345678
                     conditions:
                         - condition-1
                     injects:
@@ -125,29 +117,12 @@ mod tests {
     #[test]
     fn parses_single_event() {
         let event = r#"
-            time: 0.2345678
             conditions:
                 - condition-1
             injects:
                 - my-cool-inject
       "#;
         serde_yaml::from_str::<Event>(event).unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "Events Time field must have a float value between 0 and 1")]
-    fn fails_on_incorrect_time_value() {
-        let event = r#"
-            time: 600
-            conditions:
-                - condition-1
-            injects:
-                - my-cool-inject
-      "#;
-        serde_yaml::from_str::<Event>(event)
-            .unwrap()
-            .formalize()
-            .unwrap();
     }
 
     #[test]
@@ -175,7 +150,6 @@ mod tests {
                             executive: capability-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:
@@ -206,7 +180,6 @@ mod tests {
                             executive: capability-1
                 events:
                     my-cool-event:
-                        time: 0.2345678
                         conditions:
                             - condition-1
                         injects:
