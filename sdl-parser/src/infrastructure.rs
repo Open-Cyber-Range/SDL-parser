@@ -284,4 +284,66 @@ mod tests {
         "#;
         parse_sdl(sdl).unwrap();
     }
+
+    #[should_panic(
+        expected = "Infrastructure entry \"main-switch\" does not exist under Infrastructure even though it is a dependency for \"win-10\""
+    )]
+    #[test]
+    fn error_on_missing_infrastructure_link() {
+        let sdl = r#"
+        name: test-scenario
+        description: some-description
+        start: 2022-01-20T13:00:00Z
+        end: 2022-01-20T23:00:00Z
+        nodes:
+            win-10:
+                type: VM
+                resources:
+                    ram: 2 gib
+                    cpu: 2
+                source: windows10
+            main-switch:
+                type: Switch
+        infrastructure: 
+            win-10:
+                count: 1
+                links:
+                - main-switch
+        "#;
+
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[should_panic(
+        expected = "Infrastructure entry \"router\" does not exist under Infrastructure even though it is a dependency for \"win-10\""
+    )]
+    #[test]
+    fn error_on_missing_infrastructure_dependency() {
+        let sdl = r#"
+        name: test-scenario
+        description: some-description
+        start: 2022-01-20T13:00:00Z
+        end: 2022-01-20T23:00:00Z
+        nodes:
+            win-10:
+                type: VM
+                resources:
+                    ram: 2 gib
+                    cpu: 2
+                source: windows10
+            router:
+                type: VM
+                resources:
+                    ram: 2 gib
+                    cpu: 2
+                source: debian11
+        infrastructure: 
+            win-10:
+                count: 1
+                dependencies:
+                - router
+        "#;
+
+        parse_sdl(sdl).unwrap();
+    }
 }

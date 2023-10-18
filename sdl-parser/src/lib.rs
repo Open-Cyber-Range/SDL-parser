@@ -307,6 +307,28 @@ impl Scenario {
                     &infrastructure_name,
                     &node_names,
                 )?;
+
+                let infra_node_dependencies = infrastructure
+                    .get(infrastructure_name)
+                    .map(|infra_node| {
+                        let mut dependencies = vec![];
+                        if let Some(links) = &infra_node.links {
+                            dependencies.extend(links.iter().map(|link| link.to_owned()));
+                        }
+                        if let Some(node_dependencies) = &infra_node.dependencies {
+                            dependencies.extend(node_dependencies.iter().map(|dependency| dependency.to_owned()));
+                        }
+                        dependencies
+                    })
+                    .unwrap_or_default();
+
+                for dependency in infra_node_dependencies {
+                    if !infrastructure.contains_key(&dependency) {
+                        return Err(anyhow!(
+                            "Infrastructure entry \"{dependency}\" does not exist under Infrastructure even though it is a dependency for \"{infrastructure_name}\""
+                        ));
+                    }
+                }
                 Ok(())
             })?;
         }
@@ -929,7 +951,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Node \"win10\" can not have count bigger than 1, if it has conditions defined")]
+    #[should_panic(
+        expected = "Node \"win10\" can not have count bigger than 1, if it has conditions defined"
+    )]
     fn condition_vm_count_in_infrastructure_over_1() {
         let sdl = r#"
             name: test-scenario
@@ -1027,7 +1051,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "my-really-really-superlong-non-compliant-name is too long, maximum node name length is 35")]
+    #[should_panic(
+        expected = "my-really-really-superlong-non-compliant-name is too long, maximum node name length is 35"
+    )]
     fn too_long_node_name_is_disallowed() {
         let sdl = r#"
             name: test-scenario
