@@ -42,8 +42,6 @@ mod tests {
     fn generate_package_list_based_on_sdl() {
         let node_sdl = r#"
             name: test-scenario
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10-1:
                     type: VM
