@@ -21,7 +21,6 @@ pub mod vulnerability;
 use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
 use capability::{Capabilities, Capability};
-use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
@@ -51,10 +50,6 @@ pub struct Scenario {
     pub name: String,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(alias = "Start", alias = "START")]
-    pub start: DateTime<Utc>,
-    #[serde(alias = "End", alias = "END")]
-    pub end: DateTime<Utc>,
     #[serde(alias = "Nodes", alias = "NODES")]
     pub nodes: Option<Nodes>,
     #[serde(alias = "Features", alias = "FEATURES")]
@@ -714,8 +709,6 @@ mod tests {
     fn can_parse_minimal_sdl() {
         let minimal_sdl = r#"
                 name: test-scenario
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 
         "#;
         let parsed_schema = parse_sdl(minimal_sdl).unwrap();
@@ -727,8 +720,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -759,8 +750,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             Description: some-description
-            start: 2022-01-20T13:00:00Z
-            End: 2022-01-20T23:00:00Z
             nodes:
                 Win10:
                     TYPE: VM
@@ -781,8 +770,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -819,8 +806,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             features:
                 my-cool-service:
                     type: service
@@ -850,8 +835,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -874,8 +857,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -901,8 +882,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -961,8 +940,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -1004,8 +981,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -1031,8 +1006,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -1061,8 +1034,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 my-really-really-superlong-non-compliant-name:
                     type: VM
@@ -1080,8 +1051,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             features:
                 parent-service:
                     type: Service

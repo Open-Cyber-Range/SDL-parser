@@ -474,8 +474,6 @@ mod tests {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 entities:
                     red-team:
                         name: "The Red Team"
@@ -507,8 +505,6 @@ mod tests {
         let sdl = r#"
         name: test-scenario3
         description: some-description
-        Start: 2023-09-25T08:34:01Z
-        End: 2023-09-25T09:34:01Z
 
         stories:
           story-1:

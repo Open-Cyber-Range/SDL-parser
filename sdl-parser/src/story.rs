@@ -76,8 +76,6 @@ mod tests {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
                         speed: 1
@@ -190,8 +188,6 @@ mod tests {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
                         speed: 1
@@ -207,8 +203,6 @@ mod tests {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 stories: 
                     story-1: 
                         speed: 1
