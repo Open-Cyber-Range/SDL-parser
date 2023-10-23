@@ -111,8 +111,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
                 name: Some other vulnerability
@@ -155,8 +153,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
                 name: some-vulnerability
@@ -197,8 +193,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             vulnerabilities:
               vulnerability-1:
                 name: some-vulnerability

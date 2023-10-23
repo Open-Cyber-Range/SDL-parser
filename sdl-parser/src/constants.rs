@@ -13,7 +13,7 @@ lazy_static! {
     pub static ref CWE_REGEX: Regex = Regex::new(r"CWE-\d+").unwrap();
 }
 
-pub const DEFAULT_CLOCK_VALUE: f64 = 1.0;
-pub const fn default_clock_value() -> f64 {
-    DEFAULT_CLOCK_VALUE
+pub const DEFAULT_SPEED_VALUE: f64 = 1.0;
+pub const fn default_speed_value() -> f64 {
+    DEFAULT_SPEED_VALUE
 }

@@ -4,8 +4,6 @@ expression: schema
 ---
 name: test-scenario
 description: some description
-start: "2022-01-20T13:00:00Z"
-end: "2022-01-20T23:00:00Z"
 nodes: ~
 features: ~
 infrastructure: ~
@@ -46,7 +44,6 @@ injects:
 events:
   my-cool-event:
     name: ~
-    time: 0.2345678
     conditions:
       - condition-1
     injects:
@@ -59,7 +56,7 @@ scripts:
     end-time: 694800
     speed: 1.5
     events:
-      - my-cool-event
+      my-cool-event: 1800
     description: ~
 stories: ~
 

@@ -21,7 +21,6 @@ pub mod vulnerability;
 use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
 use capability::{Capabilities, Capability};
-use chrono::{DateTime, Utc};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
@@ -51,10 +50,6 @@ pub struct Scenario {
     pub name: String,
     #[serde(default, alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(alias = "Start", alias = "START")]
-    pub start: DateTime<Utc>,
-    #[serde(alias = "End", alias = "END")]
-    pub end: DateTime<Utc>,
     #[serde(alias = "Nodes", alias = "NODES")]
     pub nodes: Option<Nodes>,
     #[serde(alias = "Features", alias = "FEATURES")]
@@ -307,6 +302,28 @@ impl Scenario {
                     &infrastructure_name,
                     &node_names,
                 )?;
+
+                let infra_node_dependencies = infrastructure
+                    .get(infrastructure_name)
+                    .map(|infra_node| {
+                        let mut dependencies = vec![];
+                        if let Some(links) = &infra_node.links {
+                            dependencies.extend(links.iter().map(|link| link.to_owned()));
+                        }
+                        if let Some(node_dependencies) = &infra_node.dependencies {
+                            dependencies.extend(node_dependencies.iter().map(|dependency| dependency.to_owned()));
+                        }
+                        dependencies
+                    })
+                    .unwrap_or_default();
+
+                for dependency in infra_node_dependencies {
+                    if !infrastructure.contains_key(&dependency) {
+                        return Err(anyhow!(
+                            "Infrastructure entry \"{dependency}\" does not exist under Infrastructure even though it is a dependency for \"{infrastructure_name}\""
+                        ));
+                    }
+                }
                 Ok(())
             })?;
         }
@@ -322,6 +339,7 @@ impl Scenario {
         if let Some(evaluations) = &self.evaluations {
             for named_evaluation in evaluations.iter() {
                 Connection::<Metric>::validate_connections(&named_evaluation, &metric_names)?;
+                Evaluation::validate_evaluation_metric_scores(named_evaluation.1, self.metrics.as_ref())?;
             }
         }
         Ok(())
@@ -431,10 +449,13 @@ impl Scenario {
     }
 
     fn verify_injects(&self) -> Result<()> {
-        let entity_names = self
-            .entities
-            .as_ref()
-            .map(|entity_map| entity_map.keys().cloned().collect::<Vec<String>>());
+        let entity_names = self.entities.as_ref().map(|entity_map| {
+            entity_map
+                .flatten()
+                .keys()
+                .cloned()
+                .collect::<Vec<String>>()
+        });
         let tlo_names = self
             .tlos
             .as_ref()
@@ -688,8 +709,6 @@ mod tests {
     fn can_parse_minimal_sdl() {
         let minimal_sdl = r#"
                 name: test-scenario
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 
         "#;
         let parsed_schema = parse_sdl(minimal_sdl).unwrap();
@@ -701,8 +720,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -733,8 +750,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             Description: some-description
-            start: 2022-01-20T13:00:00Z
-            End: 2022-01-20T23:00:00Z
             nodes:
                 Win10:
                     TYPE: VM
@@ -755,8 +770,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -793,8 +806,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             features:
                 my-cool-service:
                     type: service
@@ -824,8 +835,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -848,8 +857,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -875,8 +882,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -928,13 +933,13 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Node \"win10\" can not have count bigger than 1, if it has conditions defined")]
+    #[should_panic(
+        expected = "Node \"win10\" can not have count bigger than 1, if it has conditions defined"
+    )]
     fn condition_vm_count_in_infrastructure_over_1() {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -976,8 +981,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win10:
                     type: VM
@@ -1003,8 +1006,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 win-10:
                     type: VM
@@ -1026,13 +1027,13 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "my-really-really-superlong-non-compliant-name is too long, maximum node name length is 35")]
+    #[should_panic(
+        expected = "my-really-really-superlong-non-compliant-name is too long, maximum node name length is 35"
+    )]
     fn too_long_node_name_is_disallowed() {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             nodes:
                 my-really-really-superlong-non-compliant-name:
                     type: VM
@@ -1050,8 +1051,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             features:
                 parent-service:
                     type: Service

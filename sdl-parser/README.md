@@ -12,7 +12,7 @@ To use the SDL parser, you'll need to add it as a dependency to your project. Yo
 
 ```
 [dependencies]
-sdl-parser = "0.10"
+sdl-parser = "0.16"
 ```
 
 After adding the dependency, you can use the SDL parser in your Rust code:
@@ -24,8 +24,6 @@ fn main() {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
         "#;
         let scenario = parse_sdl(sdl).unwrap();
         assert_eq!(scenario.name, "test-scenario")

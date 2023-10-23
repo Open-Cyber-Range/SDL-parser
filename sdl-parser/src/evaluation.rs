@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{helpers::Connection, metric::Metric, Formalize};
+use crate::{helpers::Connection, metric::Metric, metric::Metrics, Formalize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct MinScore {
@@ -50,6 +50,31 @@ pub struct Evaluation {
     pub min_score: Option<MinScore>,
 }
 
+impl Evaluation {
+    pub fn validate_evaluation_metric_scores(
+        &self,
+        potential_metrics: Option<&Metrics>,
+    ) -> Result<()> {
+        if let Some(metrics) = potential_metrics {
+            let metric_score_sum = metrics.iter().map(|s| s.1.max_score).sum();
+            if let Some(min_score) = &self.min_score {
+                if let Some(absolute_min_score) = min_score.absolute {
+                    if absolute_min_score > metric_score_sum {
+                        return Err(anyhow!(
+                            "Sum of metric scores has to be smaller than the evaluation min-score"
+                        ));
+                    }
+                }
+            }
+        } else {
+            return Err(anyhow!(
+                "Evaluation requires Metrics but none found under Scenario",
+            ));
+        }
+        Ok(())
+    }
+}
+
 impl Connection<Metric> for (&String, &Evaluation) {
     fn validate_connections(&self, potential_metric_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(metric_names) = potential_metric_names {
@@ -89,6 +114,13 @@ impl Formalize for Evaluation {
         }
         if self.metrics.is_empty() {
             return Err(anyhow!("An Evaluation must have at least one Metric"));
+        }
+        if let Some(min_score) = &self.min_score {
+            if let Some(percentage) = min_score.percentage {
+                if percentage > 100 {
+                    return Err(anyhow!("Min score percentage can not be over 100%"));
+                }
+            }
         }
         Ok(())
     }
@@ -139,11 +171,8 @@ mod tests {
     )]
     fn fails_with_missing_metric() {
         let sdl = r#"
-        
             name: test-scenario
             description: some description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             conditions:
                 condition-1:
                     command: executable/path.sh
@@ -201,6 +230,52 @@ mod tests {
           min-score:
             absolute: 50
             percentage: 60
+        "#;
+        let mut evaluation: Evaluation = serde_yaml::from_str(evaluation_string).unwrap();
+        assert!(evaluation.formalize().is_err());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Sum of metric scores has to be smaller than the evaluation min-score"
+    )]
+    fn fails_to_parse_evaluation_too_small_min_score() {
+        let sdl = r#"
+            name: test-scenario
+            description: some description
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+            metrics:
+                metric-1:
+                    type: MANUAL
+                    artifact: true
+                    max-score: 10
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition: condition-1
+            evaluations:
+                evaluation-1:
+                    description: some description
+                    metrics:
+                        - metric-1
+                        - metric-2
+                    min-score:
+                        absolute: 9999
+        "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn fails_to_parse_too_high_min_score() {
+        let evaluation_string = r#"
+            description: some description
+            metrics:
+                - metric-1
+                - metric-2
+            min_score: 101
         "#;
         let mut evaluation: Evaluation = serde_yaml::from_str(evaluation_string).unwrap();
         assert!(evaluation.formalize().is_err());

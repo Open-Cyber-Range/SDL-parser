@@ -57,8 +57,6 @@ mod tests {
         let sdl = r#"
           name: test-scenario
           description: some-description
-          start: 2022-01-20T13:00:00Z
-          end: 2022-01-20T23:00:00Z
           conditions:
             condition-1:
                 command: executable/path.sh
@@ -128,8 +126,6 @@ mod tests {
         let sdl = r#"
             name: test-scenario
             description: some-description
-            start: 2022-01-20T13:00:00Z
-            end: 2022-01-20T23:00:00Z
             goals:
                 goal-1:
                     description: "new goal"

@@ -474,8 +474,6 @@ mod tests {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                start: 2022-01-20T13:00:00Z
-                end: 2022-01-20T23:00:00Z
                 entities:
                     red-team:
                         name: "The Red Team"
@@ -498,6 +496,75 @@ mod tests {
                         to-entities:
                                 - red-team
                                 - blue-team
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn inject_supports_nested_entities() {
+        let sdl = r#"
+        name: test-scenario3
+        description: some-description
+
+        stories:
+          story-1:
+            clock: 1
+            scripts:
+              - script-1
+
+        scripts:
+          script-1:
+            start-time: 10 min
+            end-time: 20 min
+            speed: 1
+            events:
+              event-1: 15 min
+
+        events:
+          event-1:
+            conditions: 
+                - test-condition
+            injects: 
+                - inject-1
+
+        injects:
+          inject-1:
+            source: flag-generator
+            from-entity: red-entity.rob
+            to-entities:
+              - blue-entity.bob
+            capabilities:
+                executive: constant-1-capability
+
+        capabilities:
+          constant-1-capability:
+            condition: constant-1
+
+        conditions:
+          test-condition:
+            source: test-condition
+          constant-1:
+            source: constant-1
+
+        entities:
+          blue-entity:
+            name: "Blue entity"
+            description: "This entity is Blue"
+            role: Blue
+            entities:
+              bob:
+                name: "Bob"
+                description: "This entity is Blue"
+                role: Blue
+          red-entity:
+            name: "Red entity"
+            description: "This entity is Red"
+            role: Red
+            entities:
+              rob:
+                name: "Rob"
+                description: "This entity is Red"
+                role: Red
             "#;
         parse_sdl(sdl).unwrap();
     }

@@ -127,8 +127,6 @@ mod tests {
       
           name: test-scenario
           description: some-description
-          start: 2022-01-20T13:00:00Z
-          end: 2022-01-20T23:00:00Z
           conditions:
             condition-1:
                 command: executable/path.sh
@@ -257,5 +255,100 @@ mod tests {
                 - Animal
         "#;
         serde_yaml::from_str::<Entity>(entity_yml).unwrap();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"my-organization\" TLO \"tlo-2\" not found under Scenario TLOs"
+    )]
+    fn fails_parsing_entity_with_nonexisting_tlo() {
+        let sdl = r#"
+
+          name: test-scenario
+          description: some-description
+          conditions:
+            condition-1:
+                command: executable/path.sh
+                interval: 30
+          metrics:
+              metric-1:
+                  type: MANUAL
+                  artifact: true
+                  max-score: 10
+              metric-2:
+                  type: CONDITIONAL
+                  max-score: 10
+                  condition: condition-1
+          vulnerabilities:
+              vulnerability-1:
+                  name: Some other vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1343
+              vulnerability-2:
+                  name: Some vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1341
+          evaluations:
+              evaluation-1:
+                  description: some description
+                  metrics:
+                      - metric-1
+                      - metric-2
+                  min-score: 50
+          capabilities:
+              capability-1:
+                  description: "Can defend against Dirty Cow"
+                  condition: condition-1
+                  vulnerabilities:
+                    - vulnerability-1
+                    - vulnerability-2
+              capability-2:
+                  description: "Can defend against Dirty Cow"
+                  condition: condition-1
+                  vulnerabilities:
+                    - vulnerability-1
+                    - vulnerability-2
+          tlos:
+              tlo-1:
+                  description: some description
+                  evaluation: evaluation-1
+                  capabilities:
+                      - capability-1
+                      - capability-2
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos:
+                    - tlo-1
+          entities:
+              my-organization:
+                  name: "My Organization"
+                  description: "This is my organization"
+                  role: White
+                  mission: "defend"
+                  categories:
+                    - Foundation
+                    - Organization
+                  vulnerabilities:
+                    - vulnerability-2
+                  tlos:
+                    - tlo-1
+                    - tlo-2
+                  entities:
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        facts:
+                            anatomy: sharks do not have bones
+      "#;
+        let entities = parse_sdl(sdl).unwrap().entities;
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(entities);
+        });
     }
 }
