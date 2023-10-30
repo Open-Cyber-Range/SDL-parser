@@ -107,6 +107,7 @@ sync-to-github:
   script:
     - git remote remove github || echo "No repo found"
     - git remote add github https://mannyfred:$MANFRED_GITHUB_TOKEN@github.com/Open-Cyber-Range/SDL-parser.git
+    - git checkout master
     - git pull --rebase origin master
     - git push github master:main --force
   only:
