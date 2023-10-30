@@ -98,3 +98,16 @@ publish-crate-to-crateio:
     - cargo publish --token $CARGO_REGISTRY_TOKEN
   only:
     - master
+
+sync-to-github:
+  stage: build
+  image: $DOCKER_REGISTRY_PULL/ocr-base-deployment-image
+  before_script:
+    - apt update && apt install -y git
+  script:
+    - git remote remove github || echo "No repo found"
+    - git remote add github https://mannyfred:$MANFRED_GITHUB_TOKEN@github.com/Open-Cyber-Range/SDL-parser.git
+    - git pull --rebase origin master
+    - git push github master:main --force
+  only:
+    - master
