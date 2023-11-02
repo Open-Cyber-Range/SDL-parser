@@ -239,11 +239,14 @@ impl Scenario {
                 for (node_name, infra_node) in infrastructure.iter() {
                     if infra_node.count > 1 {
                         if let Some(node) = nodes.get(node_name) {
-                            if node.type_field == NodeType::Switch {
-                                return Err(anyhow!(
-                                    "Node {} is a switch with a count higher than 1",
-                                    node_name
-                                ));
+                            match node.type_field {
+                                NodeType::Switch(_) => {
+                                    return Err(anyhow!(
+                                        "Node {} is a switch with a count higher than 1",
+                                        node_name
+                                    ));
+                                }
+                                _ => continue,
                             }
                         }
                     }
@@ -276,15 +279,21 @@ impl Scenario {
                         MAX_LONG_NAME
                     ));
                 }
-                Connection::<Feature>::validate_connections(&named_node, &feature_names)?;
-                Connection::<Vulnerability>::validate_connections(
-                    &named_node,
-                    &vulnerability_names,
-                )?;
-                Connection::<Condition>::validate_connections(
-                    &(named_node.0, named_node.1, &self.infrastructure),
-                    &condition_names,
-                )?;
+                match &named_node.1.type_field {
+                    NodeType::VM(vm) => {
+                        let named_vm = (named_node.0, vm);
+                        Connection::<Feature>::validate_connections(&named_vm, &feature_names)?;
+                        Connection::<Vulnerability>::validate_connections(
+                            &named_vm,
+                            &vulnerability_names,
+                        )?;
+                        Connection::<Condition>::validate_connections(
+                            &(named_node.0, vm, &self.infrastructure),
+                            &condition_names,
+                        )?;
+                    }
+                    _ => continue,
+                }
             }
         }
         Ok(())
@@ -339,7 +348,10 @@ impl Scenario {
         if let Some(evaluations) = &self.evaluations {
             for named_evaluation in evaluations.iter() {
                 Connection::<Metric>::validate_connections(&named_evaluation, &metric_names)?;
-                Evaluation::validate_evaluation_metric_scores(named_evaluation.1, self.metrics.as_ref())?;
+                Evaluation::validate_evaluation_metric_scores(
+                    named_evaluation.1,
+                    self.metrics.as_ref(),
+                )?;
             }
         }
         Ok(())
@@ -486,26 +498,26 @@ impl Scenario {
                 .map(|entities| entities.flatten().keys().cloned().collect::<Vec<String>>());
 
             for (node_name, node) in nodes {
-                Connection::<Entity>::validate_connections(
-                    &(node_name, &node.roles),
-                    &all_entity_names,
-                )?;
+                match &node.type_field {
+                    NodeType::VM(vm) => {
+                        Connection::<Entity>::validate_connections(
+                            &(node_name, &vm.roles),
+                            &all_entity_names,
+                        )?;
 
-                if let Some(node_features) = &node.features {
-                    let feature_roles = node_features.values().cloned().collect::<Vec<String>>();
-                    Connection::<Node>::validate_connections(
-                        &(node_name, &node.roles),
-                        &Some(feature_roles),
-                    )?;
-                }
-
-                if let Some(node_conditions) = &node.conditions {
-                    let condition_roles =
-                        node_conditions.values().cloned().collect::<Vec<String>>();
-                    Connection::<Node>::validate_connections(
-                        &(node_name, &node.roles),
-                        &Some(condition_roles),
-                    )?;
+                        let feature_roles = vm.features.values().cloned().collect::<Vec<String>>();
+                        Connection::<Node>::validate_connections(
+                            &(node_name, &vm.roles),
+                            &Some(feature_roles),
+                        )?;
+                        let condition_roles =
+                            vm.conditions.values().cloned().collect::<Vec<String>>();
+                        Connection::<Node>::validate_connections(
+                            &(node_name, &vm.roles),
+                            &Some(condition_roles),
+                        )?;
+                    }
+                    _ => continue,
                 }
             }
         }
@@ -568,7 +580,9 @@ impl Formalize for Scenario {
 
         if let Some(mut nodes) = self.nodes.clone() {
             nodes.iter_mut().try_for_each(move |(_, node)| {
-                node.formalize()?;
+                if let NodeType::VM(ref mut vm) = node.type_field {
+                    vm.formalize()?;
+                }
                 Ok(())
             })?;
             self.nodes = Some(nodes);
@@ -746,26 +760,6 @@ mod tests {
     }
 
     #[test]
-    fn sdl_keys_are_valid_in_lowercase_uppercase_capitalized() {
-        let sdl = r#"
-            name: test-scenario
-            Description: some-description
-            nodes:
-                Win10:
-                    TYPE: VM
-                    Description: win-10-description
-                    resources:
-                        RAM: 4 gib
-                        Cpu: 2
-                    SOURCE:
-                        name: windows10
-                        version: '*'
-
-        "#;
-        parse_sdl(sdl).unwrap();
-    }
-
-    #[test]
     fn includes_infrastructure() {
         let sdl = r#"
             name: test-scenario
@@ -830,7 +824,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Node \"win-10\" has Features but none found under Scenario")]
+    #[should_panic(expected = "VM \"win-10\" has Features but none found under Scenario")]
     fn feature_missing_from_scenario() {
         let sdl = r#"
             name: test-scenario

@@ -6,21 +6,21 @@ name: test-scenario
 description: some-description
 nodes:
   win-10:
-    type: VM
+    conditions: {}
     description: ~
+    features: {}
     resources:
       ram: 2147483648
       cpu: 2
-    source:
-      name: windows10
-      version: "*"
-    features: ~
-    conditions: ~
-    vulnerabilities: ~
     roles:
       user:
         username: user
         entities: ~
+    source:
+      name: windows10
+      version: "*"
+    type: VM
+    vulnerabilities: []
 features: ~
 infrastructure: ~
 conditions: ~
