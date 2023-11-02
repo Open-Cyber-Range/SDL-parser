@@ -20,21 +20,54 @@ where
         .0)
 }
 
-#[derive(Serialize, Deserialize)]
+#[allow(clippy::large_enum_variant)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum NodeType {
-    NodeSwitch(Switch),
-    NodeVM(VM),
+    #[serde(alias = "SWITCH", alias = "switch", alias = "Switch")]
+    Switch(Switch),
+    #[serde(alias = "VM", alias = "vm", alias = "Vm", alias = "vM")]
+    VM(VM),
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Switch {
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct Switch {}
 
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct VM {
-
+    #[serde(default, skip_deserializing)]
+    pub source: Option<Source>,
+    #[serde(
+        default,
+        rename = "source",
+        alias = "Source",
+        alias = "SOURCE",
+        skip_serializing
+    )]
+    _source_helper: Option<HelperSource>,
+    #[serde(
+        alias = "Resources",
+        alias = "RESOURCES",
+        deserialize_with = "deserialize_struct_case_insensitive"
+    )]
+    pub resources: Resources,
+    #[serde(default, alias = "Features", alias = "FEATURES")]
+    pub features: HashMap<String, String>,
+    #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
+    pub conditions: HashMap<String, String>,
+    #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
+    pub vulnerabilities: Vec<String>,
+    #[serde(
+        default,
+        rename = "roles",
+        alias = "Roles",
+        alias = "ROLES",
+        skip_serializing
+    )]
+    _roles_helper: Option<HelperRoles>,
+    #[serde(skip_deserializing)]
+    pub roles: Option<Roles>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -56,43 +89,10 @@ pub type Roles = HashMap<String, Role>;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
-    #[serde(tag = "type")]
+    #[serde(flatten)]
     pub type_field: NodeType,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
-    #[serde(
-        default,
-        alias = "Resources",
-        alias = "RESOURCES",
-        deserialize_with = "deserialize_struct_case_insensitive"
-    )]
-    pub resources: Option<Resources>,
-    #[serde(
-        default,
-        rename = "source",
-        alias = "Source",
-        alias = "SOURCE",
-        skip_serializing
-    )]
-    _source_helper: Option<HelperSource>,
-    #[serde(default, skip_deserializing)]
-    pub source: Option<Source>,
-    #[serde(default, alias = "Features", alias = "FEATURES")]
-    pub features: Option<HashMap<String, String>>,
-    #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
-    pub conditions: Option<HashMap<String, String>>,
-    #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
-    pub vulnerabilities: Option<Vec<String>>,
-    #[serde(
-        default,
-        rename = "roles",
-        alias = "Roles",
-        alias = "ROLES",
-        skip_serializing
-    )]
-    _roles_helper: Option<HelperRoles>,
-    #[serde(skip_deserializing)]
-    pub roles: Option<Roles>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -127,18 +127,20 @@ impl From<HelperRoles> for Roles {
     }
 }
 
-impl Connection<Vulnerability> for (&String, &Node) {
+impl Connection<Vulnerability> for (&String, &VM) {
     fn validate_connections(
         &self,
         potential_vulnerability_names: &Option<Vec<String>>,
     ) -> Result<()> {
-        if let Some(node_vulnerabilities) = &self.1.vulnerabilities {
+        let node_vulnerabilities = &self.1.vulnerabilities;
+
+        if !node_vulnerabilities.is_empty() {
             if let Some(vulnerabilities) = potential_vulnerability_names {
                 for vulnerability_name in node_vulnerabilities.iter() {
                     if !vulnerabilities.contains(vulnerability_name) {
                         return Err(anyhow!(
-                            "Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
-                        ));
+                                "Vulnerability \"{vulnerability_name}\" not found under Scenario Vulnerabilities",
+                            ));
                     }
                 }
             } else {
@@ -148,25 +150,28 @@ impl Connection<Vulnerability> for (&String, &Node) {
                 ));
             }
         }
+
         Ok(())
     }
 }
 
-impl Connection<Feature> for (&String, &Node) {
+impl Connection<Feature> for (&String, &VM) {
     fn validate_connections(&self, potential_feature_names: &Option<Vec<String>>) -> Result<()> {
-        if let Some(node_features) = &self.1.features {
+        let vm_features = &self.1.features;
+
+        if !vm_features.is_empty() {
             if let Some(features) = potential_feature_names {
-                for node_feature in node_features.keys() {
+                for node_feature in vm_features.keys() {
                     if !features.contains(node_feature) {
                         return Err(anyhow!(
-                            "Node \"{node_name}\" Feature \"{node_feature}\" not found under Scenario Features",
-                            node_name = &self.0,
-                        ));
+                                "VM \"{node_name}\" Feature \"{node_feature}\" not found under Scenario Features",
+                                node_name = &self.0,
+                            ));
                     }
                 }
-            } else if !node_features.is_empty() {
+            } else if !vm_features.is_empty() {
                 return Err(anyhow!(
-                    "Node \"{node_name}\" has Features but none found under Scenario",
+                    "VM \"{node_name}\" has Features but none found under Scenario",
                     node_name = &self.0,
                 ));
             }
@@ -175,35 +180,36 @@ impl Connection<Feature> for (&String, &Node) {
     }
 }
 
-impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
+impl Connection<Condition> for (&String, &VM, &Option<Infrastructure>) {
     fn validate_connections(&self, potential_condition_names: &Option<Vec<String>>) -> Result<()> {
         let (node_name, node, infrastructure) = self;
-        if let Some(node_conditions) = &node.conditions {
-            if let Some(conditions) = potential_condition_names {
-                for condition_name in node_conditions.keys() {
-                    if !conditions.contains(condition_name) {
-                        return Err(anyhow!(
+        let vm_conditions = &node.conditions;
+
+        if let Some(conditions) = potential_condition_names {
+            for condition_name in vm_conditions.keys() {
+                if !conditions.contains(condition_name) {
+                    return Err(anyhow!(
                             "Node \"{node_name}\" Condition \"{condition_name}\" not found under Scenario Conditions"
                         ));
-                    }
                 }
-                if node_conditions.keys().len() > 0 {
-                    if let Some(infrastructure) = infrastructure {
-                        if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
-                            if infra_node.count > 1 {
-                                return Err(anyhow!(
+            }
+            if vm_conditions.keys().len() > 0 {
+                if let Some(infrastructure) = infrastructure {
+                    if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
+                        if infra_node.count > 1 {
+                            return Err(anyhow!(
                                     "Node \"{node_name}\" can not have count bigger than 1, if it has conditions defined"
                                 ));
-                            }
                         }
                     }
                 }
-            } else if !node_conditions.is_empty() {
-                return Err(anyhow!(
-                    "Node \"{node_name}\" has Conditions but none found under Scenario"
-                ));
             }
+        } else if !vm_conditions.is_empty() {
+            return Err(anyhow!(
+                "Node \"{node_name}\" has Conditions but none found under Scenario"
+            ));
         }
+
         Ok(())
     }
 }
@@ -211,20 +217,22 @@ impl Connection<Condition> for (&String, &Node, &Option<Infrastructure>) {
 impl Connection<Node> for (&String, &Option<Roles>) {
     fn validate_connections(&self, potential_role_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(role_names) = potential_role_names {
-            if let Some(roles) = self.1 {
-                for role_name in role_names {
-                    if !roles.contains_key(role_name) {
-                        return Err(anyhow!(
-                            "Role {role_name} not found under for Node {node_name}'s roles",
-                            node_name = self.0
-                        ));
+            if !role_names.is_empty() {
+                if let Some(roles) = self.1 {
+                    for role_name in role_names {
+                        if !roles.contains_key(role_name) {
+                            return Err(anyhow!(
+                                "Role {role_name} not found under for Node {node_name}'s roles",
+                                node_name = self.0
+                            ));
+                        }
                     }
+                } else {
+                    return Err(anyhow!(
+                        "Roles list is empty for Node {node_name} but it has Role requirements",
+                        node_name = self.0
+                    ));
                 }
-            } else {
-                return Err(anyhow!(
-                    "Roles list is empty for Node {node_name} but it has Role requirements",
-                    node_name = self.0
-                ));
             }
         }
 
@@ -260,30 +268,14 @@ impl Connection<Entity> for (&String, &Option<HashMap<String, Role>>) {
     }
 }
 
-impl Formalize for Node {
+impl Formalize for VM {
     fn formalize(&mut self) -> Result<()> {
-        if self.type_field == NodeType::NodeVM {
-            if let Some(source_helper) = &self._source_helper {
-                self.source = Some(source_helper.to_owned().into());
-            } else {
-                return Err(anyhow::anyhow!("A Node is missing a source field"));
-            }
-            if self.resources.is_none() {
-                return Err(anyhow::anyhow!(
-                    "Nodes of type VM must have Resources defined"
-                ));
-            }
-        } else if self.type_field == NodeType::NodeSwitch {
-            if self._source_helper.is_some() {
-                return Err(anyhow::anyhow!("Nodes of type Switch can not have Sources"));
-            }
-
-            if self.resources.is_some() {
-                return Err(anyhow::anyhow!(
-                    "Nodes of type Switch can not have Resources"
-                ));
-            }
+        if let Some(source_helper) = &self._source_helper {
+            self.source = Some(source_helper.to_owned().into());
+        } else {
+            return Err(anyhow::anyhow!("A Node is missing a source field"));
         }
+
         if let Some(helper_roles) = &self._roles_helper {
             self.roles = Some(helper_roles.to_owned().into());
         }
@@ -335,7 +327,9 @@ mod tests {
             source:
                 name: package-name
                 version: 1.2.3
-
+            resources:
+                cpu: 2
+                ram: 2GB
         "#;
         let node = serde_yaml::from_str::<Node>(longhand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -346,7 +340,9 @@ mod tests {
         let shorthand_source = r#"
             type: VM
             source: package-name
-
+            resources:
+                cpu: 2
+                ram: 2GB
         "#;
         let node = serde_yaml::from_str::<Node>(shorthand_source).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -360,7 +356,9 @@ mod tests {
                 admin: "username"
             conditions:
                 condition-1: "admin"
-
+            resources:
+                cpu: 2
+                ram: 2GB
         "#;
         let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
         insta::assert_debug_snapshot!(node);
@@ -370,12 +368,8 @@ mod tests {
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
-
         "#;
-        serde_yaml::from_str::<Node>(shorthand_source)
-            .unwrap()
-            .formalize()
-            .unwrap();
+        serde_yaml::from_str::<Node>(shorthand_source).unwrap();
     }
 
     #[test]
@@ -648,7 +642,7 @@ entities:
     }
 
     #[test]
-    #[should_panic(expected = "Nodes of type VM must have Resources defined")]
+    #[should_panic(expected = "missing field `resources`")]
     fn resources_missing_for_vm_node() {
         let sdl = r#"
             name: test-scenario
@@ -662,7 +656,7 @@ entities:
     }
 
     #[test]
-    #[should_panic(expected = "Nodes of type Switch can not have Sources")]
+    #[should_panic(expected = "unknown field `source`")]
     fn source_defined_for_switch_node() {
         let sdl = r#"
             name: test-scenario
@@ -677,7 +671,7 @@ entities:
     }
 
     #[test]
-    #[should_panic(expected = "Nodes of type Switch can not have Resources")]
+    #[should_panic(expected = "unknown field `resources`")]
     fn resources_defined_for_switch_node() {
         let sdl = r#"
             name: test-scenario

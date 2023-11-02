@@ -1,7 +1,7 @@
 use anyhow::{Ok, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::parse_sdl;
+use crate::{node::NodeType, parse_sdl};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Ord, PartialOrd, Eq)]
 pub struct LibraryItem {
@@ -23,11 +23,16 @@ pub fn generate_package_list(sdl_string: &str) -> Result<Vec<LibraryItem>> {
 
     if let Some(nodes) = nodes {
         for (_, node) in nodes {
-            if let Some(source) = &node.source {
-                result.push(LibraryItem::new(
-                    source.name.clone(),
-                    source.version.clone(),
-                ));
+            match node.type_field {
+                NodeType::VM(vm) => {
+                    if let Some(source) = &vm.source {
+                        result.push(LibraryItem::new(
+                            source.name.clone(),
+                            source.version.clone(),
+                        ));
+                    }
+                }
+                _ => continue,
             }
         }
     }

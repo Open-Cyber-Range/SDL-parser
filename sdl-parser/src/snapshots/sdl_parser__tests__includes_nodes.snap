@@ -3,29 +3,29 @@ source: sdl-parser/src/lib.rs
 expression: nodes
 ---
 deb10:
-  type: VM
+  conditions: {}
   description: deb-10-description
+  features: {}
   resources:
     ram: 2147483648
     cpu: 1
+  roles: ~
   source:
     name: debian10
     version: "*"
-  features: ~
-  conditions: ~
-  vulnerabilities: ~
-  roles: ~
-win10:
   type: VM
+  vulnerabilities: []
+win10:
+  conditions: {}
   description: win-10-description
+  features: {}
   resources:
     ram: 4294967296
     cpu: 2
+  roles: ~
   source:
     name: windows10
     version: "*"
-  features: ~
-  conditions: ~
-  vulnerabilities: ~
-  roles: ~
+  type: VM
+  vulnerabilities: []
 
