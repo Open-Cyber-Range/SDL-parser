@@ -3,16 +3,10 @@ source: sdl-parser/src/node.rs
 expression: node
 ---
 Node {
-    type_field: Switch,
+    type_field: Switch(
+        Switch,
+    ),
     description: Some(
         "a network switch",
     ),
-    resources: None,
-    _source_helper: None,
-    source: None,
-    features: None,
-    conditions: None,
-    vulnerabilities: None,
-    _roles_helper: None,
-    roles: None,
 }

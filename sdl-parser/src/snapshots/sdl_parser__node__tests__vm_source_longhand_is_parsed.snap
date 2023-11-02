@@ -3,21 +3,27 @@ source: sdl-parser/src/node.rs
 expression: node
 ---
 Node {
-    type_field: VM,
-    description: None,
-    resources: None,
-    _source_helper: Some(
-        Source(
-            Source {
-                name: "package-name",
-                version: "1.2.3",
+    type_field: VM(
+        VM {
+            source: None,
+            _source_helper: Some(
+                Source(
+                    Source {
+                        name: "package-name",
+                        version: "1.2.3",
+                    },
+                ),
+            ),
+            resources: Resources {
+                ram: 2000000000,
+                cpu: 2,
             },
-        ),
+            features: {},
+            conditions: {},
+            vulnerabilities: [],
+            _roles_helper: None,
+            roles: None,
+        },
     ),
-    source: None,
-    features: None,
-    conditions: None,
-    vulnerabilities: None,
-    _roles_helper: None,
-    roles: None,
+    description: None,
 }

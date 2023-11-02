@@ -6,17 +6,12 @@ name: test-scenario
 description: some-description
 nodes:
   win-10:
-    type: VM
+    conditions: {}
     description: ~
+    features: {}
     resources:
       ram: 2147483648
       cpu: 2
-    source:
-      name: windows10
-      version: "*"
-    features: ~
-    conditions: ~
-    vulnerabilities: ~
     roles:
       admin:
         username: admin
@@ -25,6 +20,11 @@ nodes:
         username: user
         entities:
           - blue-team.bob
+    source:
+      name: windows10
+      version: "*"
+    type: VM
+    vulnerabilities: []
 features: ~
 infrastructure: ~
 conditions: ~

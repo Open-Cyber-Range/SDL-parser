@@ -6,19 +6,14 @@ name: test-scenario
 description: some-description
 nodes:
   deb10:
-    type: VM
-    description: deb-10-description
-    resources:
-      ram: 2147483648
-      cpu: 1
-    source:
-      name: debian10
-      version: "*"
-    features: ~
     conditions:
       condition-2: moderator
       condition-3: admin
-    vulnerabilities: ~
+    description: deb-10-description
+    features: {}
+    resources:
+      ram: 2147483648
+      cpu: 1
     roles:
       admin:
         username: username
@@ -26,23 +21,28 @@ nodes:
       moderator:
         username: name
         entities: ~
-  win10:
+    source:
+      name: debian10
+      version: "*"
     type: VM
+    vulnerabilities: []
+  win10:
+    conditions:
+      condition-1: admin
     description: win-10-description
+    features: {}
     resources:
       ram: 4294967296
       cpu: 2
-    source:
-      name: windows10
-      version: "*"
-    features: ~
-    conditions:
-      condition-1: admin
-    vulnerabilities: ~
     roles:
       admin:
         username: username
         entities: ~
+    source:
+      name: windows10
+      version: "*"
+    type: VM
+    vulnerabilities: []
 features: ~
 infrastructure:
   deb10:
