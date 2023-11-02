@@ -56,7 +56,7 @@ pub type Roles = HashMap<String, Role>;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
-    #[serde(flatten)]
+    #[serde(tag = "type")]
     pub type_field: NodeType,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
@@ -273,7 +273,7 @@ impl Formalize for Node {
                     "Nodes of type VM must have Resources defined"
                 ));
             }
-        } else if self.type_field == NodeType::Switch {
+        } else if self.type_field == NodeType::NodeSwitch {
             if self._source_helper.is_some() {
                 return Err(anyhow::anyhow!("Nodes of type Switch can not have Sources"));
             }
