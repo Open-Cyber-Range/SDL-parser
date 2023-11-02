@@ -20,12 +20,21 @@ where
         .0)
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum NodeType {
-    #[serde(alias = "vm", alias = "Vm")]
-    VM,
-    #[serde(alias = "switch", alias = "SWITCH")]
-    Switch,
+    NodeSwitch(Switch),
+    NodeVM(VM),
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Switch {
+
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct VM {
+
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
@@ -47,7 +56,7 @@ pub type Roles = HashMap<String, Role>;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
-    #[serde(rename = "type", alias = "Type", alias = "TYPE")]
+    #[serde(flatten)]
     pub type_field: NodeType,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
@@ -253,7 +262,7 @@ impl Connection<Entity> for (&String, &Option<HashMap<String, Role>>) {
 
 impl Formalize for Node {
     fn formalize(&mut self) -> Result<()> {
-        if self.type_field == NodeType::VM {
+        if self.type_field == NodeType::NodeVM {
             if let Some(source_helper) = &self._source_helper {
                 self.source = Some(source_helper.to_owned().into());
             } else {
@@ -323,7 +332,7 @@ mod tests {
     fn vm_source_longhand_is_parsed() {
         let longhand_source = r#"
             type: VM
-            source: 
+            source:
                 name: package-name
                 version: 1.2.3
 
@@ -348,7 +357,7 @@ mod tests {
         let node_sdl = r#"
             type: VM
             roles:
-                admin: "username"   
+                admin: "username"
             conditions:
                 condition-1: "admin"
 
@@ -396,8 +405,8 @@ mod tests {
                         admin: "username"
                         moderator: "name"
                     features:
-                        feature-1: "admin" 
-                        feature-2: "moderator" 
+                        feature-1: "admin"
+                        feature-2: "moderator"
             features:
                 feature-1:
                     type: service
@@ -407,7 +416,7 @@ mod tests {
                     source:
                         name: my-cool-artifact
                         version: 1.0.0
-                    
+
         "#;
         let scenario = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -501,7 +510,7 @@ mod tests {
                         ram: 32 gib
                     source: windows10
                     roles:
-                        admin: 
+                        admin:
                             username: "admin"
                             entities:
                                 - blue-team.bob
@@ -529,7 +538,7 @@ mod tests {
                         ram: 32 gib
                     source: windows10
                     roles:
-                        admin: 
+                        admin:
                             username: "admin"
                             entities:
                                 - blue-team.bob
@@ -556,7 +565,7 @@ mod tests {
                         ram: 32 gib
                     source: windows10
                     roles:
-                        admin: 
+                        admin:
                             username: "admin"
                             entities:
                                 - blue-team.bob
@@ -592,12 +601,12 @@ mod tests {
             nodes:
                 win-10:
                     type: VM
-                    resources: 
+                    resources:
                         cpu: 2
                         ram: 2 gib
                     source: windows10
                     roles:
-                        user: 
+                        user:
                             username: user
         "#;
         let scenario = parse_sdl(sdl).unwrap();
@@ -613,13 +622,13 @@ description: some-description
 nodes:
     win-10:
         type: VM
-        resources: 
+        resources:
             cpu: 2
             ram: 2 gib
         source: windows10
         roles:
             admin: admin
-            user: 
+            user:
                 username: user
                 entities:
                     - blue-team.bob
@@ -630,7 +639,7 @@ entities:
         entities:
             bob:
                 name: Blue Bob
-        
+
         "#;
         let parsed_sdl = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -676,7 +685,7 @@ entities:
             nodes:
                 switch-1:
                     type: Switch
-                    resources: 
+                    resources:
                         cpu: 2
                         ram: 2 gib
 
@@ -693,7 +702,7 @@ entities:
                 vm-1:
                     type: vm
                     source: debian11
-                    resources: 
+                    resources:
                         cpu: 2
                         ram: 2 gib
                 switch-1:

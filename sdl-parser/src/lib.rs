@@ -709,7 +709,7 @@ mod tests {
     fn can_parse_minimal_sdl() {
         let minimal_sdl = r#"
                 name: test-scenario
-                
+
         "#;
         let parsed_schema = parse_sdl(minimal_sdl).unwrap();
         insta::assert_yaml_snapshot!(parsed_schema);
@@ -820,7 +820,7 @@ mod tests {
                     source:
                         name: dl_library
                         version: 1.2.3
-                    dependencies: 
+                    dependencies:
                         - my-cool-service
         "#;
         let features = parse_sdl(sdl).unwrap().features;
@@ -1055,7 +1055,7 @@ mod tests {
                 parent-service:
                     type: Service
                     source: some-service
-                    dependencies: 
+                    dependencies:
                         - child-service
                         - child-config
                 child-config:
@@ -1073,7 +1073,7 @@ mod tests {
                     type: Configuration
                     source:
                         name: some-config
-                        version: 1.0.0                
+                        version: 1.0.0
                 grandchild-artifact:
                     type: Artifact
                     source:
