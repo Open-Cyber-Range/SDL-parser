@@ -44,6 +44,7 @@ injects:
 events:
   my-cool-event:
     name: ~
+    source: ~
     conditions:
       - condition-1
     injects:
