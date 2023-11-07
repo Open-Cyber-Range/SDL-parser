@@ -2,12 +2,22 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{condition::Condition, helpers::Connection, inject::Inject, Formalize};
+use crate::{condition::Condition, helpers::Connection, inject::Inject, Formalize, common::{HelperSource, Source}};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Event {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
+    #[serde(
+        default,
+        rename = "source",
+        alias = "Source",
+        alias = "SOURCE",
+        skip_serializing
+    )]
+    _source_helper: Option<HelperSource>,
+    #[serde(default, skip_deserializing)]
+    pub source: Option<Source>,
     #[serde(alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
     #[serde(alias = "Injects", alias = "INJECTS")]
@@ -20,6 +30,14 @@ pub type Events = HashMap<String, Event>;
 
 impl Formalize for Event {
     fn formalize(&mut self) -> Result<()> {
+        if self._source_helper.is_some() {
+            if let Some(helper_source) = &self._source_helper {
+                self.source = Some(helper_source.to_owned().into());
+            } else {
+                return Err(anyhow!("Event missing Source field"));
+            }
+        }
+
         if self.injects.is_empty() {
             return Err(anyhow!("An Event must have have at least one Inject"));
         }
@@ -100,6 +118,7 @@ mod tests {
                         executive: capability-1
             events:
                 my-cool-event:
+                    source: event-package
                     conditions:
                         - condition-1
                     injects:
@@ -115,6 +134,9 @@ mod tests {
     #[test]
     fn parses_single_event() {
         let event = r#"
+            source: 
+                name: event-package
+                version: 1.0.0
             conditions:
                 - condition-1
             injects:
