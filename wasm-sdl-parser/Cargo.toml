@@ -1,6 +1,6 @@
 [package]
 name = "wasm-sdl-parser"
-version = "0.18.0"
+version = "0.19.0"
 authors = ["Kristi Reispass <kristi.reispass@cr14.ee>"]
 description = "Parser library for Scenario Defined Language (SDL)"
 license = "MIT"

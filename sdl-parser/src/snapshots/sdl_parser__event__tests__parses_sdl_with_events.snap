@@ -49,6 +49,9 @@ injects:
 events:
   my-cool-event:
     name: ~
+    source:
+      name: event-package
+      version: "*"
     conditions:
       - condition-1
     injects:
