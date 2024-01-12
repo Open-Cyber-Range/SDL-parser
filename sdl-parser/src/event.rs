@@ -213,4 +213,45 @@ mod tests {
             "#;
         parse_sdl(sdl).unwrap();
     }
+
+    #[test]
+    #[should_panic(expected = "Event \"my-cool-event\" has Injects but none found under Scenario")]
+    fn fails_no_injects_under_scenario() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                events:
+                    my-cool-event:
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Inject \"my-cool-inject\" not found under Scenario")]
+    fn fails_on_missing_inject() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                injects:
+                    inject-1:
+                        source: inject-package
+                        capabilities:
+                            executive: capability-1
+                events:
+                    my-cool-event:
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
 }
