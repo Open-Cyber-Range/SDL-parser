@@ -2,7 +2,13 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{condition::Condition, helpers::Connection, inject::Inject, Formalize, common::{HelperSource, Source}};
+use crate::{
+    common::{HelperSource, Source},
+    condition::Condition,
+    helpers::Connection,
+    inject::Inject,
+    Formalize,
+};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Event {
@@ -21,7 +27,7 @@ pub struct Event {
     #[serde(alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: Option<Vec<String>>,
     #[serde(alias = "Injects", alias = "INJECTS")]
-    pub injects: Vec<String>,
+    pub injects: Option<Vec<String>>,
     #[serde(alias = "Description", alias = "DESCRIPTION")]
     pub description: Option<String>,
 }
@@ -38,9 +44,6 @@ impl Formalize for Event {
             }
         }
 
-        if self.injects.is_empty() {
-            return Err(anyhow!("An Event must have have at least one Inject"));
-        }
         Ok(())
     }
 }
@@ -71,19 +74,24 @@ impl Connection<Condition> for (&String, &Event) {
 
 impl Connection<Inject> for (&String, &Event) {
     fn validate_connections(&self, potential_inject_names: &Option<Vec<String>>) -> Result<()> {
-        if let Some(inject_names) = potential_inject_names {
-            for event_inject_name in &self.1.injects {
-                if !inject_names.contains(event_inject_name) {
-                    return Err(anyhow!(
-                        "Event \"{event_name}\" Inject \"{event_inject_name}\" not found under Scenario", 
-                        event_name = self.0 
-                    ));
+        if self.1.injects.is_some() && potential_inject_names.is_none() {
+            return Err(anyhow!(
+                "Event \"{event_name}\" has Injects but none found under Scenario",
+                event_name = self.0
+            ));
+        }
+
+        if let Some(required_injects) = &self.1.injects {
+            if let Some(inject_names) = potential_inject_names {
+                for event_inject_name in required_injects {
+                    if !inject_names.contains(event_inject_name) {
+                        return Err(anyhow!(
+                            "Inject \"{event_inject_name}\" not found under Scenario",
+                            event_inject_name = event_inject_name
+                        ));
+                    }
                 }
             }
-        } else {
-            return Err(anyhow!(
-                "An Event requires at least one Inject but none are defined under Scenario"
-            ));
         }
 
         Ok(())
@@ -177,7 +185,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Capability requires at least one Condition but none found under Scenario")]
+    #[should_panic(
+        expected = "Capability requires at least one Condition but none found under Scenario"
+    )]
     fn fails_on_missing_conditions() {
         let sdl = r#"
                 name: test-scenario
@@ -198,6 +208,47 @@ mod tests {
                     my-cool-event:
                         conditions:
                             - condition-1
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Event \"my-cool-event\" has Injects but none found under Scenario")]
+    fn fails_no_injects_under_scenario() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                events:
+                    my-cool-event:
+                        injects:
+                            - my-cool-inject
+            "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Inject \"my-cool-inject\" not found under Scenario")]
+    fn fails_on_missing_inject() {
+        let sdl = r#"
+                name: test-scenario
+                description: some description
+                conditions:
+                    condition-1:
+                        command: executable/path.sh
+                        interval: 30
+                capabilities:
+                    capability-1:
+                        description: "Can defend against Dirty Cow"
+                        condition: condition-1
+                injects:
+                    inject-1:
+                        source: inject-package
+                        capabilities:
+                            executive: capability-1
+                events:
+                    my-cool-event:
                         injects:
                             - my-cool-inject
             "#;
