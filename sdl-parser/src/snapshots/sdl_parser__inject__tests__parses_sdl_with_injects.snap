@@ -111,10 +111,6 @@ injects:
       - blue-team
     tlos:
       - tlo-1
-    capabilities:
-      executive: capability-2
-      secondary:
-        - capability-3
     description: ~
     environment: ~
 events: ~

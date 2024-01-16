@@ -41,9 +41,6 @@ injects:
     from-entity: ~
     to-entities: ~
     tlos: ~
-    capabilities:
-      executive: capability-1
-      secondary: ~
     description: ~
     environment: ~
 events:

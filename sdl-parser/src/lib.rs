@@ -472,10 +472,6 @@ impl Scenario {
             .tlos
             .as_ref()
             .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
-        let capability_names = self
-            .capabilities
-            .as_ref()
-            .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(injects) = &self.injects {
             for named_inject in injects.iter() {
@@ -484,7 +480,6 @@ impl Scenario {
                     &named_inject,
                     &tlo_names,
                 )?;
-                Connection::<Capability>::validate_connections(&named_inject, &capability_names)?;
             }
         }
         Ok(())
