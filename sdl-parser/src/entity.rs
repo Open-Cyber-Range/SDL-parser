@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    helpers::Connection, training_learning_objective::TrainingLearningObjective,
+    event::Event, helpers::Connection, training_learning_objective::TrainingLearningObjective,
     vulnerability::Vulnerability,
 };
 
@@ -34,6 +34,8 @@ pub struct Entity {
     pub tlos: Option<Vec<String>>,
     #[serde(alias = "Facts", alias = "FACTS")]
     pub facts: Option<HashMap<String, String>>,
+    #[serde(alias = "Events", alias = "EVENTS")]
+    pub events: Option<Vec<String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
 }
@@ -93,6 +95,35 @@ impl Connection<Vulnerability> for (&String, &Entity) {
     }
 }
 
+impl Connection<Event> for (&String, &Entity) {
+    fn validate_connections(&self, potential_event_names: &Option<Vec<String>>) -> Result<()> {
+        let flattened_entities = vec![(self.0.clone(), self.1.clone())]
+            .into_iter()
+            .collect::<Entities>()
+            .flatten();
+
+        for (entity_name, entity) in flattened_entities {
+            if let Some(events) = &entity.events {
+                if let Some(event_names) = potential_event_names {
+                    for event_name in events {
+                        if !event_names.contains(event_name) {
+                            return Err(anyhow!(
+                                "Entity \"{entity_name}\" Event \"{event_name}\" not found under Scenario Events"
+                            ));
+                        }
+                    }
+                } else {
+                    return Err(anyhow!(
+                        "Entity \"{entity_name}\" has Events but none found under Scenario"
+                    ));
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
 pub type Entities = HashMap<String, Entity>;
 pub trait Flatten {
     fn flatten(&self) -> Self;
@@ -124,9 +155,24 @@ mod tests {
     #[test]
     fn parses_sdl_with_entities() {
         let sdl = r#"
-      
           name: test-scenario
           description: some-description
+          stories:
+            story-1:
+                speed: 1
+                scripts:
+                    - script-1
+          scripts:
+            script-1:
+                start-time: 0
+                end-time: 3 hour 30 min
+                speed: 1
+                events:
+                    earthquake: 1 hour
+          events:
+            earthquake:
+                description: "Here comes another earthquake"
+                source: earthquake-package
           conditions:
             condition-1:
                 command: executable/path.sh
@@ -189,6 +235,8 @@ mod tests {
                   description: "This is my organization"
                   role: White
                   mission: "defend"
+                  events:
+                    - earthquake
                   categories:
                     - Foundation
                     - Organization
@@ -350,5 +398,83 @@ mod tests {
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(entities);
         });
+    }
+    #[test]
+    fn parses_entity_with_events() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+            my-other-cool-event:
+                description: "This is my other event"
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                    - my-cool-event
+                entities: 
+                    blue-player:
+                        role: Blue
+                        events:
+                            -  my-other-cool-event
+      "#;
+        let entities = parse_sdl(sdl).unwrap().entities;
+        insta::assert_yaml_snapshot!(entities);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"blue-team\" Event \"i-don't-exist\" not found under Scenario Events"
+    )]
+    fn fails_parsing_entity_with_nonexisting_event() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"blue-team.blue-player\" Event \"i-don't-exist\" not found under Scenario Events"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_event() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+          entities:
+            blue-team:
+                role: Blue
+                entities: 
+                    blue-player:
+                        role: Blue
+                        events:
+                            - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Entity \"blue-team\" has Events but none found under Scenario")]
+    fn fails_parsing_entity_with_no_events_defined() {
+        let sdl = r#"
+          name: test-scenario
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
     }
 }

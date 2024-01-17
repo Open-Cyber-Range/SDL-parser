@@ -75,6 +75,7 @@ entities:
     vulnerabilities: ~
     tlos: ~
     facts: ~
+    events: ~
     entities: ~
   my-organization:
     name: My Organization
@@ -87,6 +88,7 @@ entities:
     vulnerabilities: ~
     tlos: ~
     facts: ~
+    events: ~
     entities: ~
   red-team:
     name: The Red Team
@@ -97,6 +99,7 @@ entities:
     vulnerabilities: ~
     tlos: ~
     facts: ~
+    events: ~
     entities: ~
 goals: ~
 injects:

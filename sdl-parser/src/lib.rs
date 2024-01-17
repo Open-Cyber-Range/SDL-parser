@@ -419,6 +419,11 @@ impl Scenario {
             .tlos
             .as_ref()
             .map(|tlo_map| tlo_map.keys().cloned().collect::<Vec<String>>());
+        let event_names = self
+            .events
+            .as_ref()
+            .map(|event_map| event_map.keys().cloned().collect::<Vec<String>>());
+
         if let Some(entities) = &self.entities {
             for named_entity in entities.iter() {
                 Connection::<TrainingLearningObjective>::validate_connections(
@@ -429,6 +434,7 @@ impl Scenario {
                     &named_entity,
                     &vulnerability_names,
                 )?;
+                Connection::<Event>::validate_connections(&named_entity, &event_names)?;
             }
         }
         Ok(())

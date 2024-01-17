@@ -44,6 +44,7 @@ entities:
     vulnerabilities: ~
     tlos: ~
     facts: ~
+    events: ~
     entities:
       bob:
         name: Blue Bob
@@ -54,6 +55,7 @@ entities:
         vulnerabilities: ~
         tlos: ~
         facts: ~
+        events: ~
         entities: ~
 goals: ~
 injects: ~
