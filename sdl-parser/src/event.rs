@@ -112,18 +112,9 @@ mod tests {
                 condition-1:
                     command: executable/path.sh
                     interval: 30
-            capabilities:
-                capability-1:
-                    description: "Can defend against Dirty Cow"
-                    condition: condition-1
-                capability-2:
-                    description: "Can defend against Dirty Cow"
-                    condition: condition-1
             injects:
                 my-cool-inject:
                     source: inject-package
-                    capabilities:
-                        executive: capability-1
             events:
                 my-cool-event:
                     source: event-package
@@ -154,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Condition \"condition-1\" not found under Scenario Conditions")]
+    #[should_panic(expected = "Condition \"condition-1\" not found under Scenario")]
     fn fails_on_missing_scenario_condition() {
         let sdl = r#"
                 name: test-scenario
@@ -162,18 +153,9 @@ mod tests {
                 conditions:
                     condition-3000:
                         source: digital-library-package
-                capabilities:
-                    capability-1:
-                        description: "Can defend against Dirty Cow"
-                        condition: condition-1
-                    capability-2:
-                        description: "Can defend against Dirty Cow"
-                        condition: condition-1
                 injects:
                     my-cool-inject:
                         source: inject-package
-                        capabilities:
-                            executive: capability-1
                 events:
                     my-cool-event:
                         conditions:
@@ -186,24 +168,15 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Capability requires at least one Condition but none found under Scenario"
+        expected = "Event \"my-cool-event\" has Conditions but none found under Scenario"
     )]
     fn fails_on_missing_conditions() {
         let sdl = r#"
                 name: test-scenario
                 description: some description
-                capabilities:
-                    capability-1:
-                        description: "Can defend against Dirty Cow"
-                        condition: condition-1
-                    capability-2:
-                        description: "Can defend against Dirty Cow"
-                        condition: condition-1
                 injects:
                     my-cool-inject:
                         source: inject-package
-                        capabilities:
-                            executive: capability-1
                 events:
                     my-cool-event:
                         conditions:
@@ -238,15 +211,9 @@ mod tests {
                     condition-1:
                         command: executable/path.sh
                         interval: 30
-                capabilities:
-                    capability-1:
-                        description: "Can defend against Dirty Cow"
-                        condition: condition-1
                 injects:
                     inject-1:
                         source: inject-package
-                        capabilities:
-                            executive: capability-1
                 events:
                     my-cool-event:
                         injects:

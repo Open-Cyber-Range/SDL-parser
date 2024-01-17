@@ -16,12 +16,6 @@ conditions:
     description: ~
     environment: ~
 vulnerabilities: ~
-capabilities:
-  capability-1:
-    name: ~
-    description: Can defend against Dirty Cow
-    condition: condition-1
-    vulnerabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~

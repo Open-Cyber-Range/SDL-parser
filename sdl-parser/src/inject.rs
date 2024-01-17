@@ -11,14 +11,6 @@ use crate::{
 };
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
-pub struct InjectCapabilities {
-    #[serde(default, alias = "Executive", alias = "EXECUTIVE")]
-    pub executive: String,
-    #[serde(default, alias = "Secondary", alias = "SECONDARY")]
-    pub secondary: Option<Vec<String>>,
-}
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub struct Inject {
     #[serde(default, alias = "Name", alias = "NAME")]
     pub name: Option<String>,
@@ -134,16 +126,6 @@ mod tests {
             description: some description
             start: 2022-01-20T13:00:00Z
             end: 2022-01-20T23:00:00Z
-            capabilities:
-                capability-1:
-                    description: "Can defend against Dirty Cow"
-                    condition: condition-1
-                capability-2:
-                    description: "Can defend against Dirty Cow"
-                    condition: condition-1
-                capability-3:
-                    description: "Can defend against Dirty Cow"
-                    condition: condition-1
             conditions:
                 condition-1:
                     command: executable/path.sh
@@ -162,9 +144,6 @@ mod tests {
                     name: fungibly leverage client-focused e-tailers
                     description: we learn to make charts of web page stats
                     evaluation: evaluation-1
-                    capabilities:
-                        - capability-1
-                        - capability-2
             evaluations:
                 evaluation-1:
                     description: some description

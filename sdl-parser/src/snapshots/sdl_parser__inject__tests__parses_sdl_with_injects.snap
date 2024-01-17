@@ -16,22 +16,6 @@ conditions:
     description: ~
     environment: ~
 vulnerabilities: ~
-capabilities:
-  capability-1:
-    name: ~
-    description: Can defend against Dirty Cow
-    condition: condition-1
-    vulnerabilities: ~
-  capability-2:
-    name: ~
-    description: Can defend against Dirty Cow
-    condition: condition-1
-    vulnerabilities: ~
-  capability-3:
-    name: ~
-    description: Can defend against Dirty Cow
-    condition: condition-1
-    vulnerabilities: ~
 metrics:
   metric-1:
     name: ~
@@ -62,9 +46,6 @@ tlos:
     name: fungibly leverage client-focused e-tailers
     description: we learn to make charts of web page stats
     evaluation: evaluation-1
-    capabilities:
-      - capability-1
-      - capability-2
 entities:
   blue-team:
     name: The Blue Team

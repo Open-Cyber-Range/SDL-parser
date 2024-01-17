@@ -1,4 +1,3 @@
-pub mod capability;
 pub mod common;
 pub mod condition;
 mod constants;
@@ -20,7 +19,6 @@ pub mod vulnerability;
 
 use crate::helpers::Connection;
 use anyhow::{anyhow, Ok, Result};
-use capability::{Capabilities, Capability};
 use condition::{Condition, Conditions};
 use constants::MAX_LONG_NAME;
 use depper::{Dependencies, DependenciesBuilder};
@@ -73,8 +71,6 @@ pub struct Scenario {
     pub conditions: Option<Conditions>,
     #[serde(alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Option<Vulnerabilities>,
-    #[serde(alias = "Capabilities", alias = "CAPABILITIES")]
-    pub capabilities: Option<Capabilities>,
     #[serde(alias = "Metrics", alias = "METRICS")]
     pub metrics: Option<Metrics>,
     #[serde(alias = "Evaluations", alias = "EVALUATIONS")]
@@ -370,15 +366,10 @@ impl Scenario {
             .evaluations
             .as_ref()
             .map(|evaluation_map| evaluation_map.keys().cloned().collect::<Vec<String>>());
-        let capability_names = self
-            .capabilities
-            .as_ref()
-            .map(|capability_map| capability_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(training_learning_objectives) = &self.tlos {
             for named_tlo in training_learning_objectives {
                 Connection::<Evaluation>::validate_connections(&named_tlo, &evaluation_names)?;
-                Connection::<Capability>::validate_connections(&named_tlo, &capability_names)?;
             }
         }
         Ok(())
@@ -448,27 +439,6 @@ impl Scenario {
         if let Some(goals) = &self.goals {
             for goal in goals.iter() {
                 goal.validate_connections(&tlo_names)?;
-            }
-        }
-        Ok(())
-    }
-
-    fn verify_capabilities(&self) -> Result<()> {
-        let condition_names = self
-            .conditions
-            .as_ref()
-            .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
-        let vulnerability_names = self
-            .vulnerabilities
-            .as_ref()
-            .map(|vulnerability_map| vulnerability_map.keys().cloned().collect::<Vec<String>>());
-        if let Some(capabilities) = &self.capabilities {
-            for named_capability in capabilities.iter() {
-                Connection::<Vulnerability>::validate_connections(
-                    &named_capability,
-                    &vulnerability_names,
-                )?;
-                Connection::<Condition>::validate_connections(&named_capability, &condition_names)?;
             }
         }
         Ok(())
@@ -622,16 +592,6 @@ impl Formalize for Scenario {
             self.conditions = Some(conditions);
         }
 
-        if let Some(mut capabilities) = self.capabilities.clone() {
-            capabilities
-                .iter_mut()
-                .try_for_each(move |(_, condition)| {
-                    condition.formalize()?;
-                    Ok(())
-                })?;
-            self.capabilities = Some(capabilities);
-        }
-
         if let Some(mut metrics) = self.metrics.clone() {
             metrics.iter_mut().try_for_each(move |(_, metric)| {
                 metric.formalize()?;
@@ -707,7 +667,6 @@ impl Formalize for Scenario {
         self.verify_evaluations()?;
         self.verify_switch_counts()?;
         self.verify_features()?;
-        self.verify_capabilities()?;
         self.verify_dependencies()?;
         self.verify_metrics()?;
         self.verify_training_learning_objectives()?;

@@ -204,26 +204,10 @@ mod tests {
                       - metric-1
                       - metric-2
                   min-score: 50
-          capabilities:
-              capability-1:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
-              capability-2:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
           tlos:
               tlo-1:
                   description: some description
                   evaluation: evaluation-1
-                  capabilities:
-                      - capability-1
-                      - capability-2
           goals:
               goal-1:
                   description: "new goal"
@@ -345,26 +329,10 @@ mod tests {
                       - metric-1
                       - metric-2
                   min-score: 50
-          capabilities:
-              capability-1:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
-              capability-2:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
           tlos:
               tlo-1:
                   description: some description
                   evaluation: evaluation-1
-                  capabilities:
-                      - capability-1
-                      - capability-2
           goals:
               goal-1:
                   description: "new goal"

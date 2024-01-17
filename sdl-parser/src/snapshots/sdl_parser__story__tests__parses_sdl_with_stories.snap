@@ -16,7 +16,6 @@ conditions:
     description: ~
     environment: ~
 vulnerabilities: ~
-capabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~

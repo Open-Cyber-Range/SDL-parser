@@ -30,7 +30,6 @@ features: ~
 infrastructure: ~
 conditions: ~
 vulnerabilities: ~
-capabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~
