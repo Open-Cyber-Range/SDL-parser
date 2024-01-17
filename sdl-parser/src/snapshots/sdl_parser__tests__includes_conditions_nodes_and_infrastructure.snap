@@ -11,6 +11,7 @@ nodes:
       condition-3: admin
     description: deb-10-description
     features: {}
+    injects: {}
     resources:
       ram: 2147483648
       cpu: 1
@@ -31,6 +32,7 @@ nodes:
       condition-1: admin
     description: win-10-description
     features: {}
+    injects: {}
     resources:
       ram: 4294967296
       cpu: 2

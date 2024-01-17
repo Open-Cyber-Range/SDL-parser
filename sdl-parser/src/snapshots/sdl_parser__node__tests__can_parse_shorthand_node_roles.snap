@@ -9,6 +9,7 @@ nodes:
     conditions: {}
     description: ~
     features: {}
+    injects: {}
     resources:
       ram: 34359738368
       cpu: 2

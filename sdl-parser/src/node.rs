@@ -1,6 +1,6 @@
 use crate::{
     condition::Condition, entity::Entity, feature::Feature, helpers::Connection,
-    infrastructure::Infrastructure, vulnerability::Vulnerability, Formalize,
+    infrastructure::Infrastructure, inject::Inject, vulnerability::Vulnerability, Formalize,
 };
 use anyhow::{anyhow, Result};
 use bytesize::ByteSize;
@@ -56,6 +56,8 @@ pub struct VM {
     pub features: HashMap<String, String>,
     #[serde(default, alias = "Conditions", alias = "CONDITIONS")]
     pub conditions: HashMap<String, String>,
+    #[serde(default, alias = "Injects", alias = "INJECTS")]
+    pub injects: HashMap<String, String>,
     #[serde(default, alias = "Vulnerabilities", alias = "VULNERABILITIES")]
     pub vulnerabilities: Vec<String>,
     #[serde(
@@ -214,6 +216,40 @@ impl Connection<Condition> for (&String, &VM, &Option<Infrastructure>) {
     }
 }
 
+impl Connection<Inject> for (&String, &VM, &Option<Infrastructure>) {
+    fn validate_connections(&self, potential_inject_names: &Option<Vec<String>>) -> Result<()> {
+        let (node_name, node, infrastructure) = self;
+        let vm_injects = &node.injects;
+
+        if let Some(injects) = potential_inject_names {
+            for inject_name in vm_injects.keys() {
+                if !injects.contains(inject_name) {
+                    return Err(anyhow!(
+                            "Node \"{node_name}\" Inject \"{inject_name}\" not found under Scenario Injects"
+                        ));
+                }
+            }
+            if !vm_injects.is_empty() {
+                if let Some(infrastructure) = infrastructure {
+                    if let Some(infra_node) = infrastructure.get(node_name.to_owned()) {
+                        if infra_node.count > 1 {
+                            return Err(anyhow!(
+                                    "Node \"{node_name}\" can not have count bigger than 1, if it has injects defined"
+                                ));
+                        }
+                    }
+                }
+            }
+        } else if !vm_injects.is_empty() {
+            return Err(anyhow!(
+                "Node \"{node_name}\" has Injects but none found under Scenario"
+            ));
+        }
+
+        Ok(())
+    }
+}
+
 impl Connection<Node> for (&String, &Option<Roles>) {
     fn validate_connections(&self, potential_role_names: &Option<Vec<String>>) -> Result<()> {
         if let Some(role_names) = potential_role_names {
@@ -365,6 +401,22 @@ mod tests {
     }
 
     #[test]
+    fn node_injects_are_parsed() {
+        let node_sdl = r#"
+            type: VM
+            roles:
+                admin: "username"
+            injects:
+                inject-1: "admin"
+            resources:
+                cpu: 2
+                ram: 2GB
+        "#;
+        let node = serde_yaml::from_str::<Node>(node_sdl).unwrap();
+        insta::assert_debug_snapshot!(node);
+    }
+
+    #[test]
     fn switch_source_is_not_required() {
         let shorthand_source = r#"
             type: Switch
@@ -411,6 +463,36 @@ mod tests {
                         name: my-cool-artifact
                         version: 1.0.0
 
+        "#;
+        let scenario = parse_sdl(sdl).unwrap();
+        insta::with_settings!({sort_maps => true}, {
+                insta::assert_yaml_snapshot!(scenario);
+        });
+    }
+
+    #[test]
+    fn includes_nodes_with_defined_injects() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        ram: 2 gib
+                        cpu: 2
+                    source: windows10
+                    roles:
+                        admin: "username"
+                        moderator: "name"
+                    injects:
+                        inject-1: "admin"
+                        inject-2: "moderator"
+            injects:
+                inject-1:
+                    source: dl-library
+                inject-2:
+                    source: dl-library
         "#;
         let scenario = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -611,29 +693,28 @@ mod tests {
     #[test]
     fn can_parse_mixed_short_and_longhand_node_roles() {
         let sdl = r#"
-name: test-scenario
-description: some-description
-nodes:
-    win-10:
-        type: VM
-        resources:
-            cpu: 2
-            ram: 2 gib
-        source: windows10
-        roles:
-            admin: admin
-            user:
-                username: user
-                entities:
-                    - blue-team.bob
+            name: test-scenario
+            description: some-description
+            nodes:
+                win-10:
+                    type: VM
+                    resources:
+                        cpu: 2
+                        ram: 2 gib
+                    source: windows10
+                    roles:
+                        admin: admin
+                        user:
+                            username: user
+                            entities:
+                                - blue-team.bob
 
-entities:
-    blue-team:
-        name: The Blue Team
-        entities:
-            bob:
-                name: Blue Bob
-
+            entities:
+                blue-team:
+                    name: The Blue Team
+                    entities:
+                        bob:
+                            name: Blue Bob
         "#;
         let parsed_sdl = parse_sdl(sdl).unwrap();
         insta::with_settings!({sort_maps => true}, {
@@ -665,7 +746,6 @@ entities:
                 switch-1:
                     type: Switch
                     source: windows10
-
         "#;
         parse_sdl(sdl).unwrap();
     }
@@ -682,7 +762,6 @@ entities:
                     resources:
                         cpu: 2
                         ram: 2 gib
-
         "#;
         parse_sdl(sdl).unwrap();
     }
@@ -701,7 +780,6 @@ entities:
                         ram: 2 gib
                 switch-1:
                     type: SWITCH
-
         "#;
         parse_sdl(sdl).unwrap();
     }

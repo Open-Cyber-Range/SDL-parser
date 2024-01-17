@@ -11,6 +11,7 @@ nodes:
     features:
       feature-1: admin
       feature-2: moderator
+    injects: {}
     resources:
       ram: 2147483648
       cpu: 2

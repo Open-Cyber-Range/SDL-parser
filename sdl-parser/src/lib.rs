@@ -265,6 +265,10 @@ impl Scenario {
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
+        let inject_names = self
+            .injects
+            .as_ref()
+            .map(|inject_map| inject_map.keys().cloned().collect::<Vec<String>>());
         let vulnerability_names = self
             .vulnerabilities
             .as_ref()
@@ -290,6 +294,10 @@ impl Scenario {
                         Connection::<Condition>::validate_connections(
                             &(named_node.0, vm, &self.infrastructure),
                             &condition_names,
+                        )?;
+                        Connection::<Inject>::validate_connections(
+                            &(named_node.0, vm, &self.infrastructure),
+                            &inject_names,
                         )?;
                     }
                     _ => continue,

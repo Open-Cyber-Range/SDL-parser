@@ -6,6 +6,7 @@ deb-10:
   conditions: {}
   description: ~
   features: {}
+  injects: {}
   resources:
     ram: 2147483648
     cpu: 2
@@ -19,6 +20,7 @@ win-10:
   conditions: {}
   description: ~
   features: {}
+  injects: {}
   resources:
     ram: 2147483648
     cpu: 2

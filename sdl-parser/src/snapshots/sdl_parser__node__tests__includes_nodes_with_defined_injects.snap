@@ -9,13 +9,18 @@ nodes:
     conditions: {}
     description: ~
     features: {}
-    injects: {}
+    injects:
+      inject-1: admin
+      inject-2: moderator
     resources:
       ram: 2147483648
       cpu: 2
     roles:
-      user:
-        username: user
+      admin:
+        username: username
+        entities: ~
+      moderator:
+        username: name
         entities: ~
     source:
       name: windows10
@@ -32,7 +37,27 @@ evaluations: ~
 tlos: ~
 entities: ~
 goals: ~
-injects: ~
+injects:
+  inject-1:
+    name: ~
+    source:
+      name: dl-library
+      version: "*"
+    from-entity: ~
+    to-entities: ~
+    tlos: ~
+    description: ~
+    environment: ~
+  inject-2:
+    name: ~
+    source:
+      name: dl-library
+      version: "*"
+    from-entity: ~
+    to-entities: ~
+    tlos: ~
+    description: ~
+    environment: ~
 events: ~
 scripts: ~
 stories: ~
