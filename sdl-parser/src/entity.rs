@@ -97,26 +97,23 @@ impl Connection<Vulnerability> for (&String, &Entity) {
 
 impl Connection<Event> for (&String, &Entity) {
     fn validate_connections(&self, potential_event_names: &Option<Vec<String>>) -> Result<()> {
-        let flattened_entities = vec![(self.0.clone(), self.1.clone())]
-            .into_iter()
-            .collect::<Entities>()
-            .flatten();
+        let entity_events = &self.1.events;
 
-        for (entity_name, entity) in flattened_entities {
-            if let Some(events) = &entity.events {
-                if let Some(event_names) = potential_event_names {
-                    for event_name in events {
-                        if !event_names.contains(event_name) {
-                            return Err(anyhow!(
-                                "Entity \"{entity_name}\" Event \"{event_name}\" not found under Scenario Events"
-                            ));
-                        }
+        if let Some(entity_events) = entity_events {
+            if let Some(sdl_event_names) = potential_event_names {
+                for entity_event_name in entity_events {
+                    if !sdl_event_names.contains(entity_event_name) {
+                        return Err(anyhow!(
+                            "Entity \"{entity_name}\" Event \"{entity_event_name}\" not found under Scenario Events",
+                            entity_name = self.0
+                        ));
                     }
-                } else {
-                    return Err(anyhow!(
-                        "Entity \"{entity_name}\" has Events but none found under Scenario"
-                    ));
                 }
+            } else {
+                return Err(anyhow!(
+                    "Entity \"{entity_name}\" has Events but none found under Scenario",
+                    entity_name = self.0
+                ));
             }
         }
 
@@ -367,6 +364,161 @@ mod tests {
                 insta::assert_yaml_snapshot!(entities);
         });
     }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"my-organization.fish\" TLO \"tlo-i-don't-exist\" not found under Scenario TLOs"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_tlo() {
+        let sdl = r#"
+
+          name: test-scenario
+          description: some-description
+          conditions:
+            condition-1:
+                command: executable/path.sh
+                interval: 30
+          metrics:
+              metric-1:
+                  type: MANUAL
+                  artifact: true
+                  max-score: 10
+              metric-2:
+                  type: CONDITIONAL
+                  max-score: 10
+                  condition: condition-1
+          vulnerabilities:
+              vulnerability-1:
+                  name: Some other vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1343
+              vulnerability-2:
+                  name: Some vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1341
+          evaluations:
+              evaluation-1:
+                  description: some description
+                  metrics:
+                      - metric-1
+                      - metric-2
+                  min-score: 50
+          tlos:
+              tlo-1:
+                  description: some description
+                  evaluation: evaluation-1
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos:
+                    - tlo-1
+          entities:
+              my-organization:
+                  name: "My Organization"
+                  description: "This is my organization"
+                  role: White
+                  mission: "defend"
+                  categories:
+                    - Foundation
+                    - Organization
+                  vulnerabilities:
+                    - vulnerability-2
+                  tlos:
+                    - tlo-1
+                  entities:
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        tlos: 
+                            - tlo-i-don't-exist
+                        facts:
+                            anatomy: sharks do not have bones
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"my-organization.fish\" Vulnerability \"vulnerability-i-don't-exist\" not found under Scenario Vulnerabilities"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_vulnerability() {
+        let sdl = r#"
+
+          name: test-scenario
+          description: some-description
+          conditions:
+            condition-1:
+                command: executable/path.sh
+                interval: 30
+          metrics:
+              metric-1:
+                  type: MANUAL
+                  artifact: true
+                  max-score: 10
+              metric-2:
+                  type: CONDITIONAL
+                  max-score: 10
+                  condition: condition-1
+          vulnerabilities:
+              vulnerability-1:
+                  name: Some other vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1343
+              vulnerability-2:
+                  name: Some vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1341
+          evaluations:
+              evaluation-1:
+                  description: some description
+                  metrics:
+                      - metric-1
+                      - metric-2
+                  min-score: 50
+          tlos:
+              tlo-1:
+                  description: some description
+                  evaluation: evaluation-1
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos:
+                    - tlo-1
+          entities:
+              my-organization:
+                  name: "My Organization"
+                  description: "This is my organization"
+                  role: White
+                  mission: "defend"
+                  categories:
+                    - Foundation
+                    - Organization
+                  vulnerabilities:
+                    - vulnerability-2
+                  tlos:
+                    - tlo-1
+                  entities:
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        vulnerabilities:
+                            - vulnerability-i-don't-exist
+                        facts:
+                            anatomy: sharks do not have bones
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
     #[test]
     fn parses_entity_with_events() {
         let sdl = r#"

@@ -416,7 +416,7 @@ impl Scenario {
             .map(|event_map| event_map.keys().cloned().collect::<Vec<String>>());
 
         if let Some(entities) = &self.entities {
-            for named_entity in entities.iter() {
+            for named_entity in entities.flatten().iter() {
                 Connection::<TrainingLearningObjective>::validate_connections(
                     &named_entity,
                     &tlo_names,
