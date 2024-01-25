@@ -9,6 +9,7 @@ nodes:
     conditions: {}
     description: ~
     features: {}
+    injects: {}
     resources:
       ram: 2147483648
       cpu: 2
@@ -25,7 +26,6 @@ features: ~
 infrastructure: ~
 conditions: ~
 vulnerabilities: ~
-capabilities: ~
 metrics: ~
 evaluations: ~
 tlos: ~

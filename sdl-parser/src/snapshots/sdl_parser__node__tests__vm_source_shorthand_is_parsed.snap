@@ -17,6 +17,7 @@ Node {
             },
             features: {},
             conditions: {},
+            injects: {},
             vulnerabilities: [],
             _roles_helper: None,
             roles: None,

@@ -1,4 +1,24 @@
-## SDL parser
+<a href="https://cr14.ee">
+    <img src="../assets/logos/CR14-logo.svg" alt="CR14 Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://eas.ee">
+    <img src="../assets/logos/eas-logo.svg" alt="EAS Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://taltech.ee">
+    <img src="..//assets/logos/Taltech-logo.svg" alt="Taltech Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://eeagrants.org">
+    <img src="../assets/logos/ng.png" alt="NG Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://ntnu.edu">
+    <img src="..//assets/logos/NTNU-logo.svg" alt="NTNU Logo" width="100" height="100">
+</a>
+
+# SDL parser
 
 The SDL parser is a Rust tool designed for parsing Scenario Defined Language files and is a part of Open Cyber Range suite. The SDL parser tool can be used to extract this information from SDL files and convert it into a format that can be used by other tools. With its advanced memory management and error handling features, the SDL parser offers fast parsing times and low memory usage, making it ideal for modern applications that require speed and efficiency in security analysis. If you're looking to integrate SDL files into your Rust project for security analysis, the SDL parser is an essential tool that simplifies the process and ensures accurate and reliable security assessments.
 

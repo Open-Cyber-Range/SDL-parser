@@ -6,7 +6,4 @@ tlo-1:
   name: ~
   description: some description
   evaluation: evaluation-1
-  capabilities:
-    - capability-1
-    - capability-2
 

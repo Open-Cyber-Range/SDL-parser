@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    helpers::Connection, training_learning_objective::TrainingLearningObjective,
+    event::Event, helpers::Connection, training_learning_objective::TrainingLearningObjective,
     vulnerability::Vulnerability,
 };
 
@@ -34,6 +34,8 @@ pub struct Entity {
     pub tlos: Option<Vec<String>>,
     #[serde(alias = "Facts", alias = "FACTS")]
     pub facts: Option<HashMap<String, String>>,
+    #[serde(alias = "Events", alias = "EVENTS")]
+    pub events: Option<Vec<String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
     pub entities: Option<Entities>,
 }
@@ -93,6 +95,32 @@ impl Connection<Vulnerability> for (&String, &Entity) {
     }
 }
 
+impl Connection<Event> for (&String, &Entity) {
+    fn validate_connections(&self, potential_event_names: &Option<Vec<String>>) -> Result<()> {
+        let entity_events = &self.1.events;
+
+        if let Some(entity_events) = entity_events {
+            if let Some(sdl_event_names) = potential_event_names {
+                for entity_event_name in entity_events {
+                    if !sdl_event_names.contains(entity_event_name) {
+                        return Err(anyhow!(
+                            "Entity \"{entity_name}\" Event \"{entity_event_name}\" not found under Scenario Events",
+                            entity_name = self.0
+                        ));
+                    }
+                }
+            } else {
+                return Err(anyhow!(
+                    "Entity \"{entity_name}\" has Events but none found under Scenario",
+                    entity_name = self.0
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 pub type Entities = HashMap<String, Entity>;
 pub trait Flatten {
     fn flatten(&self) -> Self;
@@ -124,9 +152,24 @@ mod tests {
     #[test]
     fn parses_sdl_with_entities() {
         let sdl = r#"
-      
           name: test-scenario
           description: some-description
+          stories:
+            story-1:
+                speed: 1
+                scripts:
+                    - script-1
+          scripts:
+            script-1:
+                start-time: 0
+                end-time: 3 hour 30 min
+                speed: 1
+                events:
+                    earthquake: 1 hour
+          events:
+            earthquake:
+                description: "Here comes another earthquake"
+                source: earthquake-package
           conditions:
             condition-1:
                 command: executable/path.sh
@@ -158,26 +201,10 @@ mod tests {
                       - metric-1
                       - metric-2
                   min-score: 50
-          capabilities:
-              capability-1:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
-              capability-2:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
           tlos:
               tlo-1:
                   description: some description
                   evaluation: evaluation-1
-                  capabilities:
-                      - capability-1
-                      - capability-2
           goals:
               goal-1:
                   description: "new goal"
@@ -189,6 +216,8 @@ mod tests {
                   description: "This is my organization"
                   role: White
                   mission: "defend"
+                  events:
+                    - earthquake
                   categories:
                     - Foundation
                     - Organization
@@ -297,26 +326,10 @@ mod tests {
                       - metric-1
                       - metric-2
                   min-score: 50
-          capabilities:
-              capability-1:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
-              capability-2:
-                  description: "Can defend against Dirty Cow"
-                  condition: condition-1
-                  vulnerabilities:
-                    - vulnerability-1
-                    - vulnerability-2
           tlos:
               tlo-1:
                   description: some description
                   evaluation: evaluation-1
-                  capabilities:
-                      - capability-1
-                      - capability-2
           goals:
               goal-1:
                   description: "new goal"
@@ -350,5 +363,238 @@ mod tests {
         insta::with_settings!({sort_maps => true}, {
                 insta::assert_yaml_snapshot!(entities);
         });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"my-organization.fish\" TLO \"tlo-i-don't-exist\" not found under Scenario TLOs"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_tlo() {
+        let sdl = r#"
+
+          name: test-scenario
+          description: some-description
+          conditions:
+            condition-1:
+                command: executable/path.sh
+                interval: 30
+          metrics:
+              metric-1:
+                  type: MANUAL
+                  artifact: true
+                  max-score: 10
+              metric-2:
+                  type: CONDITIONAL
+                  max-score: 10
+                  condition: condition-1
+          vulnerabilities:
+              vulnerability-1:
+                  name: Some other vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1343
+              vulnerability-2:
+                  name: Some vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1341
+          evaluations:
+              evaluation-1:
+                  description: some description
+                  metrics:
+                      - metric-1
+                      - metric-2
+                  min-score: 50
+          tlos:
+              tlo-1:
+                  description: some description
+                  evaluation: evaluation-1
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos:
+                    - tlo-1
+          entities:
+              my-organization:
+                  name: "My Organization"
+                  description: "This is my organization"
+                  role: White
+                  mission: "defend"
+                  categories:
+                    - Foundation
+                    - Organization
+                  vulnerabilities:
+                    - vulnerability-2
+                  tlos:
+                    - tlo-1
+                  entities:
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        tlos: 
+                            - tlo-i-don't-exist
+                        facts:
+                            anatomy: sharks do not have bones
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"my-organization.fish\" Vulnerability \"vulnerability-i-don't-exist\" not found under Scenario Vulnerabilities"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_vulnerability() {
+        let sdl = r#"
+
+          name: test-scenario
+          description: some-description
+          conditions:
+            condition-1:
+                command: executable/path.sh
+                interval: 30
+          metrics:
+              metric-1:
+                  type: MANUAL
+                  artifact: true
+                  max-score: 10
+              metric-2:
+                  type: CONDITIONAL
+                  max-score: 10
+                  condition: condition-1
+          vulnerabilities:
+              vulnerability-1:
+                  name: Some other vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1343
+              vulnerability-2:
+                  name: Some vulnerability
+                  description: some-description
+                  technical: false
+                  class: CWE-1341
+          evaluations:
+              evaluation-1:
+                  description: some description
+                  metrics:
+                      - metric-1
+                      - metric-2
+                  min-score: 50
+          tlos:
+              tlo-1:
+                  description: some description
+                  evaluation: evaluation-1
+          goals:
+              goal-1:
+                  description: "new goal"
+                  tlos:
+                    - tlo-1
+          entities:
+              my-organization:
+                  name: "My Organization"
+                  description: "This is my organization"
+                  role: White
+                  mission: "defend"
+                  categories:
+                    - Foundation
+                    - Organization
+                  vulnerabilities:
+                    - vulnerability-2
+                  tlos:
+                    - tlo-1
+                  entities:
+                    fish:
+                        name: "Shark"
+                        description: "This is my organization"
+                        mission: "swim around"
+                        categories:
+                            - Animal
+                        vulnerabilities:
+                            - vulnerability-i-don't-exist
+                        facts:
+                            anatomy: sharks do not have bones
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    fn parses_entity_with_events() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+            my-other-cool-event:
+                description: "This is my other event"
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                    - my-cool-event
+                entities: 
+                    blue-player:
+                        role: Blue
+                        events:
+                            -  my-other-cool-event
+      "#;
+        let entities = parse_sdl(sdl).unwrap().entities;
+        insta::assert_yaml_snapshot!(entities);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"blue-team\" Event \"i-don't-exist\" not found under Scenario Events"
+    )]
+    fn fails_parsing_entity_with_nonexisting_event() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Entity \"blue-team.blue-player\" Event \"i-don't-exist\" not found under Scenario Events"
+    )]
+    fn fails_parsing_child_entity_with_nonexisting_event() {
+        let sdl = r#"
+          name: test-scenario
+          events:
+            my-cool-event:
+                description: "This is my event"
+          entities:
+            blue-team:
+                role: Blue
+                entities: 
+                    blue-player:
+                        role: Blue
+                        events:
+                            - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Entity \"blue-team\" has Events but none found under Scenario")]
+    fn fails_parsing_entity_with_no_events_defined() {
+        let sdl = r#"
+          name: test-scenario
+          entities:
+            blue-team:
+                role: Blue
+                events:
+                - i-don't-exist
+      "#;
+        parse_sdl(sdl).unwrap();
     }
 }
