@@ -1,4 +1,24 @@
-## SDL parser library
+<a href="https://cr14.ee">
+    <img src="assets/logos/CR14-logo.svg" alt="CR14 Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://eas.ee">
+    <img src="assets/logos/eas-logo.svg" alt="EAS Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://taltech.ee">
+    <img src="assets/logos/Taltech-logo.svg" alt="Taltech Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://eeagrants.org">
+    <img src="assets/logos/ng.png" alt="NG Logo" width="100" height="100">
+</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://ntnu.edu">
+    <img src="assets/logos/NTNU-logo.svg" alt="NTNU Logo" width="100" height="100">
+</a>
+
+# SDL parser library
 
 This library handles parsing SDL input for different programming libraries and environments
 
