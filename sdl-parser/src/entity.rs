@@ -32,8 +32,6 @@ pub struct Entity {
     pub vulnerabilities: Option<Vec<String>>,
     #[serde(alias = "TLOs", alias = "TLOS")]
     pub tlos: Option<Vec<String>>,
-    #[serde(alias = "Facts", alias = "FACTS")]
-    pub facts: Option<HashMap<String, String>>,
     #[serde(alias = "Events", alias = "EVENTS")]
     pub events: Option<Vec<String>>,
     #[serde(alias = "Entities", alias = "ENTITIES")]
