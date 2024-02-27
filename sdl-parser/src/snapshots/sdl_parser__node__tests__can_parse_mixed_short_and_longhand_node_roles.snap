@@ -42,7 +42,6 @@ entities:
     categories: ~
     vulnerabilities: ~
     tlos: ~
-    facts: ~
     events: ~
     entities:
       bob:
@@ -53,7 +52,6 @@ entities:
         categories: ~
         vulnerabilities: ~
         tlos: ~
-        facts: ~
         events: ~
         entities: ~
 goals: ~

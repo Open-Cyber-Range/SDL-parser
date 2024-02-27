@@ -206,8 +206,8 @@ mod tests {
           goals:
               goal-1:
                   description: "new goal"
-                  tlos: 
-                    - tlo-1  
+                  tlos:
+                    - tlo-1
           entities:
               my-organization:
                   name: "My Organization"
@@ -230,8 +230,6 @@ mod tests {
                         mission: "swim around"
                         categories:
                             - Animal
-                        facts:
-                            anatomy: sharks do not have bones 
       "#;
         let entities = parse_sdl(sdl).unwrap().entities;
         insta::with_settings!({sort_maps => true}, {
@@ -354,8 +352,6 @@ mod tests {
                         mission: "swim around"
                         categories:
                             - Animal
-                        facts:
-                            anatomy: sharks do not have bones
       "#;
         let entities = parse_sdl(sdl).unwrap().entities;
         insta::with_settings!({sort_maps => true}, {
@@ -432,10 +428,8 @@ mod tests {
                         mission: "swim around"
                         categories:
                             - Animal
-                        tlos: 
+                        tlos:
                             - tlo-i-don't-exist
-                        facts:
-                            anatomy: sharks do not have bones
       "#;
         parse_sdl(sdl).unwrap();
     }
@@ -511,8 +505,6 @@ mod tests {
                             - Animal
                         vulnerabilities:
                             - vulnerability-i-don't-exist
-                        facts:
-                            anatomy: sharks do not have bones
       "#;
         parse_sdl(sdl).unwrap();
     }
@@ -531,7 +523,7 @@ mod tests {
                 role: Blue
                 events:
                     - my-cool-event
-                entities: 
+                entities:
                     blue-player:
                         role: Blue
                         events:
@@ -573,7 +565,7 @@ mod tests {
           entities:
             blue-team:
                 role: Blue
-                entities: 
+                entities:
                     blue-player:
                         role: Blue
                         events:

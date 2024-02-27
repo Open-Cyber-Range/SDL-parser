@@ -14,7 +14,6 @@ my-organization:
     - vulnerability-2
   tlos:
     - tlo-1
-  facts: ~
   events:
     - earthquake
   entities:
@@ -27,8 +26,6 @@ my-organization:
         - Animal
       vulnerabilities: ~
       tlos: ~
-      facts:
-        anatomy: sharks do not have bones
       events: ~
       entities: ~
 
