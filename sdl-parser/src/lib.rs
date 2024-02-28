@@ -34,6 +34,7 @@ use metric::{Metric, Metrics};
 use node::{Node, NodeType, Nodes};
 use script::{Script, Scripts};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use story::Stories;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
@@ -549,6 +550,25 @@ impl Scenario {
         }
         Ok(())
     }
+
+    fn verify_unique_conditions_for_metrics(&self) -> Result<()> {
+        let mut unique_conditions_under_metrics = HashSet::new();
+
+        if let Some(metrics) = &self.metrics {
+            for metric in metrics.values() {
+                if let Some(condition) = &metric.condition {
+                    if !unique_conditions_under_metrics.insert(condition) {
+                        return Err(anyhow!(
+                            "Duplicate condition '{}' found under metrics. Each condition must be unique for every metric.",
+                            condition
+                        ));
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl Formalize for Scenario {
@@ -675,6 +695,7 @@ impl Formalize for Scenario {
         self.verify_events()?;
         self.verify_scripts()?;
         self.verify_stories()?;
+        self.verify_unique_conditions_for_metrics()?;
         Ok(())
     }
 }
@@ -1063,5 +1084,30 @@ mod tests {
             .unwrap();
 
         insta::assert_debug_snapshot!(dependencies.generate_tranches().unwrap());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Duplicate condition 'condition-1' found under metrics. Each condition must be unique for every metric."
+    )]
+    fn condition_used_by_multiple_metrics() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            metrics:
+                metric-1:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition: condition-1
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition: condition-1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 }
