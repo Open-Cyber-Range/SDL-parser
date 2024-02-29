@@ -34,6 +34,7 @@ use metric::{Metric, Metrics};
 use node::{Node, NodeType, Nodes};
 use script::{Script, Scripts};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use story::Stories;
 use training_learning_objective::{TrainingLearningObjective, TrainingLearningObjectives};
 use vulnerability::{Vulnerabilities, Vulnerability};
@@ -380,9 +381,20 @@ impl Scenario {
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
+
+        let mut unique_conditions_under_metrics = HashSet::new();
+
         if let Some(metrics) = &self.metrics {
-            for metric in metrics.iter() {
-                metric.validate_connections(&condition_names)?;
+            for (metric_name, metric) in metrics.iter() {
+                if let Some(condition) = &metric.condition {
+                    if !unique_conditions_under_metrics.insert(condition) {
+                        return Err(anyhow!(
+                            "Duplicate condition '{}' found under metrics. Each condition must be unique for every metric.",
+                            condition
+                        ));
+                    }
+                }
+                (metric_name, metric).validate_connections(&condition_names)?;
             }
         }
         Ok(())
@@ -1063,5 +1075,30 @@ mod tests {
             .unwrap();
 
         insta::assert_debug_snapshot!(dependencies.generate_tranches().unwrap());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Duplicate condition 'condition-1' found under metrics. Each condition must be unique for every metric."
+    )]
+    fn condition_used_by_multiple_metrics() {
+        let sdl = r#"
+            name: test-scenario
+            description: some-description
+            metrics:
+                metric-1:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition: condition-1
+                metric-2:
+                    type: CONDITIONAL
+                    max-score: 10
+                    condition: condition-1
+            conditions:
+                condition-1:
+                    command: executable/path.sh
+                    interval: 30
+        "#;
+        parse_sdl(sdl).unwrap();
     }
 }
