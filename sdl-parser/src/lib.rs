@@ -381,9 +381,20 @@ impl Scenario {
             .conditions
             .as_ref()
             .map(|condition_map| condition_map.keys().cloned().collect::<Vec<String>>());
+
+        let mut unique_conditions_under_metrics = HashSet::new();
+
         if let Some(metrics) = &self.metrics {
-            for metric in metrics.iter() {
-                metric.validate_connections(&condition_names)?;
+            for (metric_name, metric) in metrics.iter() {
+                if let Some(condition) = &metric.condition {
+                    if !unique_conditions_under_metrics.insert(condition) {
+                        return Err(anyhow!(
+                            "Duplicate condition '{}' found under metrics. Each condition must be unique for every metric.",
+                            condition
+                        ));
+                    }
+                }
+                (metric_name, metric).validate_connections(&condition_names)?;
             }
         }
         Ok(())
@@ -550,25 +561,6 @@ impl Scenario {
         }
         Ok(())
     }
-
-    fn verify_unique_conditions_for_metrics(&self) -> Result<()> {
-        let mut unique_conditions_under_metrics = HashSet::new();
-
-        if let Some(metrics) = &self.metrics {
-            for metric in metrics.values() {
-                if let Some(condition) = &metric.condition {
-                    if !unique_conditions_under_metrics.insert(condition) {
-                        return Err(anyhow!(
-                            "Duplicate condition '{}' found under metrics. Each condition must be unique for every metric.",
-                            condition
-                        ));
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
 }
 
 impl Formalize for Scenario {
@@ -695,7 +687,6 @@ impl Formalize for Scenario {
         self.verify_events()?;
         self.verify_scripts()?;
         self.verify_stories()?;
-        self.verify_unique_conditions_for_metrics()?;
         Ok(())
     }
 }
