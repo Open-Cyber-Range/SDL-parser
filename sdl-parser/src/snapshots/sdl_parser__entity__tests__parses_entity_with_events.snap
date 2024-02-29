@@ -10,7 +10,6 @@ blue-team:
   categories: ~
   vulnerabilities: ~
   tlos: ~
-  facts: ~
   events:
     - my-cool-event
   entities:
@@ -22,7 +21,6 @@ blue-team:
       categories: ~
       vulnerabilities: ~
       tlos: ~
-      facts: ~
       events:
         - my-other-cool-event
       entities: ~
