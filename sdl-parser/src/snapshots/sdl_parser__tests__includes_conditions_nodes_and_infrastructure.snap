@@ -1,6 +1,7 @@
 ---
 source: sdl-parser/src/lib.rs
 expression: conditions
+snapshot_kind: text
 ---
 name: test-scenario
 description: some-description
@@ -52,6 +53,7 @@ infrastructure:
     count: 1
     links: ~
     dependencies: ~
+    properties: ~
     description: ~
   win10:
     name: ~
@@ -59,6 +61,7 @@ infrastructure:
     links: ~
     dependencies:
       - deb10
+    properties: ~
     description: ~
 conditions:
   condition-1:
@@ -94,4 +97,3 @@ injects: ~
 events: ~
 scripts: ~
 stories: ~
-

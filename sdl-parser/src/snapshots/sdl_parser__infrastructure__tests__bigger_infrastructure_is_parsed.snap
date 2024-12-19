@@ -1,12 +1,14 @@
 ---
 source: sdl-parser/src/infrastructure.rs
 expression: infrastructure
+snapshot_kind: text
 ---
 switch-1:
   name: ~
   count: 1
   links: ~
   dependencies: ~
+  properties: ~
   description: ~
 switch-2:
   name: ~
@@ -14,6 +16,7 @@ switch-2:
   links:
     - switch-1
   dependencies: ~
+  properties: ~
   description: ~
 ubuntu-10:
   name: ~
@@ -23,17 +26,19 @@ ubuntu-10:
   dependencies:
     - windows-10
     - windows-10-vuln-1
+  properties: ~
   description: ~
 windows-10:
   name: ~
   count: 3
   links: ~
   dependencies: ~
+  properties: ~
   description: ~
 windows-10-vuln-1:
   name: ~
   count: 1
   links: ~
   dependencies: ~
+  properties: ~
   description: ~
-

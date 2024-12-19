@@ -1,6 +1,6 @@
 [package]
 name = "sdl-parser-export"
-version = "0.21.0"
+version = "0.21.1"
 edition = "2021"
 build = "build.rs"
 
@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [package.metadata.deb]
 name = "libsdl-parser"
-maintainer = "Kaarel Allemann <kaarel.allemann@c14.ee>"
+maintainer = "CR14 Developers <developers@c14.ee>"
 copyright = "2022, CR14 <info@cr14.ee>"
 license-file = ["../LICENSE", "4"]
 extended-description = """\

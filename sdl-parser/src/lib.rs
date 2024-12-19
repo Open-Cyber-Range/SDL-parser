@@ -27,7 +27,7 @@ use evaluation::{Evaluation, Evaluations};
 use event::{Event, Events};
 use feature::{Feature, Features};
 use goal::Goals;
-use infrastructure::{Infrastructure, InfrastructureHelper};
+use infrastructure::{Infrastructure, InfrastructureHelper, Properties};
 use inject::{Inject, Injects};
 pub use library_item::LibraryItem;
 use metric::{Metric, Metrics};
@@ -146,29 +146,28 @@ impl Scenario {
     fn build_infrastructure_dependencies(
         &self,
         mut dependency_builder: depper::DependenciesBuilder,
-    ) -> Result<Dependencies, anyhow::Error> {
+    ) -> Result<depper::Dependencies, anyhow::Error> {
         if let Some(infrastructure) = &self.infrastructure {
             for (node_name, infra_node) in infrastructure.iter() {
                 let mut dependencies: Vec<String> = vec![];
+
                 if let Some(links) = &infra_node.links {
-                    let links = links
-                        .iter()
-                        .map(|link| link.to_string())
-                        .collect::<Vec<String>>();
-                    dependencies.extend_from_slice(links.as_slice());
+                    for link in links {
+                        dependencies.push(link.clone());
+                    }
                 }
+
                 if let Some(node_dependencies) = &infra_node.dependencies {
-                    let node_dependencies = node_dependencies
-                        .iter()
-                        .map(|dependency| dependency.to_string())
-                        .collect::<Vec<String>>();
-                    dependencies.extend_from_slice(node_dependencies.as_slice());
+                    dependencies.extend(node_dependencies.iter().cloned());
                 }
+
                 dependency_builder =
                     dependency_builder.add_element(node_name.clone(), dependencies);
             }
         }
-        dependency_builder.build()
+        dependency_builder
+            .build()
+            .map_err(|e| anyhow!("Error building dependencies: {}", e))
     }
 
     fn build_feature_dependencies(
@@ -308,38 +307,100 @@ impl Scenario {
         let node_names = self
             .nodes
             .as_ref()
-            .map(|node_map| node_map.keys().cloned().collect::<Vec<String>>());
+            .map(|node_map| node_map.keys().cloned().collect::<HashSet<String>>())
+            .unwrap_or_default();
 
         if let Some(infrastructure) = &self.infrastructure {
-            infrastructure.keys().try_for_each(|infrastructure_name| {
-                Connection::<Infrastructure>::validate_connections(
-                    &infrastructure_name,
-                    &node_names,
-                )?;
+            for (infrastructure_name, infra_node) in infrastructure {
+                if !node_names.contains(infrastructure_name) {
+                    return Err(anyhow!(
+                        "Infrastructure entry \"{}\" does not exist under Nodes",
+                        infrastructure_name
+                    ));
+                }
 
-                let infra_node_dependencies = infrastructure
-                    .get(infrastructure_name)
-                    .map(|infra_node| {
-                        let mut dependencies = vec![];
-                        if let Some(links) = &infra_node.links {
-                            dependencies.extend(links.iter().map(|link| link.to_owned()));
+                let mut all_dependencies = HashSet::new();
+                if let Some(links) = &infra_node.links {
+                    for link in links {
+                        if !infrastructure.contains_key(link) {
+                            return Err(anyhow!(
+                                "Infrastructure entry \"{}\" does not exist under Infrastructure even though it is a dependency for \"{}\"",
+                                link, infrastructure_name
+                            ));
                         }
-                        if let Some(node_dependencies) = &infra_node.dependencies {
-                            dependencies.extend(node_dependencies.iter().map(|dependency| dependency.to_owned()));
+                        all_dependencies.insert(link.clone());
+                    }
+                }
+                if let Some(dependencies) = &infra_node.dependencies {
+                    for dependency in dependencies {
+                        if !infrastructure.contains_key(dependency) {
+                            return Err(anyhow!(
+                                "Infrastructure entry \"{}\" does not exist under Infrastructure even though it is a dependency for \"{}\"",
+                                dependency, infrastructure_name
+                            ));
                         }
-                        dependencies
-                    })
-                    .unwrap_or_default();
+                        all_dependencies.insert(dependency.clone());
+                    }
+                }
 
-                for dependency in infra_node_dependencies {
-                    if !infrastructure.contains_key(&dependency) {
+                if let Some(Properties::Simple { cidr, gateway }) = &infra_node.properties {
+                    if !cidr.contains(*gateway) {
                         return Err(anyhow!(
-                            "Infrastructure entry \"{dependency}\" does not exist under Infrastructure even though it is a dependency for \"{infrastructure_name}\""
+                            "Gateway {} is not within CIDR {} for node {}",
+                            gateway,
+                            cidr,
+                            infrastructure_name
                         ));
                     }
                 }
-                Ok(())
-            })?;
+
+                if let Some(Properties::Complex(properties_list)) = &infra_node.properties {
+                    if let Some(links) = &infra_node.links {
+                        let link_set: HashSet<&String> = links.iter().collect();
+
+                        for property_map in properties_list {
+                            for (link, ip) in property_map {
+                                if !link_set.contains(link) {
+                                    return Err(anyhow!(
+                                        "Property key '{}' in properties of node '{}' does not exist in its links: {:?}",
+                                        link,
+                                        infrastructure_name,
+                                        links
+                                    ));
+                                }
+
+                                if let Some(linked_node) = infrastructure.get(link) {
+                                    if let Some(Properties::Simple { cidr, .. }) =
+                                        &linked_node.properties
+                                    {
+                                        if !cidr.contains(*ip) {
+                                            return Err(anyhow!(
+                                                "IP address '{}' for '{}' in properties of node '{}' is not within the CIDR '{}' of the linked node '{}'",
+                                                ip, link, infrastructure_name, cidr, link
+                                            ));
+                                        }
+                                    } else {
+                                        return Err(anyhow!(
+                                            "Linked node '{}' does not have a valid CIDR in its properties",
+                                            link
+                                        ));
+                                    }
+                                } else {
+                                    return Err(anyhow!(
+                                        "Linked node '{}' referenced in properties of '{}' does not exist in the infrastructure",
+                                        link, infrastructure_name
+                                    ));
+                                }
+                            }
+                        }
+                    } else {
+                        return Err(anyhow!(
+                            "Links must be defined to validate Complex properties for node '{}'",
+                            infrastructure_name
+                        ));
+                    }
+                }
+            }
         }
 
         Ok(())

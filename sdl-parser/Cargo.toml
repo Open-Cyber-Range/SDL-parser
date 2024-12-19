@@ -1,6 +1,6 @@
 [package]
 name = "sdl-parser"
-version = "0.21.0"
+version = "0.21.1"
 edition = "2021"
 license = "MIT"
 description = "The SDL parser is a Rust tool designed for parsing Scenario Defined Language files."
@@ -22,6 +22,7 @@ regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde-aux = "4"
 serde_yaml = "0.9"
+ipnetwork = "0.20.0"
 
 [features]
 default = []
