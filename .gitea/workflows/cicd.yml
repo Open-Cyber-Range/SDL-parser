@@ -18,9 +18,9 @@ env:
   OCR_PIP_REPOSITORY: ${{ vars.OCR_PIP_REPOSITORY }}
   OCR_NPM_REPOSITORY: ${{ vars.OCR_NPM_REPOSITORY }}
   DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
-  MANFRED_GITHUB_TOKEN: ${{ secrets.MANFRED_GITHUB_TOKEN }}
+  OCR_GITHUB_TOKEN: ${{ secrets.OCR_GITHUB_TOKEN }}
   PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  OCR_CRATES_PUBLISH: ${{ secrets.OCR_CRATES_PUBLISH }}
 
 jobs:
   lint-and-test:
@@ -52,7 +52,7 @@ jobs:
         run: cargo build --release --target x86_64-pc-windows-gnu
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3 # GHES is only supported in v3
         with:
           name: sdl-parser-x86_64-pc-windows-gnu
           path: target/x86_64-pc-windows-gnu/release
@@ -98,20 +98,25 @@ jobs:
     container:
       image: ${{ vars.DOCKER_REGISTRY_PULL }}/node:lts
     steps:
-      - name: Install Git
+      - name: Install Git and build tools
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git build-essential python3
 
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install node-gyp
+        run: |
+          yarn global add node-gyp
+
       - name: Build and publish
         run: |
           cd node-package
-          yarn global add node-gyp && yarn install --frozen-lockfile
+          yarn install --frozen-lockfile
           { echo "$OCR_DEPLOYMENT_USER"; sleep 1; echo "$OCR_DEPLOYMENT_PASSWORD"; } | npm login --registry=$OCR_NPM_REPOSITORY
           npm publish --registry=$OCR_NPM_REPOSITORY
+
 
   build-and-publish-pip-wrapper:
     if: github.ref == 'refs/heads/master'
@@ -151,12 +156,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build and publish
+      - name: Prepare Environment
         run: |
-          apt update && apt install -y jq npm
-          cargo install wasm-pack
+          apt update && apt install -y jq
           echo //registry.npmjs.org/:_authToken=$PUBLISH_TOKEN > ~/.npmrc
-          cd wasm-sdl-parser/ && wasm-pack build --target web --release
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      - name: Build and publish WASM package
+        run: |
+          cd wasm-sdl-parser/
+          wasm-pack build --target web --release
           cd pkg/
           jq '.name = "@open-cyber-range/wasm-sdl-parser"' package.json > tmp.file && mv tmp.file package.json
           wasm-pack publish --access public
@@ -174,7 +185,7 @@ jobs:
       - name: Build and publish
         run: |
           cd sdl-parser/
-          cargo publish --token $CARGO_REGISTRY_TOKEN
+          cargo publish --token $OCR_CRATES_PUBLISH
 
   sync-to-github:
     if: github.ref == 'refs/heads/master'
@@ -186,10 +197,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configuring git to exclude .gitea directory
+        run: |
+          echo "/.gitea/" >> .gitignore
+          git config --global user.email "developers@cr14.ee"
+          git config --global user.name "CR14 Developers"
+
       - name: Sync to GitHub
         run: |
           git remote remove github || echo "No repo found"
-          git remote add github https://mannyfred:$MANFRED_GITHUB_TOKEN@github.com/Open-Cyber-Range/SDL-parser.git
+          git remote add github https://$OCR_GITHUB_TOKEN@github.com/Open-Cyber-Range/SDL-parser.git
           git checkout master
           git pull --rebase origin master
+          git add -A
+          git commit -m "Cleanup sensitive information" || echo "No changes to commit"
           git push github master:main --force

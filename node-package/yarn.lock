@@ -84,10 +84,10 @@
   resolved "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.2.tgz"
   integrity sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==
 
-"@types/ffi-napi@^4.0.5":
-  version "4.0.5"
-  resolved "https://registry.npmjs.org/@types/ffi-napi/-/ffi-napi-4.0.5.tgz"
-  integrity sha512-WDPpCcHaPhHmP1FIw3ds/+OLt8bYQ/h3SO7o+8kH771PL21kHVzTwii7+WyMBXMQrBsR6xVU2y7w+h+9ggpaQw==
+"@types/ffi-napi@^4.0.10":
+  version "4.0.10"
+  resolved "https://registry.yarnpkg.com/@types/ffi-napi/-/ffi-napi-4.0.10.tgz#c4dd1f7e811fbf8a2136d26975d3202a5f53efdc"
+  integrity sha512-Q6TimLDxdg+Obp4W9tgzIhSA25THD6AmR8eM+ZB7bbU96xnkpd7PRXwG4az2rKpreuF90IPr/LlQtetmIfQL2g==
   dependencies:
     "@types/node" "*"
     "@types/ref-napi" "*"
@@ -103,22 +103,29 @@
   resolved "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
-"@types/node@*", "@types/node@^17.0.12":
+"@types/node@*":
+  version "22.10.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.10.2.tgz#a485426e6d1fdafc7b0d4c7b24e2c78182ddabb9"
+  integrity sha512-Xxr6BBRCAOQixvonOye19wnzyDiUtTeqldOOmj3CkeblonbccA12PFwlufvRdrpjXxqnmUaeiU5EOA+7s5diUQ==
+  dependencies:
+    undici-types "~6.20.0"
+
+"@types/node@^17.0.12":
   version "17.0.12"
   resolved "https://registry.npmjs.org/@types/node/-/node-17.0.12.tgz"
   integrity sha512-4YpbAsnJXWYK/fpTVFlMIcUIho2AYCi4wg5aNPrG1ng7fn/1/RZfCIpRCiBX+12RVa34RluilnvCqD+g3KiSiA==
 
 "@types/ref-napi@*":
-  version "3.0.4"
-  resolved "https://registry.npmjs.org/@types/ref-napi/-/ref-napi-3.0.4.tgz"
-  integrity sha512-ng8SCmdZbz1GHaW3qgGoX9IaHoIvgMqgBHLe3sv18NbAkHVgnjRW8fJq51VTUm4lnJyLu60q9/002o7qjOg13g==
+  version "3.0.12"
+  resolved "https://registry.yarnpkg.com/@types/ref-napi/-/ref-napi-3.0.12.tgz#2ddde995ecf769f1e5da01604e468348949c72c3"
+  integrity sha512-UZPKghRaLlWx2lPAphpdtYe62TbGBaPeqUM6gF1vI6FPRIu/Tff/WMAzpJRFU3jJIiD8HiXpVt2RjcFHtA6YRg==
   dependencies:
     "@types/node" "*"
 
 "@types/ref-struct-di@*":
-  version "1.1.6"
-  resolved "https://registry.npmjs.org/@types/ref-struct-di/-/ref-struct-di-1.1.6.tgz"
-  integrity sha512-+Sa2H3ynDYo2ungR3d5kmNetlkAYNqQVjJvs1k7i6zvo7Zu/qb+OsrXU54RuiOYJCwY9piN+hOd4YRRaiEOqgw==
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/@types/ref-struct-di/-/ref-struct-di-1.1.12.tgz#5d9167488692816754c6d2b9064d9b0313609d59"
+  integrity sha512-R2RNkGIROGoJTbXYTXrsXybnsQD4iAy26ih/G6HCeCB9luWFQKkr537XGz0uGJ1kH8y8RMkdbQmD/wBulrOPHw==
   dependencies:
     "@types/ref-napi" "*"
 
@@ -201,6 +208,56 @@
   dependencies:
     "@typescript-eslint/types" "5.10.1"
     eslint-visitor-keys "^3.0.0"
+
+"@yuuang/ffi-rs-darwin-arm64@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-darwin-arm64/-/ffi-rs-darwin-arm64-1.1.1.tgz#3bd96e34b374c7457142b40ad44732c0832b66a0"
+  integrity sha512-WtsJFO6TBglbOetiNEkuXfXEf957XYUlrB9iNm4fk6quixhIS6YGdCoSzsPghEbH8DlEkXzkCopkW5sCpyDsCw==
+
+"@yuuang/ffi-rs-darwin-x64@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-darwin-x64/-/ffi-rs-darwin-x64-1.1.1.tgz#b6258937e689f760b6c2a3d925d4ad91a6ae07d2"
+  integrity sha512-zYRg+GvDJdZLJSjd3PpvGUZ7Zu1TVtl0Lcbr373SQ5loxlEXCAT38HPKoewaWmPfJNDfdHPikmXJFND9qeGjrg==
+
+"@yuuang/ffi-rs-linux-arm-gnueabihf@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-linux-arm-gnueabihf/-/ffi-rs-linux-arm-gnueabihf-1.1.1.tgz#a8e1a99ccaba2d015d8777466ed47a10df01f16d"
+  integrity sha512-aSIX8f5MVVoUnc+j1Al2KhbZx1crQVDYVLGtkjLQgV6iWbaH/o6sXGdqo0Jz33b0+GxgUxDCjZMCC7uMvnmnbg==
+
+"@yuuang/ffi-rs-linux-arm64-gnu@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-linux-arm64-gnu/-/ffi-rs-linux-arm64-gnu-1.1.1.tgz#d4e900d162a53dfaa83ca645f0826127b17ab35f"
+  integrity sha512-npICoIE+CYhGpp72BKxj5KC4O6g1WuAetljPB0TFp+zdBIJQLxxWPzTLPg3RumlEpoZ63J59QTEgmIAvsQ/N5g==
+
+"@yuuang/ffi-rs-linux-arm64-musl@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-linux-arm64-musl/-/ffi-rs-linux-arm64-musl-1.1.1.tgz#4cdefb92feef849181e122257c7012c5f053a1bd"
+  integrity sha512-J4V1ra9lVYp3bE7KIgCKUeXhrymrvePOX4qURd4dsF0VQQu9SPiE7rDj0l6H4LRfpTDSq1HnbWn2R9ZaHN5YSg==
+
+"@yuuang/ffi-rs-linux-x64-gnu@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-linux-x64-gnu/-/ffi-rs-linux-x64-gnu-1.1.1.tgz#854ec02aa2cd20c5cecd15a8162efd782d6b590a"
+  integrity sha512-wQ6QV6At7FcAia/6amvAODHyRLVlKAbTs61w6RxD7k84TTgRyD4QJsINgdGYISXG2peilrMXqALlm2w7cKcllQ==
+
+"@yuuang/ffi-rs-linux-x64-musl@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-linux-x64-musl/-/ffi-rs-linux-x64-musl-1.1.1.tgz#306b2150d26344aea3f6ec33b372d96f67e6a790"
+  integrity sha512-JQITz02Oz1RLpXzofqT1DOWyVR+uyADftp+s2+Kiq6CZXSPyxOiHY40QBugUrby6vYH0qCADUzjpX5aLDkZHag==
+
+"@yuuang/ffi-rs-win32-arm64-msvc@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-win32-arm64-msvc/-/ffi-rs-win32-arm64-msvc-1.1.1.tgz#cc1832287177fa4f2973b8122aaab972b9349685"
+  integrity sha512-sqA3tM9g/kH0T86iNYD8imMaskCaFCeW7K+Dr/3Mm6atkvVOcg94n8lHq54MU5wWOwKBgIfGtmVyQetUEhOO0Q==
+
+"@yuuang/ffi-rs-win32-ia32-msvc@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-win32-ia32-msvc/-/ffi-rs-win32-ia32-msvc-1.1.1.tgz#f082ef0b7e46ed107c0727ef3cd215710ab068d2"
+  integrity sha512-yze+xpuaeFWDeGyHoV9e/EJuoLq7JHVYgYS26j/QtbBUg8nDSrq3F4kO2ymFGYqDJhy69zBojbCLGN+eOHrFcA==
+
+"@yuuang/ffi-rs-win32-x64-msvc@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@yuuang/ffi-rs-win32-x64-msvc/-/ffi-rs-win32-x64-msvc-1.1.1.tgz#1f25b95c078b024b87c6b520d0f5b4a50ed22387"
+  integrity sha512-nUsy7tocOGsMVGUei/MwjT4FdUJRuipiQAuV2sMjFxb3UT9rZsph7mAryggW+TSqhzCc4tkpyEKZtlqslpTh8Q==
 
 acorn-jsx@^5.3.1:
   version "5.3.2"
@@ -469,7 +526,7 @@ debug@^2.6.9:
   dependencies:
     ms "2.0.0"
 
-debug@^3.1.0, debug@^3.2.7:
+debug@^3.2.7:
   version "3.2.7"
   resolved "https://registry.npmjs.org/debug/-/debug-3.2.7.tgz"
   integrity sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==
@@ -789,17 +846,21 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
-ffi-napi@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.npmjs.org/ffi-napi/-/ffi-napi-4.0.3.tgz"
-  integrity sha512-PMdLCIvDY9mS32RxZ0XGb95sonPRal8aqRhLbeEtWKZTe2A87qRFG9HjOhvG8EX2UmQw5XNRMIOT+1MYlWmdeg==
-  dependencies:
-    debug "^4.1.1"
-    get-uv-event-loop-napi-h "^1.0.5"
-    node-addon-api "^3.0.0"
-    node-gyp-build "^4.2.1"
-    ref-napi "^2.0.1 || ^3.0.2"
-    ref-struct-di "^1.1.0"
+ffi-rs@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/ffi-rs/-/ffi-rs-1.1.1.tgz#7a3abbb12fa14abca46f84d80399a315ba4bef04"
+  integrity sha512-9291xUexLwtBU/NOorDFa7h2iepnQL1mcpG+DpvnL1U8Wa1Lz/bt2/R35rEn9vSPp/YbeaG6lUM3eRZSAwS2Jw==
+  optionalDependencies:
+    "@yuuang/ffi-rs-darwin-arm64" "1.1.1"
+    "@yuuang/ffi-rs-darwin-x64" "1.1.1"
+    "@yuuang/ffi-rs-linux-arm-gnueabihf" "1.1.1"
+    "@yuuang/ffi-rs-linux-arm64-gnu" "1.1.1"
+    "@yuuang/ffi-rs-linux-arm64-musl" "1.1.1"
+    "@yuuang/ffi-rs-linux-x64-gnu" "1.1.1"
+    "@yuuang/ffi-rs-linux-x64-musl" "1.1.1"
+    "@yuuang/ffi-rs-win32-arm64-msvc" "1.1.1"
+    "@yuuang/ffi-rs-win32-ia32-msvc" "1.1.1"
+    "@yuuang/ffi-rs-win32-x64-msvc" "1.1.1"
 
 file-entry-cache@^6.0.1:
   version "6.0.1"
@@ -894,18 +955,6 @@ get-symbol-description@^1.0.0:
   dependencies:
     call-bind "^1.0.2"
     get-intrinsic "^1.1.1"
-
-get-symbol-from-current-process-h@^1.0.1, get-symbol-from-current-process-h@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/get-symbol-from-current-process-h/-/get-symbol-from-current-process-h-1.0.2.tgz"
-  integrity sha512-syloC6fsCt62ELLrr1VKBM1ggOpMdetX9hTrdW77UQdcApPHLmf7CI7OKcN1c9kYuNxKcDe4iJ4FY9sX3aw2xw==
-
-get-uv-event-loop-napi-h@^1.0.5:
-  version "1.0.6"
-  resolved "https://registry.npmjs.org/get-uv-event-loop-napi-h/-/get-uv-event-loop-napi-h-1.0.6.tgz"
-  integrity sha512-t5c9VNR84nRoF+eLiz6wFrEp1SE2Acg0wS+Ysa2zF0eROes+LzOfuTaVHxGy8AbS8rq7FHEJzjnCZo1BupwdJg==
-  dependencies:
-    get-symbol-from-current-process-h "^1.0.1"
 
 getpass@^0.1.1:
   version "0.1.7"
@@ -1333,16 +1382,6 @@ natural-compare@^1.4.0:
   resolved "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-node-addon-api@^3.0.0:
-  version "3.2.1"
-  resolved "https://registry.npmjs.org/node-addon-api/-/node-addon-api-3.2.1.tgz"
-  integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
-
-node-gyp-build@^4.2.1:
-  version "4.3.0"
-  resolved "https://registry.npmjs.org/node-gyp-build/-/node-gyp-build-4.3.0.tgz"
-  integrity sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==
-
 "normalize-package-data@~1.0.1 || ^2.0.0":
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/normalize-package-data/-/normalize-package-data-2.5.0.tgz#e66db1838b200c1dfc233225d12cb36520e234a8"
@@ -1593,23 +1632,6 @@ readable-stream@^2.0.6, readable-stream@^2.2.2:
     safe-buffer "~5.1.1"
     string_decoder "~1.1.1"
     util-deprecate "~1.0.1"
-
-"ref-napi@^2.0.1 || ^3.0.2":
-  version "3.0.3"
-  resolved "https://registry.npmjs.org/ref-napi/-/ref-napi-3.0.3.tgz"
-  integrity sha512-LiMq/XDGcgodTYOMppikEtJelWsKQERbLQsYm0IOOnzhwE9xYZC7x8txNnFC9wJNOkPferQI4vD4ZkC0mDyrOA==
-  dependencies:
-    debug "^4.1.1"
-    get-symbol-from-current-process-h "^1.0.2"
-    node-addon-api "^3.0.0"
-    node-gyp-build "^4.2.1"
-
-ref-struct-di@^1.1.0:
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/ref-struct-di/-/ref-struct-di-1.1.1.tgz"
-  integrity sha512-2Xyn/0Qgz89VT+++WP0sTosdm9oeowLP23wRJYhG4BFdMUrLj3jhwHZNEytYNYgtPKLNTP3KJX4HEgBvM1/Y2g==
-  dependencies:
-    debug "^3.1.0"
 
 regexpp@^3.2.0:
   version "3.2.0"
@@ -1986,6 +2008,11 @@ unbox-primitive@^1.0.1:
     has-bigints "^1.0.1"
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
+
+undici-types@~6.20.0:
+  version "6.20.0"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.20.0.tgz#8171bf22c1f588d1554d55bf204bc624af388433"
+  integrity sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==
 
 uri-js@^4.2.2:
   version "4.4.1"
