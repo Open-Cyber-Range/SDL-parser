@@ -196,19 +196,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: 'master'
 
-      - name: Configuring git to exclude .gitea directory
+      - name: Setup GitHub Remote
         run: |
-          echo "/.gitea/" >> .gitignore
-          git config --global user.email "developers@cr14.ee"
-          git config --global user.name "CR14 Developers"
-
-      - name: Sync to GitHub
-        run: |
-          git remote remove github || echo "No repo found"
+          git remote remove github || echo "No github remote found"
           git remote add github https://$OCR_GITHUB_TOKEN@github.com/Open-Cyber-Range/SDL-parser.git
-          git checkout master
+
+      - name: Rebase and push to GitHub
+        run: |
+          git checkout -f master
           git pull --rebase origin master
-          git add -A
-          git commit -m "Cleanup sensitive information" || echo "No changes to commit"
           git push github master:main --force
